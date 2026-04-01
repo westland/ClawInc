@@ -16,23 +16,23 @@ TELEGRAM_TOKEN_WATCHER="123456:ABC..."
 ```
 
 ### 2. Create Telegram Bots
-Message [@BotFather](https://t.me/BotFather) on Telegram and create 5 bots:
+Message [@BotFather](https://t.me/BotFather) on Telegram and create 4 bots (Watcher runs headlessly with no Telegram bot):
 1. `HenryClawBot` — Chief of Staff
 2. `CoderClawBot` — Software Engineer
 3. `ScoutClawBot` — Research Analyst
 4. `WriterClawBot` — Content Creator
-5. `WatcherClawBot` — System Monitor
 
 Copy each bot token into the script.
 
 ### 3. Upload to Server
 ```bash
-scp -r deploy/ root@137.184.15.207:/root/deploy/
+scp -r deploy/ root@YOUR_DROPLET_IP:/root/deploy/
+scp -r dashboard/ root@YOUR_DROPLET_IP:/opt/clawinc-dashboard/
 ```
 
 ### 4. SSH in and Run
 ```bash
-ssh root@137.184.15.207
+ssh root@YOUR_DROPLET_IP
 chmod +x /root/deploy/deploy-openclaw.sh
 /root/deploy/deploy-openclaw.sh
 ```
@@ -41,38 +41,71 @@ The script will:
 - Create 2GB swap (critical for 1GB RAM server)
 - Install Node.js 24 and OpenClaw
 - Configure all 5 agents with their workspaces
-- Set up cron jobs (morning research, daily memo, overnight coding, health checks, R&D)
+- Set up 6 cron jobs (morning research, daily memo, overnight coding, health checks, R&D, cleanup)
 - Harden security (firewall, file permissions, gateway on localhost only)
 - Start the OpenClaw gateway as a systemd service
-- Optionally install Mission Control dashboard
 
-### 5. Verify
+### 5. Install Shiny Dashboard
 ```bash
-openclaw status
-openclaw agents list --bindings
-openclaw doctor
-openclaw cron list
-free -h          # Should show 2GB swap
-ufw status       # Should show only SSH
+apt-get install -y python3.12-venv
+python3 -m venv /opt/clawinc-dashboard/venv
+/opt/clawinc-dashboard/venv/bin/pip install shiny psutil
+cp /root/deploy/clawinc-dashboard.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now clawinc-dashboard
+ufw allow 8050/tcp
 ```
 
-### 6. Access Mission Control
+### 6. Verify
 ```bash
-ssh -L 3000:localhost:3000 -L 4200:localhost:4200 root@137.184.15.207
+systemctl is-active openclaw           # should say: active
+systemctl is-active clawinc-dashboard  # should say: active
+sudo -u clawuser openclaw status
+sudo -u clawuser openclaw cron list
+free -h                                # should show 2GB swap
+ufw status                             # should show SSH + 8050
 ```
-Then open http://localhost:3000 in your browser.
+
+---
+
+## Accessing Your Dashboards
+
+### Shiny Monitoring Dashboard (recommended for students)
+Open directly in any browser — no SSH required, no token needed:
+```
+http://YOUR_DROPLET_IP:8050
+```
+Shows: all 5 agent cards, CPU/RAM/disk gauges, Telegram bot bindings, cron job schedule, live activity log. Auto-refreshes every 30 seconds.
+
+### OpenClaw Control UI (admin / instructor use)
+Requires an SSH tunnel because the gateway binds to localhost only:
+
+**Step 1** — open the tunnel on your local machine (leave this terminal open):
+```bash
+ssh -N -L 18789:127.0.0.1:18789 root@YOUR_DROPLET_IP
+```
+
+**Step 2** — get the tokenized URL from the server:
+```bash
+sudo -u clawuser openclaw dashboard
+# Outputs: http://localhost:18789/#token=<your-token>
+```
+
+**Step 3** — open that URL in your browser. The token authenticates automatically.
+
+The Control UI lets you chat with agents directly, browse session history, view real-time logs, and manage configuration.
 
 ---
 
 ## Agent Roster
 
-| Agent | Role | Model | Schedule |
-|-------|------|-------|----------|
-| **Henry** | Chief of Staff / Orchestrator | Claude Opus 4.6 | 11PM R&D session |
-| **Coder** | Software Engineer | Claude Sonnet 4.5 | 2AM overnight dev |
-| **Scout** | Research Analyst | Claude Haiku 4.5 | 8AM daily research |
-| **Writer** | Content Creator | Claude Sonnet 4.5 | 9AM daily memo |
-| **Watcher** | System Monitor | Claude Haiku 4.5 | Every 30min health check |
+| Agent | Role | Model | Telegram | Schedule |
+|-------|------|-------|----------|----------|
+| **Henry** | Chief of Staff / Orchestrator | Claude Opus 4.6 | @HenryClawBot | 11PM R&D session |
+| **Coder** | Software Engineer | Claude Sonnet 4.5 | @CoderClawBot | 2AM overnight dev |
+| **Scout** | Research Analyst | Claude Haiku 4.5 | @ScoutClawBot | 8AM daily research |
+| **Writer** | Content Creator | Claude Sonnet 4.5 | @WriterClawBot | 9AM daily memo |
+| **Watcher** | System Monitor | Claude Haiku 4.5 | — (headless) | Every 30min health check |
 
 ## Cron Schedule
 
@@ -85,32 +118,28 @@ Then open http://localhost:3000 in your browser.
 | 2:00 AM | Coder | Overnight development |
 | 4:00 AM Sun | Watcher | Weekly session cleanup |
 
-## File Structure
+## Server File Structure
 ```
-~/.openclaw/
-├── openclaw.json           ← Master configuration
-├── logs/
-├── workspace-henry/        ← Orchestrator
+~/.openclaw/                       (clawuser's home)
+├── openclaw.json                  ← Master configuration
+├── logs/openclaw.log              ← Gateway activity log
+├── workspace-henry/               ← Orchestrator
 │   ├── SOUL.md, AGENTS.md, MEMORY.md
 │   ├── memory/
 │   └── skills/ (delegate-task, daily-standup, rnd-meeting)
-├── workspace-coder/        ← Software Engineer
-│   ├── SOUL.md, AGENTS.md, MEMORY.md
-│   ├── memory/
-│   └── skills/ (vibe-code, debug-app, deploy-app)
-├── workspace-scout/        ← Research Analyst
-│   ├── SOUL.md, AGENTS.md, MEMORY.md
-│   ├── memory/
-│   └── skills/ (web-research, trend-monitor, news-digest)
-├── workspace-writer/       ← Content Creator
-│   ├── SOUL.md, AGENTS.md, MEMORY.md
-│   ├── memory/
-│   └── skills/ (write-memo, write-report, content-plan)
-├── workspace-watcher/      ← System Monitor
-│   ├── SOUL.md, AGENTS.md, MEMORY.md, HEARTBEAT.md
-│   ├── memory/
-│   └── skills/ (health-check, log-analyzer, session-cleanup)
-└── agents/ (henry, coder, scout, writer, watcher)
+├── workspace-coder/               ← Software Engineer
+├── workspace-scout/               ← Research Analyst
+├── workspace-writer/              ← Content Creator
+└── workspace-watcher/             ← System Monitor
+
+/opt/clawinc-dashboard/            (Shiny dashboard)
+├── app.py
+├── requirements.txt
+└── venv/
+
+/etc/systemd/system/
+├── openclaw.service               ← Gateway service
+└── clawinc-dashboard.service      ← Dashboard service
 ```
 
 ## Useful Commands
@@ -120,23 +149,30 @@ systemctl status openclaw
 systemctl restart openclaw
 journalctl -u openclaw -f
 
+systemctl status clawinc-dashboard
+systemctl restart clawinc-dashboard
+journalctl -u clawinc-dashboard -f
+
 # Agent management
-openclaw status
-openclaw agents list --bindings
-openclaw doctor
-openclaw cron list
+sudo -u clawuser openclaw status
+sudo -u clawuser openclaw cron list
+sudo -u clawuser openclaw doctor
 
 # Memory search
-openclaw memory search "query" --agent henry
+sudo -u clawuser openclaw memory search "query" --agent henry
 
-# Manual agent interaction
-openclaw chat henry "run the daily standup"
+# Manual agent trigger
+sudo -u clawuser openclaw chat henry "run the daily standup"
+
+# Get dashboard token
+sudo -u clawuser openclaw dashboard
 ```
 
 ## Security Notes
-- Gateway listens on 127.0.0.1 only (not publicly accessible)
-- Access only via SSH tunnel
-- All config files are chmod 600, directories chmod 700
-- UFW firewall allows only SSH
-- Systemd service runs with NoNewPrivileges=true, ProtectSystem=strict
-- Gateway auth token is 64 characters (saved in /root/.openclaw-gateway-token)
+- Gateway listens on 127.0.0.1 only — not publicly accessible
+- OpenClaw Control UI (port 18789): SSH tunnel + gateway auth token required
+- Shiny Dashboard (port 8050): publicly accessible, read-only (no write access to agents)
+- UFW allows: SSH (22) + dashboard (8050). All other ports blocked.
+- Config files: chmod 600 (owner read/write only)
+- Systemd: `NoNewPrivileges=true`, `ProtectSystem=strict`, `MemoryMax=512M`
+- Gateway runs as `clawuser`, not root

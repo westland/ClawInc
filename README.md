@@ -3,7 +3,7 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT 518 · J. Christopher Westland · University of Illinois at Chicago*
 
-[![Release](https://img.shields.io/github/v/release/westland/ClawInc)](https://github.com/westland/ClawInc/releases/tag/v0.45)
+[![Release](https://img.shields.io/github/v/release/westland/ClawInc)](https://github.com/westland/ClawInc/releases/tag/v0.56)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.3.31-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
@@ -29,6 +29,7 @@
 15. [Schema Fixes for OpenClaw 2026.x](#15-schema-fixes-for-openclaw-2026x)
 16. [Deployment Walkthrough](#16-deployment-walkthrough)
 17. [Class Usage Guide](#17-class-usage-guide)
+18. [Shiny Monitoring Dashboard](#18-shiny-monitoring-dashboard)
 
 ---
 
@@ -102,8 +103,9 @@ OpenClaw is open-source, self-hosted, and model-agnostic. You own your data, con
                             ▲
                             │  SSH Tunnel (port 18789)
                             │
-                     Browser Dashboard
-                  http://localhost:18789
+                 OpenClaw Control UI (admin)          Shiny Dashboard (monitoring)
+              http://localhost:18789                  http://137.184.15.207:8050
+              Token required · SSH tunnel             Public · no auth required
 ```
 
 ### Data Flow
@@ -175,7 +177,8 @@ Each agent is an isolated workspace with its own system prompt, memory, skills, 
 | **Process management** | systemd | Auto-restart on failure, runs at boot, resource limits |
 | **Messaging** | Telegram Bot API | Free, reliable, works on all devices, supports voice notes |
 | **Memory** | QMD (falls back to builtin) | Vector + full-text hybrid search across agent memories |
-| **Dashboard** | OpenClaw built-in (port 18789) | Real-time monitoring, config editor, log viewer |
+| **Control UI** | OpenClaw built-in (port 18789, SSH tunnel) | Chat with agents, session browser, config editor, log viewer |
+| **Monitoring dashboard** | Shiny for Python (port 8050, public) | Agent status cards, CPU/RAM/disk gauges, live log tail, cron schedule |
 | **Documentation** | R Markdown (Rmd → HTML/PDF) | Consistent with course toolchain |
 
 ---
@@ -189,10 +192,15 @@ ClawInc/
 ├── Student_Setup_Guide_ClawInc.Rmd        ← Complete student setup guide
 │                                            (knit to HTML in RStudio)
 │
+├── dashboard/                             ← Shiny for Python monitoring dashboard
+│   ├── app.py                             ← Dashboard application (port 8050)
+│   └── requirements.txt                  ← Python dependencies (shiny, psutil)
+│
 ├── deploy/                                ← All server installation files
 │   ├── README.md                          ← Deploy package quick-start
 │   ├── deploy-openclaw.sh                 ← Main deployment script
-│   ├── openclaw.service                   ← Systemd unit file
+│   ├── openclaw.service                   ← Systemd unit file (OpenClaw gateway)
+│   ├── clawinc-dashboard.service          ← Systemd unit file (Shiny dashboard)
 │   └── configs/
 │       ├── openclaw.json                  ← Master gateway config (template)
 │       ├── workspace-henry/
@@ -727,9 +735,10 @@ This cross-agent memory access is controlled at the routing layer — agents can
 
 ### Network Security
 
-- **Firewall:** UFW allows only SSH (port 22) inbound. No other ports are publicly accessible.
-- **Gateway binding:** OpenClaw listens on `127.0.0.1:18789` (loopback only). Even if the firewall were misconfigured, the gateway is not reachable from outside.
-- **Dashboard access:** Only via SSH tunnel — `ssh -L 18789:localhost:18789 root@SERVER_IP` — which provides end-to-end encryption.
+- **Firewall:** UFW allows SSH (port 22) and the Shiny dashboard (port 8050) inbound. The OpenClaw gateway is not publicly exposed.
+- **Gateway binding:** OpenClaw listens on `127.0.0.1:18789` (loopback only). Even if the firewall were misconfigured, the gateway is unreachable from outside.
+- **OpenClaw Control UI:** Only via SSH tunnel — `ssh -L 18789:localhost:18789 root@SERVER_IP` — then open the tokenized URL. The gateway auth token (`gateway.auth.token` in `openclaw.json`) is required to connect; the tokenized URL embeds it automatically.
+- **Shiny dashboard:** Publicly accessible on port 8050. It is read-only — it reads logs and config files but cannot send commands to agents or modify any state.
 - **Telegram:** All communication is outbound HTTPS to Telegram's servers. No inbound connections required.
 
 ### Process Security
@@ -943,16 +952,111 @@ openclaw memory search "marketing strategy" --agent henry
 ls ~/.openclaw/workspace-scout/memory/
 ```
 
-### Accessing the Dashboard
+### Accessing the Dashboards
 
+**Shiny Monitoring Dashboard** — open directly in any browser, no setup:
+```
+http://YOUR_DROPLET_IP:8050
+```
+Shows: agent cards, CPU/RAM/disk gauges, Telegram bot bindings, cron schedule, live log tail. Auto-refreshes every 30 seconds.
+
+**OpenClaw Control UI** — requires SSH tunnel (admin use):
 ```bash
-# On your local machine
-ssh -L 18789:localhost:18789 root@YOUR_DROPLET_IP
-# Then open in browser:
-# http://localhost:18789
+# Step 1 — open the tunnel on your local machine
+ssh -N -L 18789:127.0.0.1:18789 root@YOUR_DROPLET_IP
+
+# Step 2 — get the tokenized URL from the server
+sudo -u clawuser openclaw dashboard
+# Outputs: http://localhost:18789/#token=<your-token>
+
+# Step 3 — open that URL in your browser
+```
+The Control UI lets you chat with agents directly, browse session history, edit agent workspaces, and view real-time logs.
+
+---
+
+## 18. Shiny Monitoring Dashboard
+
+The repository includes a purpose-built monitoring dashboard (`dashboard/app.py`) built with [Shiny for Python](https://shiny.posit.co/py/). It runs as a separate systemd service on port 8050 and is publicly accessible without authentication.
+
+### What It Shows
+
+| Panel | Data source | Notes |
+|-------|-------------|-------|
+| Gateway Service | `systemctl is-active openclaw` | Green = active, red = down |
+| CPU | `psutil.cpu_percent()` | Live percentage with color bar |
+| RAM | `psutil.virtual_memory()` | Used / total GB + bar |
+| Disk | `psutil.disk_usage('/')` | Used / total GB + bar |
+| Process Info | `psutil.process_iter()` | Gateway PID, uptime, RSS memory |
+| Telegram Bots | `openclaw.json` accounts + bindings | Shows account → agent routing |
+| Agent Cards | `openclaw.json` agents list + workspace dirs | Model, thinking level, workspace init state |
+| Cron Jobs | `openclaw cron list` | Schedule, last run, next run, status |
+| Activity Log | `~/.openclaw/logs/openclaw.log` | Last 60 lines, auto-scrolled |
+
+Auto-refreshes every 30 seconds. Manual **Refresh Now** button for immediate update.
+
+### Architecture
+
+```
+Browser (any device)
+    ↓ HTTP port 8050
+Shiny for Python (uvicorn)
+    ├── reads /home/clawuser/.openclaw/openclaw.json
+    ├── reads /home/clawuser/.openclaw/logs/openclaw.log
+    ├── reads /home/clawuser/.openclaw/workspace-*/
+    ├── subprocess: systemctl is-active openclaw
+    ├── subprocess: openclaw cron list
+    └── psutil: CPU, RAM, disk, process list
 ```
 
-The dashboard shows live agent status, session history, cron job schedule, memory contents, and real-time logs.
+The dashboard is **read-only** — it observes but does not control. API keys and bot tokens in the config are never exposed in the UI.
+
+### Deployment
+
+The dashboard is deployed as `/etc/systemd/system/clawinc-dashboard.service` using a Python venv at `/opt/clawinc-dashboard/venv/`.
+
+```bash
+# Install (on a fresh server, after deploy-openclaw.sh)
+apt-get install -y python3.12-venv
+python3 -m venv /opt/clawinc-dashboard/venv
+/opt/clawinc-dashboard/venv/bin/pip install shiny psutil
+cp dashboard/app.py /opt/clawinc-dashboard/
+cp deploy/clawinc-dashboard.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now clawinc-dashboard
+ufw allow 8050/tcp
+```
+
+```bash
+# Service management
+systemctl status clawinc-dashboard
+systemctl restart clawinc-dashboard
+journalctl -u clawinc-dashboard -f
+```
+
+### OpenClaw Control UI vs. Shiny Dashboard
+
+| | Shiny Dashboard | OpenClaw Control UI |
+|--|-----------------|---------------------|
+| **URL** | `http://IP:8050` | `http://localhost:18789/#token=...` |
+| **Access** | Public, no auth | SSH tunnel + gateway token |
+| **Purpose** | Read-only monitoring | Full admin control |
+| **Chat with agents** | No | Yes |
+| **Edit config** | No | Yes |
+| **View sessions** | No | Yes |
+| **Best for** | Students checking bot status | Instructor/admin operations |
+
+### Gateway Token for Control UI
+
+OpenClaw's built-in dashboard requires a gateway auth token. To get the tokenized URL:
+
+```bash
+# On the server
+sudo -u clawuser openclaw dashboard
+# Outputs: http://localhost:18789/#token=<token>
+```
+
+The token is stored in `~/.openclaw/openclaw.json` under `gateway.auth.token`. It is stable across restarts. The CLI also uses it via `gateway.remote.token` (set to the same value) so commands like `openclaw cron list` work without manually specifying a token.
 
 ---
 
