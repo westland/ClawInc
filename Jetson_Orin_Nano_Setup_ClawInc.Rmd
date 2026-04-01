@@ -4,6 +4,10 @@ subtitle: "Installing OpenClaw Multi-Agent System from GitHub"
 author: "MKT 518 · J. Christopher Westland · University of Illinois at Chicago"
 date: "`r Sys.Date()`"
 output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    highlight: kate
   html_document:
     toc: true
     toc_depth: 3
@@ -11,10 +15,6 @@ output:
     theme: flatly
     highlight: kate
     code_folding: show
-  pdf_document:
-    toc: true
-    toc_depth: 3
-    highlight: kate
 ---
 
 ```{r setup, include=FALSE}
