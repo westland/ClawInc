@@ -1,0 +1,427 @@
+---
+title: "ClawInc on NVIDIA Jetson Orin Nano"
+subtitle: "Installing OpenClaw Multi-Agent System from GitHub"
+author: "MKT 518 · J. Christopher Westland · University of Illinois at Chicago"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    theme: flatly
+    highlight: kate
+    code_folding: show
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+---
+
+# Overview
+
+The ClawInc OpenClaw stack runs on the NVIDIA Jetson Orin Nano — and in several respects it runs *better* than the DigitalOcean droplet used in the standard deployment. The Orin Nano has 8 GB of unified memory (versus 1 GB on the base droplet), an ARM64 CPU compatible with all required packages, and a built-in GPU available for future local-model extensions.
+
+The only meaningful differences from the standard droplet install are:
+
+1. **OS version.** JetPack 6.x ships Ubuntu 22.04, not 24.04. One PPA is needed for Python 3.12.
+2. **Networking.** The Jetson is on your local network, not a public cloud IP. Telegram bots still work perfectly (long-polling is outbound). The Shiny dashboard is LAN-accessible by default; Tailscale makes it reachable from anywhere.
+3. **Swap.** Not needed on the 8 GB model. Keep it on the 4 GB model.
+
+---
+
+# Compatibility Matrix
+
+| Component | DO Droplet | Jetson Orin Nano | Compatible |
+|-----------|-----------|-------------------|:----------:|
+| Node.js 24 | x86\_64 | aarch64 | Yes |
+| OpenClaw (npm) | x86\_64 | aarch64 | Yes — pure JavaScript |
+| Shiny for Python | x86\_64 | aarch64 | Yes — ARM64 pip wheels |
+| psutil | x86\_64 | aarch64 | Yes |
+| systemd | Ubuntu 24.04 | Ubuntu 22.04 (JetPack 6) | Yes |
+| Telegram long-polling | public IP | local network | Yes — outbound HTTPS only |
+| Shiny dashboard (public) | port 8050 open | LAN only by default | Partial — see Section 6 |
+
+---
+
+# Before You Begin
+
+## Check Your JetPack Version
+
+```bash
+cat /etc/nv_tegra_release
+# or
+dpkg -l | grep jetpack
+```
+
+- **JetPack 6.x** = Ubuntu 22.04 (recommended — these instructions target this version)
+- **JetPack 5.x** = Ubuntu 20.04 (also works; same steps apply)
+
+## 4 GB vs 8 GB Model
+
+| | 4 GB model | 8 GB model |
+|--|-----------|-----------|
+| Keep 2 GB swap step | Yes | Optional |
+| All 5 agents comfortable | Tight | Yes |
+| `MemoryMax` in systemd service | Keep at 512 M | Can raise to 1 G |
+
+The Orin Nano uses **unified memory** — the CPU and GPU share the same pool — so 8 GB goes a long way even with Node.js running five concurrent LLM sessions.
+
+---
+
+# Step 1 — Clone the Repository
+
+Install Git if not already present, then clone the ClawInc repo directly onto the Jetson.
+
+```bash
+sudo apt-get install -y git
+git clone https://github.com/westland/ClawInc.git
+cd ClawInc
+```
+
+All subsequent steps assume your working directory is `~/ClawInc`.
+
+---
+
+# Step 2 — Fill In Your Credentials
+
+Open the deploy script and edit the **CONFIGURATION** block at the top (lines 5–15). Replace every `YOUR_*` placeholder with your real keys.
+
+```bash
+nano deploy/deploy-openclaw.sh
+```
+
+You will need:
+
+- **Anthropic API key** — from [console.anthropic.com](https://console.anthropic.com)
+- **Four Telegram bot tokens** — one each for Henry, Coder, Scout, and Writer (create via [@BotFather](https://t.me/BotFather))
+
+```bash
+# CONFIGURATION — fill these in before running
+ANTHROPIC_API_KEY="sk-ant-..."
+
+TELEGRAM_TOKEN_HENRY="123456:ABC..."
+TELEGRAM_TOKEN_CODER="123456:ABC..."
+TELEGRAM_TOKEN_SCOUT="123456:ABC..."
+TELEGRAM_TOKEN_WRITER="123456:ABC..."
+TELEGRAM_TOKEN_WATCHER="123456:ABC..."   # Watcher has no Telegram bot; token optional
+```
+
+Save and exit (`Ctrl+O`, `Ctrl+X`).
+
+---
+
+# Step 3 — Run the Deploy Script
+
+The script was written for Ubuntu 24.04 but is fully compatible with 22.04. Run it as root.
+
+```bash
+sudo bash deploy/deploy-openclaw.sh
+```
+
+The script will:
+
+- Create 2 GB swap (skip on 8 GB model if preferred — see note at start of script)
+- Install Node.js 24 via NodeSource (ARM64 build)
+- Install OpenClaw globally via npm
+- Create the `clawuser` service account
+- Copy all five agent workspaces to `/home/clawuser/.openclaw/`
+- Substitute your API keys into the config
+- Install and start the `openclaw.service` systemd unit
+- Add six cron jobs (morning research, daily memo, overnight dev, health checks, R&D, cleanup)
+
+**Expected runtime:** 8–12 minutes (dominated by `apt-get update` and `npm install -g openclaw`).
+
+> **Note:** If the script errors on a step involving `python3.12`, that is expected on Ubuntu 22.04.
+> Continue to Step 4 — the OpenClaw gateway itself does not require Python.
+
+---
+
+# Step 4 — Install Python 3.12 for the Shiny Dashboard
+
+Ubuntu 22.04 ships Python 3.10 by default. Python 3.12 is available via the **deadsnakes PPA**.
+
+```bash
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt-get update
+sudo apt-get install -y python3.12 python3.12-venv python3.12-distutils
+```
+
+Now create the dashboard virtual environment and install dependencies:
+
+```bash
+sudo mkdir -p /opt/clawinc-dashboard
+sudo python3.12 -m venv /opt/clawinc-dashboard/venv
+sudo /opt/clawinc-dashboard/venv/bin/pip install shiny psutil
+```
+
+Copy the dashboard app from the cloned repo:
+
+```bash
+sudo cp ~/ClawInc/dashboard/app.py /opt/clawinc-dashboard/
+```
+
+Install and start the systemd service:
+
+```bash
+sudo cp ~/ClawInc/deploy/clawinc-dashboard.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable clawinc-dashboard
+sudo systemctl start clawinc-dashboard
+```
+
+---
+
+# Step 5 — Configure the Firewall
+
+```bash
+sudo ufw allow ssh
+sudo ufw allow 8050/tcp    # Shiny dashboard
+sudo ufw --force enable
+sudo ufw status
+```
+
+Expected output:
+
+```
+Status: active
+
+To                    Action      From
+--                    ------      ----
+22/tcp                ALLOW       Anywhere
+8050/tcp              ALLOW       Anywhere
+```
+
+> The OpenClaw gateway (port 18789) is **not** opened in UFW — it binds to
+> `127.0.0.1` only and is accessed via SSH tunnel. This matches the security
+> model of the cloud deployment.
+
+---
+
+# Step 6 — Verify Everything Is Running
+
+```bash
+systemctl is-active openclaw            # should print: active
+systemctl is-active clawinc-dashboard   # should print: active
+
+sudo -u clawuser openclaw status
+sudo -u clawuser openclaw cron list
+```
+
+The `openclaw cron list` command should display all six scheduled jobs with their next run times.
+
+Check memory and swap:
+
+```bash
+free -h
+# 8 GB model — no swap needed
+# 4 GB model — should show 2 GB swap from deploy script
+```
+
+---
+
+# Step 7 — Access Your Dashboards
+
+## Find the Jetson's Local IP
+
+```bash
+ip addr show | grep "inet " | grep -v 127.0.0.1
+# Example output: inet 192.168.1.42/24 brd 192.168.1.255 scope global eth0
+```
+
+## Shiny Monitoring Dashboard
+
+Open directly in any browser on the same network — no SSH, no token required:
+
+```
+http://JETSON_LAN_IP:8050
+```
+
+For example: `http://192.168.1.42:8050`
+
+The dashboard shows all five agent cards, CPU/RAM/disk gauges, Telegram bot bindings, cron schedule, and a live activity log. It auto-refreshes every 30 seconds.
+
+## OpenClaw Control UI (Admin)
+
+The Control UI requires an SSH tunnel because the gateway is bound to localhost.
+
+**Step 1** — Open the tunnel from your laptop (leave this terminal open):
+
+```bash
+ssh -N -L 18789:127.0.0.1:18789 YOUR_USERNAME@JETSON_LAN_IP
+```
+
+**Step 2** — Get the tokenized URL from the Jetson:
+
+```bash
+sudo -u clawuser openclaw dashboard
+# Outputs: http://localhost:18789/#token=<your-token>
+```
+
+**Step 3** — Open that URL in your browser. The token is embedded — no manual paste needed.
+
+---
+
+# Step 8 — Remote Access Outside Your LAN (Optional)
+
+By default the Jetson is only accessible on your local network. For classroom use where students need to reach their bots from anywhere, **Tailscale** is the simplest solution.
+
+## Install Tailscale
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up
+tailscale ip -4    # prints something like 100.x.x.x
+```
+
+Sign in with a free Tailscale account. Once connected, every device on your Tailscale network can reach the Jetson at its stable Tailscale IP — no router port-forwarding required.
+
+## Access With Tailscale
+
+| Resource | URL |
+|----------|-----|
+| Shiny dashboard | `http://100.x.x.x:8050` |
+| OpenClaw Control UI | SSH tunnel via Tailscale IP, then `localhost:18789` |
+| SSH | `ssh username@100.x.x.x` |
+
+> **Telegram bots are unaffected by any of this.** Long-polling is outbound HTTPS
+> from the Jetson to Telegram's servers. The bots respond to messages regardless
+> of whether Tailscale is installed.
+
+---
+
+# Useful Commands
+
+## Service Management
+
+```bash
+# OpenClaw gateway
+systemctl status openclaw
+systemctl restart openclaw
+journalctl -u openclaw -f          # tail logs in real time
+
+# Shiny dashboard
+systemctl status clawinc-dashboard
+systemctl restart clawinc-dashboard
+journalctl -u clawinc-dashboard -f
+```
+
+## Agent Management
+
+```bash
+sudo -u clawuser openclaw status
+sudo -u clawuser openclaw cron list
+sudo -u clawuser openclaw doctor
+
+# Get dashboard tokenized URL
+sudo -u clawuser openclaw dashboard
+
+# Search an agent's memory
+sudo -u clawuser openclaw memory search "marketing strategy" --agent henry
+
+# Manually trigger an agent
+sudo -u clawuser openclaw chat henry "run the daily standup"
+```
+
+## Updating from GitHub
+
+To pull the latest version of the repo and restart services:
+
+```bash
+cd ~/ClawInc
+git pull origin main
+
+# If dashboard/app.py changed:
+sudo cp dashboard/app.py /opt/clawinc-dashboard/
+sudo systemctl restart clawinc-dashboard
+
+# If deploy/clawinc-dashboard.service changed:
+sudo cp deploy/clawinc-dashboard.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl restart clawinc-dashboard
+```
+
+---
+
+# Differences Summary: Jetson vs DigitalOcean
+
+| | DigitalOcean Droplet | Jetson Orin Nano |
+|--|---------------------|-----------------|
+| **Architecture** | x86\_64 | aarch64 |
+| **OS** | Ubuntu 24.04 | Ubuntu 22.04 (JetPack 6) |
+| **RAM** | 1 GB + 2 GB swap | 4 or 8 GB unified |
+| **Python 3.12** | Available natively | Requires deadsnakes PPA |
+| **Public IP** | Yes | No (LAN only by default) |
+| **Telegram bots** | Work immediately | Work immediately (outbound HTTPS) |
+| **Shiny dashboard** | Public on port 8050 | LAN on port 8050; Tailscale for remote |
+| **Monthly cost** | \$6 | \$0 (hardware already owned) |
+| **GPU** | None | 1024 CUDA cores (future use) |
+
+---
+
+# Troubleshooting
+
+## OpenClaw service fails to start
+
+```bash
+journalctl -u openclaw -n 50 --no-pager
+```
+
+The most common cause is a config validation error. Check with:
+
+```bash
+sudo -u clawuser openclaw config validate
+```
+
+## `openclaw cron list` returns "gateway token missing"
+
+The gateway token needs to be set in both `auth.token` and `remote.token` in `openclaw.json`. Run:
+
+```bash
+TOKEN=$(python3 -c "
+import json
+with open('/home/clawuser/.openclaw/openclaw.json') as f:
+    d = json.load(f)
+print(d['gateway']['auth']['token'])
+")
+echo "Token is: $TOKEN"
+```
+
+Then edit `/home/clawuser/.openclaw/openclaw.json` and ensure `gateway.remote.token` matches `gateway.auth.token`.
+
+## Shiny dashboard not reachable
+
+```bash
+systemctl is-active clawinc-dashboard
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8050/
+ufw status | grep 8050
+```
+
+All three should show: `active`, `200`, and a ALLOW rule for port 8050.
+
+## Node.js install fails on ARM64
+
+Verify the architecture before installing:
+
+```bash
+uname -m    # should print: aarch64
+```
+
+NodeSource explicitly supports aarch64 for Node.js 24. If the install script fails, try the manual method:
+
+```bash
+NODE_VERSION=24
+ARCH=arm64
+curl -fsSL https://nodejs.org/dist/latest-v${NODE_VERSION}.x/node-v${NODE_VERSION}.*-linux-${ARCH}.tar.xz \
+  -o /tmp/node.tar.xz
+tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1
+```
+
+---
+
+*Built with [OpenClaw](https://openclaw.dev) · GitHub: [westland/ClawInc](https://github.com/westland/ClawInc)*
