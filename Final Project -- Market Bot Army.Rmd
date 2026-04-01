@@ -1,0 +1,1078 @@
+---
+title: "OpenClaw Build on CO Droplet for Marketing"
+author: "J. Christopher Westland"
+date: "2026-03-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Yes, you can absolutely install OpenClaw on a Digital Ocean Droplet (and it’s actually a very common and well-supported way to run it 24/7). OpenClaw is an open-source autonomous AI agent (formerly known as Clawdbot/Moltbot) that you self-host. It turns LLMs (OpenAI, Anthropic, Gemini, local models, etc.) into a real action-taking assistant that lives in your chat apps (WhatsApp, Telegram, Discord, Slack, Signal, iMessage, etc.). You give it text or voice commands and it can:
+
+-   Build / create new agents
+
+-   Direct those agents (or swarms of them)
+
+-   Run shell commands, browser automation, email/calendar management, file ops, API calls, etc.
+
+-   Remember everything persistently and work autonomously with a heartbeat scheduler
+
+Installation on Digital Ocean DropletDigital Ocean officially supports OpenClaw in multiple easy ways:
+
+1.  Easiest: Use the 1-Click Marketplace app in the Droplet creation wizard (just search for OpenClaw).
+
+2.  App Platform deployment (one-click button on their site).
+
+3.  Manual on Ubuntu Droplet (recommended minimum: 1–2 vCPU / 4 GB RAM).
+
+The official install is dead simple on Linux:
+
+bash
+
+```         
+curl -fsSL https://openclaw.ai/install.sh | bash
+```
+
+Then run openclaw doctor (the setup wizard) to connect your LLM keys, chat apps, etc. There are dedicated Digital Ocean tutorials and YouTube guides that walk you through the whole thing in \<10 minutes (including securing it with Tailscale or firewalls).
+
+digitalocean.com
+
+Once running on the Droplet it stays online 24/7, exactly what you want for persistent agents.Text + Verbal Commands
+
+-   Text: You just message it like a friend in WhatsApp/Telegram/etc. It replies and acts.
+
+-   Verbal: It fully supports voice notes — it automatically transcribes them (speech-to-text) and treats them as commands. You can also get spoken replies back via TTS if you want. On mobile it even has native speak/listen capabilities.
+
+Building & Directing AgentsYes — this is one of OpenClaw’s killer features.\
+You (or the main agent) can:
+
+-   Run openclaw agents add \<name\> --model claude-3.5-sonnet --workspace ... (or do it via chat commands)
+
+-   Create multiple specialized agents (e.g. “researcher”, “coder”, “email-bot”, “CEO-agent”, etc.)
+
+-   Bind them to different chat channels or let them talk to each other
+
+-   Give high-level instructions like “Build me a new agent that monitors my inbox and replies to low-priority emails” and it will actually create and configure it
+
+It has built-in multi-agent orchestration, persistent memory (stored as Markdown on disk), and a huge plugin/skill system so agents can do real work.
+
+meta-intelligence.tech
+
+Quick Start Summary
+
+1.  Spin up an Ubuntu Droplet
+
+2.  Run the install script
+
+3.  Run the openclaw doctor wizard
+
+4.  Connect your messaging apps + LLM API keys
+
+5.  Start chatting/voice-noting: “Create a new coding agent named dev-bot that works in my \~/projects folder”
+
+That’s it — you now have a lobster-powered AI swarm that lives in the cloud and obeys your text/voice commands.
+
+## Details
+
+Here's the exact step-by-step guide for a fresh Digital Ocean Droplet, plus my recommendation for the cheapest size that works great for your use case (building agents, directing swarms, text/voice commands via chat apps).Recommended Droplet Size (Cheapest That Works Well)
+
+-   Best starter: Basic • 2 vCPU / 4 GB RAM / 80 GB SSD (\~\$24–28/month depending on region and promotions).\
+    This is the sweet spot for most people running OpenClaw persistently. It handles multiple agents, skills, browser automation, and moderate concurrent tasks without swapping or slowing down.
+
+    docs.digitalocean.com
+
+-   Absolute cheapest that can work (with some care): 1 vCPU / 2 GB RAM (\~\$12–15/month).\
+    Many users run OpenClaw on this size for light personal use (1–3 agents, basic skills). You may need to add swap space if you hit memory limits during npm installs or heavy agent tasks. Not ideal if you plan to run several agents or heavy tools simultaneously.
+
+-   Avoid: 1 GB RAM droplets — they frequently run into out-of-memory issues during setup or when using skills.
+
+If you're just experimenting, start with the 2 vCPU / 4 GB. You can resize the droplet upward later with zero downtime.Easiest Option: Use the 1-Click Marketplace App (Recommended for most users)
+
+1.  Log in to DigitalOcean → Go to Marketplace → Search for OpenClaw (or "Clawdbot" in older listings).
+
+2.  Click Create OpenClaw Droplet.
+
+3.  Choose:
+
+    -   Region closest to you
+
+    -   Size: 2 vCPU / 4 GB RAM (or the \$12 tier if testing)
+
+    -   Ubuntu 24.04 (it will be pre-selected)
+
+    -   Add your SSH key (highly recommended) or set a root password
+
+4.  Click Create Droplet.
+
+5.  Once it's running, SSH in:
+
+    bash
+
+    ```         
+    ssh root@YOUR_DROPLET_IP
+    ```
+
+6.  The 1-Click image usually has OpenClaw pre-installed and running as a non-root user (openclaw). Follow the on-screen instructions or run:
+
+    bash
+
+    ```         
+    su - openclaw openclaw onboard   # or openclaw doctor
+    ```
+
+    The wizard will guide you through adding your LLM API keys (Claude, OpenAI, etc.), connecting messaging apps (Telegram/WhatsApp/etc.), and setting up the daemon.
+
+Manual Fresh Droplet Installation (More Control)If you prefer full control or the 1-Click isn't available:
+
+1.  Create a new Droplet:
+
+    -   Image: Ubuntu 24.04 LTS (regular, not Marketplace)
+
+    -   Size: 2 vCPU / 4 GB RAM recommended
+
+    -   Add your SSH key
+
+    -   Create it
+
+2.  SSH in as root:
+
+    bash
+
+    ```         
+    ssh root@YOUR_DROPLET_IP
+    ```
+
+3.  Update the system:
+
+    bash
+
+    ```         
+    apt update && apt upgrade -y
+    ```
+
+4.  Install Node.js (v22+ or 24 recommended):
+
+    bash
+
+    ```         
+    curl -fsSL https://deb.nodesource.com/setup_24.x | bash - apt install -y nodejs
+    ```
+
+5.  Install OpenClaw:
+
+    bash
+
+    ```         
+    curl -fsSL https://openclaw.ai/install.sh | bash
+    ```
+
+6.  Verify:
+
+    bash
+
+    ```         
+    openclaw --version
+    ```
+
+7.  Run the onboarding wizard (this sets up everything interactively):
+
+    bash
+
+    ```         
+    openclaw onboard --install-daemon
+    ```
+
+    -   Follow the prompts: add LLM provider keys, choose messaging channels (WhatsApp, Telegram, etc.), set up the gateway, enable the systemd daemon so it runs 24/7.
+
+8.  (Optional but recommended for low-RAM droplets) Add swap space if using 2 GB:
+
+    bash
+
+    ```         
+    fallocate -l 2G /swapfile chmod 600 /swapfile mkswap /swapfile swapon /swapfile echo '/swapfile none swap sw 0 0' >> /etc/fstab
+    ```
+
+After onboarding, OpenClaw runs as a background service. You can check status with:
+
+bash
+
+```         
+systemctl status openclaw
+```
+
+Next Steps After Installation
+
+-   Connect your chat apps (the wizard helps).
+
+-   Start chatting: Send a message to your OpenClaw bot like “Create a new coding agent named dev-bot”.
+
+-   Install skills: npx clawhub\@latest install \<skill-name\> (run as the openclaw user).
+
+-   For voice: Just send voice notes — it transcribes and acts on them automatically.
+
+Security tip: After setup, consider restricting access with a VPN (Tailscale/Twingate) or firewall rules so only you can reach the gateway. Never expose it directly to the internet if possible.
+
+## Add Features
+
+Yes — here's your fully augmented, ready-to-run step-by-step guide for a fresh Digital Ocean Droplet, now including:
+
+-   Telegram interface (clean mobile text + voice notes)
+
+-   Anthropic API (Claude models as the brain — best-in-class reasoning)
+
+-   Best tool for web scraping that avoids anti-scrape protections: Firecrawl (official OpenClaw integration) + Playwright MCP as a powerful local fallback.
+
+Firecrawl is currently the best overall choice in the OpenClaw ecosystem for 2026: it gives you JS rendering, stealth proxies, automatic bot circumvention, clean LLM-ready markdown output, and crawling — all without you managing Chromium headaches on the droplet. Playwright MCP is excellent for fully interactive browser automation (clicking, forms, screenshots) when you need it local.Recommended Droplet Size (Still the Sweet Spot)
+
+-   2 vCPU / 4 GB RAM / 80 GB SSD (\~\$24–28/mo) — handles Claude + Telegram + Firecrawl/Playwright + multiple agents without issues.
+
+-   (1 vCPU / 2 GB works for light use but add 2 GB swap if you install Playwright.)
+
+Manual Fresh Droplet Installation (Augmented with Telegram + Anthropic + Scraping)
+
+1.  Create the Droplet\
+    Ubuntu 24.04 LTS → 2 vCPU / 4 GB RAM → add your SSH key → Create.
+
+2.  SSH in as root
+
+    bash
+
+    ```         
+    ssh root@YOUR_DROPLET_IP
+    ```
+
+3.  Update system & install basics
+
+    bash
+
+    ```         
+    apt update && apt upgrade -y apt install -y curl git unzip
+    ```
+
+4.  Install Node.js 24 (required)
+
+    bash
+
+    ```         
+    curl -fsSL https://deb.nodesource.com/setup_24.x | bash - apt install -y nodejs
+    ```
+
+5.  Install OpenClaw
+
+    bash
+
+    ```         
+    curl -fsSL https://openclaw.ai/install.sh | bash
+    ```
+
+6.  Run the onboard wizard with Anthropic pre-filled (this is the magic step)\
+    First, get your Anthropic API key:
+
+    -   Go to <https://console.anthropic.com/settings/keys>
+
+    -   Create a new key → copy it
+
+    Now run:
+
+    bash
+
+    ```         
+    openclaw onboard --install-daemon --anthropic-api-key "sk-ant-XXXXXXXXXXXXXXXXXXXXXXXX"
+    ```
+
+    During the interactive wizard:
+
+    -   When it asks for channels, choose Telegram.
+
+    -   It will tell you to create a bot:
+
+        -   Open Telegram → search
+
+            \@BotFather
+
+        -   Send /newbot
+
+        -   Give your bot a name (e.g. “My Claw Assistant”)
+
+        -   Username must end with \_bot (e.g. myclawbot_bot)
+
+        -   BotFather gives you a token → copy and paste it back into the OpenClaw wizard
+
+    -   Finish the rest of the wizard (it sets up Claude as default model, persistent memory, etc.).
+
+7.  Secure the Telegram pairing (required for your personal access)
+
+    bash
+
+    ```         
+    systemctl restart openclaw   # if not already running openclaw pairing list telegram     # shows pending codes openclaw pairing approve telegram <CODE>   # approve your own chat
+    ```
+
+    (Pairing codes expire after 1 hour — do this quickly.)
+
+8.  Install the best web-scraping tools (run these as the openclaw user or after su - openclaw)First, install ClawHub CLI (if not already present):
+
+    bash
+
+    ```         
+    npm install -g clawhub
+    ```
+
+    Primary recommendation — Firecrawl (best for avoiding anti-scrape + JS-heavy sites):
+
+    bash
+
+    ```         
+    clawhub install firecrawl
+    ```
+
+    -   Get a free API key at <https://firecrawl.dev> (generous free tier, stealth proxies included).
+
+    -   Add the key when prompted or via openclaw skills config firecrawl --api-key YOUR_KEY.
+
+    -   Your agents can now do things like scrape <https://example.com,> crawl, search, or run browser sessions with automatic anti-bot evasion.
+
+    Strong local alternative — Playwright MCP (full interactive browser automation):
+
+    bash
+
+    ```         
+    clawhub install playwright-mcp
+    ```
+
+    (This also pulls in the Playwright Scraper skill automatically for anti-bot protection.)(Optional ultra-stealth) Scrapling skill for the toughest Cloudflare/Turnstile sites:
+
+    bash
+
+    ```         
+    clawhub install scrapling
+    ```
+
+9.  (Optional but recommended) Add swap for Playwright/Firecrawl browser mode (if you chose the 2 GB droplet)
+
+    bash
+
+    ```         
+    fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile echo '/swapfile none swap sw 0 0' >> /etc/fstab
+    ```
+
+10. Check everything
+
+    bash
+
+    ```         
+    openclaw channels status          # should show Telegram active openclaw models status            # should show Anthropic/Claude openclaw skills list              # confirm Firecrawl + Playwright are loaded systemctl status openclaw
+    ```
+
+You're Done!Now just message your Telegram bot (text or voice note) things like:
+
+-   “Build me a new research agent”
+
+-   “Scrape the latest news from nytimes.com and summarize”
+
+-   “Create a coding agent that can browse GitHub and open PRs”
+
+The agent lives 24/7 on your droplet, uses Claude for high-quality reasoning, talks to you via Telegram, and has powerful scraping that actually beats most anti-bot protections.Security tip: Run openclaw doctor --fix after everything, and consider adding Tailscale or UFW firewall rules so only your IP (or VPN) can reach the gateway.Want me to add:
+
+-   Exact UFW firewall commands?
+
+-   Tailscale VPN setup for extra security?
+
+-   How to make Firecrawl the default web_fetch tool?
+
+-   Or switch to the 1-Click Marketplace version with these same additions?
+
+Just say the word and I’ll give you the exact extra commands! ![🦞](https://abs-0.twimg.com/emoji/v2/svg/1f99e.svg "Lobster"){alt="🦞"}
+
+See new posts
+
+can i install openclaw on a digital ocean droplet so that I can actually give text or verbal commands to direct the openclaw to build agents and direct them to do things
+
+Thought for 22s
+
+Yes, you can absolutely install OpenClaw on a Digital Ocean Droplet (and it’s actually a very common and well-supported way to run it 24/7). OpenClaw is an open-source autonomous AI agent (formerly known as Clawdbot/Moltbot) that you self-host. It turns LLMs (OpenAI, Anthropic, Gemini, local models, etc.) into a real action-taking assistant that lives in your chat apps (WhatsApp, Telegram, Discord, Slack, Signal, iMessage, etc.). You give it text or voice commands and it can:
+
+-   Build / create new agents
+
+-   Direct those agents (or swarms of them)
+
+-   Run shell commands, browser automation, email/calendar management, file ops, API calls, etc.
+
+-   Remember everything persistently and work autonomously with a heartbeat scheduler
+
+Installation on Digital Ocean DropletDigital Ocean officially supports OpenClaw in multiple easy ways:
+
+1.  Easiest: Use the 1-Click Marketplace app in the Droplet creation wizard (just search for OpenClaw).
+
+2.  App Platform deployment (one-click button on their site).
+
+3.  Manual on Ubuntu Droplet (recommended minimum: 1–2 vCPU / 4 GB RAM).
+
+The official install is dead simple on Linux:
+
+bash
+
+```         
+curl -fsSL https://openclaw.ai/install.sh | bash
+```
+
+Then run openclaw doctor (the setup wizard) to connect your LLM keys, chat apps, etc. There are dedicated Digital Ocean tutorials and YouTube guides that walk you through the whole thing in \<10 minutes (including securing it with Tailscale or firewalls).
+
+digitalocean.com
+
+Once running on the Droplet it stays online 24/7, exactly what you want for persistent agents.Text + Verbal Commands
+
+-   Text: You just message it like a friend in WhatsApp/Telegram/etc. It replies and acts.
+
+-   Verbal: It fully supports voice notes — it automatically transcribes them (speech-to-text) and treats them as commands. You can also get spoken replies back via TTS if you want. On mobile it even has native speak/listen capabilities.
+
+Building & Directing AgentsYes — this is one of OpenClaw’s killer features.\
+You (or the main agent) can:
+
+-   Run openclaw agents add \<name\> --model claude-3.5-sonnet --workspace ... (or do it via chat commands)
+
+-   Create multiple specialized agents (e.g. “researcher”, “coder”, “email-bot”, “CEO-agent”, etc.)
+
+-   Bind them to different chat channels or let them talk to each other
+
+-   Give high-level instructions like “Build me a new agent that monitors my inbox and replies to low-priority emails” and it will actually create and configure it
+
+It has built-in multi-agent orchestration, persistent memory (stored as Markdown on disk), and a huge plugin/skill system so agents can do real work.
+
+meta-intelligence.tech
+
+Quick Start Summary
+
+1.  Spin up an Ubuntu Droplet
+
+2.  Run the install script
+
+3.  Run the openclaw doctor wizard
+
+4.  Connect your messaging apps + LLM API keys
+
+5.  Start chatting/voice-noting: “Create a new coding agent named dev-bot that works in my \~/projects folder”
+
+That’s it — you now have a lobster-powered AI swarm that lives in the cloud and obeys your text/voice commands.If you want, I can give you the exact step-by-step commands for a fresh Droplet or recommend the cheapest droplet size that works great. Just say the word! ![🦞](https://abs-0.twimg.com/emoji/v2/svg/1f99e.svg "Lobster"){alt="🦞"}
+
+2 web pages
+
+Explain multi-agent orchestration
+
+Compare OpenClaw to AutoGPT
+
+give you the exact step-by-step commands for a fresh Droplet or recommend the cheapest droplet size that works great.
+
+Searching the web
+
+49 results
+
+Here's the exact step-by-step guide for a fresh Digital Ocean Droplet, plus my recommendation for the cheapest size that works great for your use case (building agents, directing swarms, text/voice commands via chat apps).Recommended Droplet Size (Cheapest That Works Well)
+
+-   Best starter: Basic • 2 vCPU / 4 GB RAM / 80 GB SSD (\~\$24–28/month depending on region and promotions).\
+    This is the sweet spot for most people running OpenClaw persistently. It handles multiple agents, skills, browser automation, and moderate concurrent tasks without swapping or slowing down.
+
+    docs.digitalocean.com
+
+-   Absolute cheapest that can work (with some care): 1 vCPU / 2 GB RAM (\~\$12–15/month).\
+    Many users run OpenClaw on this size for light personal use (1–3 agents, basic skills). You may need to add swap space if you hit memory limits during npm installs or heavy agent tasks. Not ideal if you plan to run several agents or heavy tools simultaneously.
+
+-   Avoid: 1 GB RAM droplets — they frequently run into out-of-memory issues during setup or when using skills.
+
+If you're just experimenting, start with the 2 vCPU / 4 GB. You can resize the droplet upward later with zero downtime.Easiest Option: Use the 1-Click Marketplace App (Recommended for most users)
+
+1.  Log in to DigitalOcean → Go to Marketplace → Search for OpenClaw (or "Clawdbot" in older listings).
+
+2.  Click Create OpenClaw Droplet.
+
+3.  Choose:
+
+    -   Region closest to you
+
+    -   Size: 2 vCPU / 4 GB RAM (or the \$12 tier if testing)
+
+    -   Ubuntu 24.04 (it will be pre-selected)
+
+    -   Add your SSH key (highly recommended) or set a root password
+
+4.  Click Create Droplet.
+
+5.  Once it's running, SSH in:
+
+    bash
+
+    ```         
+    ssh root@YOUR_DROPLET_IP
+    ```
+
+6.  The 1-Click image usually has OpenClaw pre-installed and running as a non-root user (openclaw). Follow the on-screen instructions or run:
+
+    bash
+
+    ```         
+    su - openclaw openclaw onboard   # or openclaw doctor
+    ```
+
+    The wizard will guide you through adding your LLM API keys (Claude, OpenAI, etc.), connecting messaging apps (Telegram/WhatsApp/etc.), and setting up the daemon.
+
+Manual Fresh Droplet Installation (More Control)If you prefer full control or the 1-Click isn't available:
+
+1.  Create a new Droplet:
+
+    -   Image: Ubuntu 24.04 LTS (regular, not Marketplace)
+
+    -   Size: 2 vCPU / 4 GB RAM recommended
+
+    -   Add your SSH key
+
+    -   Create it
+
+2.  SSH in as root:
+
+    bash
+
+    ```         
+    ssh root@YOUR_DROPLET_IP
+    ```
+
+3.  Update the system:
+
+    bash
+
+    ```         
+    apt update && apt upgrade -y
+    ```
+
+4.  Install Node.js (v22+ or 24 recommended):
+
+    bash
+
+    ```         
+    curl -fsSL https://deb.nodesource.com/setup_24.x | bash - apt install -y nodejs
+    ```
+
+5.  Install OpenClaw:
+
+    bash
+
+    ```         
+    curl -fsSL https://openclaw.ai/install.sh | bash
+    ```
+
+6.  Verify:
+
+    bash
+
+    ```         
+    openclaw --version
+    ```
+
+7.  Run the onboarding wizard (this sets up everything interactively):
+
+    bash
+
+    ```         
+    openclaw onboard --install-daemon
+    ```
+
+    -   Follow the prompts: add LLM provider keys, choose messaging channels (WhatsApp, Telegram, etc.), set up the gateway, enable the systemd daemon so it runs 24/7.
+
+8.  (Optional but recommended for low-RAM droplets) Add swap space if using 2 GB:
+
+    bash
+
+    ```         
+    fallocate -l 2G /swapfile chmod 600 /swapfile mkswap /swapfile swapon /swapfile echo '/swapfile none swap sw 0 0' >> /etc/fstab
+    ```
+
+After onboarding, OpenClaw runs as a background service. You can check status with:
+
+bash
+
+```         
+systemctl status openclaw
+```
+
+Next Steps After Installation
+
+-   Connect your chat apps (the wizard helps).
+
+-   Start chatting: Send a message to your OpenClaw bot like “Create a new coding agent named dev-bot”.
+
+-   Install skills: npx clawhub\@latest install \<skill-name\> (run as the openclaw user).
+
+-   For voice: Just send voice notes — it transcribes and acts on them automatically.
+
+Security tip: After setup, consider restricting access with a VPN (Tailscale/Twingate) or firewall rules so only you can reach the gateway. Never expose it directly to the internet if possible.Would you like me to adjust these steps for a specific size, add firewall commands, or walk through connecting a particular messaging app (e.g., Telegram)? Just let me know your droplet size or any specific preference! ![🦞](https://abs-0.twimg.com/emoji/v2/svg/1f99e.svg "Lobster"){alt="🦞"}
+
+49 web pages
+
+Explain OpenClaw agent orchestration
+
+Compare OpenClaw to Auto-GPT
+
+can you augment the above steps with Telegram interfact, Anthropic API and what ever the best tool is for webscraping, for avoiding anti-scrape rotections
+
+Thought for 44s
+
+Yes — here's your fully augmented, ready-to-run step-by-step guide for a fresh Digital Ocean Droplet, now including:
+
+-   Telegram interface (clean mobile text + voice notes)
+
+-   Anthropic API (Claude models as the brain — best-in-class reasoning)
+
+-   Best tool for web scraping that avoids anti-scrape protections: Firecrawl (official OpenClaw integration) + Playwright MCP as a powerful local fallback.
+
+Firecrawl is currently the best overall choice in the OpenClaw ecosystem for 2026: it gives you JS rendering, stealth proxies, automatic bot circumvention, clean LLM-ready markdown output, and crawling — all without you managing Chromium headaches on the droplet. Playwright MCP is excellent for fully interactive browser automation (clicking, forms, screenshots) when you need it local.Recommended Droplet Size (Still the Sweet Spot)
+
+-   2 vCPU / 4 GB RAM / 80 GB SSD (\~\$24–28/mo) — handles Claude + Telegram + Firecrawl/Playwright + multiple agents without issues.
+
+-   (1 vCPU / 2 GB works for light use but add 2 GB swap if you install Playwright.)
+
+Manual Fresh Droplet Installation (Augmented with Telegram + Anthropic + Scraping)
+
+1.  Create the Droplet\
+    Ubuntu 24.04 LTS → 2 vCPU / 4 GB RAM → add your SSH key → Create.
+
+2.  SSH in as root
+
+    bash
+
+    ```         
+    ssh root@YOUR_DROPLET_IP
+    ```
+
+3.  Update system & install basics
+
+    bash
+
+    ```         
+    apt update && apt upgrade -y apt install -y curl git unzip
+    ```
+
+4.  Install Node.js 24 (required)
+
+    bash
+
+    ```         
+    curl -fsSL https://deb.nodesource.com/setup_24.x | bash - apt install -y nodejs
+    ```
+
+5.  Install OpenClaw
+
+    bash
+
+    ```         
+    curl -fsSL https://openclaw.ai/install.sh | bash
+    ```
+
+6.  Run the onboard wizard with Anthropic pre-filled (this is the magic step)\
+    First, get your Anthropic API key:
+
+    -   Go to <https://console.anthropic.com/settings/keys>
+
+    -   Create a new key → copy it
+
+    Now run:
+
+    bash
+
+    ```         
+    openclaw onboard --install-daemon --anthropic-api-key "sk-ant-XXXXXXXXXXXXXXXXXXXXXXXX"
+    ```
+
+    During the interactive wizard:
+
+    -   When it asks for channels, choose Telegram.
+
+    -   It will tell you to create a bot:
+
+        -   Open Telegram → search
+
+            \@BotFather
+
+        -   Send /newbot
+
+        -   Give your bot a name (e.g. “My Claw Assistant”)
+
+        -   Username must end with \_bot (e.g. myclawbot_bot)
+
+        -   BotFather gives you a token → copy and paste it back into the OpenClaw wizard
+
+    -   Finish the rest of the wizard (it sets up Claude as default model, persistent memory, etc.).
+
+7.  Secure the Telegram pairing (required for your personal access)
+
+    bash
+
+    ```         
+    systemctl restart openclaw   # if not already running openclaw pairing list telegram     # shows pending codes openclaw pairing approve telegram <CODE>   # approve your own chat
+    ```
+
+    (Pairing codes expire after 1 hour — do this quickly.)
+
+8.  Install the best web-scraping tools (run these as the openclaw user or after su - openclaw)First, install ClawHub CLI (if not already present):
+
+    bash
+
+    ```         
+    npm install -g clawhub
+    ```
+
+    Primary recommendation — Firecrawl (best for avoiding anti-scrape + JS-heavy sites):
+
+    bash
+
+    ```         
+    clawhub install firecrawl
+    ```
+
+    -   Get a free API key at <https://firecrawl.dev> (generous free tier, stealth proxies included).
+
+    -   Add the key when prompted or via openclaw skills config firecrawl --api-key YOUR_KEY.
+
+    -   Your agents can now do things like scrape <https://example.com,> crawl, search, or run browser sessions with automatic anti-bot evasion.
+
+    Strong local alternative — Playwright MCP (full interactive browser automation):
+
+    bash
+
+    ```         
+    clawhub install playwright-mcp
+    ```
+
+    (This also pulls in the Playwright Scraper skill automatically for anti-bot protection.)(Optional ultra-stealth) Scrapling skill for the toughest Cloudflare/Turnstile sites:
+
+    bash
+
+    ```         
+    clawhub install scrapling
+    ```
+
+9.  (Optional but recommended) Add swap for Playwright/Firecrawl browser mode (if you chose the 2 GB droplet)
+
+    bash
+
+    ```         
+    fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile echo '/swapfile none swap sw 0 0' >> /etc/fstab
+    ```
+
+10. Check everything
+
+    bash
+
+    ```         
+    openclaw channels status          # should show Telegram active openclaw models status            # should show Anthropic/Claude openclaw skills list              # confirm Firecrawl + Playwright are loaded systemctl status openclaw
+    ```
+
+You're Done!Now just message your Telegram bot (text or voice note) things like:
+
+-   “Build me a new research agent”
+
+-   “Scrape the latest news from nytimes.com and summarize”
+
+-   “Create a coding agent that can browse GitHub and open PRs”
+
+The agent lives 24/7 on your droplet, uses Claude for high-quality reasoning, talks to you via Telegram, and has powerful scraping that actually beats most anti-bot protections.Security tip: Run openclaw doctor --fix after everything, and consider adding Tailscale or UFW firewall rules so only your IP (or VPN) can reach the gateway.Want me to add:
+
+-   Exact UFW firewall commands?
+
+-   Tailscale VPN setup for extra security?
+
+-   How to make Firecrawl the default web_fetch tool?
+
+-   Or switch to the 1-Click Marketplace version with these same additions?
+
+Just say the word and I’ll give you the exact extra commands! ![🦞](https://abs-0.twimg.com/emoji/v2/svg/1f99e.svg "Lobster"){alt="🦞"}
+
+Explore multi-agent orchestration
+
+Compare LLM providers
+
+Revise scraping tool section
+
+add:Exact UFW firewall commands? Tailscale VPN setup for extra security? How to make Firecrawl the default web_fetch tool? Or switch to the 1-Click Marketplace version with these same additions?
+
+## Security
+
+Here's the fully augmented step-by-step guide with everything you asked for:
+
+-   Exact UFW firewall commands (secure by default)
+
+-   Tailscale VPN setup for extra security (recommended — zero public exposure for the gateway)
+
+-   How to make Firecrawl the default/fallback for web_fetch (best anti-scrape protection)
+
+-   Notes on switching to the 1-Click Marketplace version with these additions
+
+Security-First RecommendationUse Tailscale + strict UFW. This way the OpenClaw gateway (port \~18789) is not exposed to the public internet at all. You access everything securely from any device via your private Tailnet. Telegram still works normally (it connects outbound).1. Create the Droplet
+
+-   Ubuntu 24.04 LTS
+
+-   Size: 2 vCPU / 4 GB RAM recommended
+
+-   Add your SSH key
+
+-   Create Droplet
+
+2\. SSH in and Basic Setup (as root)
+
+bash
+
+```         
+ssh root@YOUR_DROPLET_IP  apt update && apt upgrade -y apt install -y curl git unzip ufw
+```
+
+3\. Install Node.js 24
+
+bash
+
+```         
+curl -fsSL https://deb.nodesource.com/setup_24.x | bash - apt install -y nodejs
+```
+
+4\. Install OpenClaw
+
+bash
+
+```         
+curl -fsSL https://openclaw.ai/install.sh | bash
+```
+
+5\. Install Tailscale (for secure access)
+
+bash
+
+```         
+curl -fsSL https://tailscale.com/install.sh | sh tailscale up   # Follow the link in the output to authenticate in your browser # Note your Tailscale IP: tailscale ip -4
+```
+
+(After this, you can access the droplet via ssh root\@100.x.x.x from any Tailscale-connected device.)6. Set Up Strict UFW FirewallRun these commands in this exact order (SSH must be allowed before enabling):
+
+bash
+
+```         
+# Default policies sudo ufw default deny incoming sudo ufw default allow outgoing  # Always allow SSH first sudo ufw allow ssh  # Allow Tailscale interface (important!) sudo ufw allow in on tailscale0  # If you ever need the gateway publicly (not recommended), add: # sudo ufw allow 18789/tcp   # only if not using Tailscale Serve  # Enable firewall sudo ufw enable  # Verify sudo ufw status verbose
+```
+
+This setup blocks everything from the public internet except SSH and Tailscale traffic.7. Run OpenClaw Onboard Wizard (with Anthropic + Telegram)
+
+bash
+
+```         
+openclaw onboard --install-daemon --anthropic-api-key "sk-ant-XXXXXXXXXXXXXXXXXXXXXXXX"
+```
+
+During the wizard:
+
+-   Choose Telegram as the channel
+
+-   Create a bot with
+
+    \@BotFather
+
+    , paste the token
+
+-   Approve your pairing code: openclaw pairing approve telegram \<CODE\>
+
+8\. Configure Tailscale for OpenClaw Gateway (Secure Access)After onboarding, run:
+
+bash
+
+```         
+# Make the openclaw user able to manage Tailscale sudo tailscale set --operator=openclaw  # Configure gateway to use Tailscale Serve (recommended — easy HTTPS) openclaw config set gateway.tailscale.mode serve openclaw gateway restart  # Or for simple Tailnet binding: # openclaw config set gateway.bind tailnet # openclaw gateway restart
+```
+
+Access the gateway/dashboard from any device on your Tailnet at the magic URL shown or via the Tailscale IP.9. Install Firecrawl and Make It the Default Web Fetch ToolSwitch to the openclaw user or run as root with sudo -u openclaw if needed.First, install the Firecrawl skill/CLI:
+
+bash
+
+```         
+su - openclaw   # or use sudo -u openclaw bash  npm install -g clawhub npx -y firecrawl-cli init --browser --all
+```
+
+Get your Firecrawl API key from <https://firecrawl.dev> (free tier is generous).Then configure Firecrawl as the fallback for web_fetch (this gives automatic anti-scrape protection on tough sites):
+
+bash
+
+```         
+openclaw config set tools.web.fetch.firecrawl.enabled true openclaw config set tools.web.fetch.firecrawl.apiKey "fc-XXXXXXXXXXXXXXXXXXXXXXXX"  # Optional: force more aggressive use of Firecrawl openclaw config set tools.web.fetch.firecrawl.onlyMainContent true
+```
+
+Restart the service:
+
+bash
+
+```         
+systemctl restart openclaw
+```
+
+Now your agents will try local extraction first, then automatically fall back to Firecrawl (with stealth, JS rendering, and bot circumvention) when needed. You can also use dedicated commands like firecrawl_scrape, firecrawl_search, etc.10. Final Checks
+
+bash
+
+```         
+openclaw channels status     # Telegram should be active openclaw models status       # Anthropic/Claude ready openclaw skills list         # Firecrawl should appear openclaw doctor --fix        # Run any recommended fixes systemctl status openclaw tailscale status sudo ufw status verbose
+```
+
+Switching to 1-Click Marketplace VersionYes, you can use the DigitalOcean 1-Click OpenClaw App for faster setup:
+
+1.  In DigitalOcean → Marketplace → Search "OpenClaw" → Create Droplet.
+
+2.  Choose your size (2 vCPU / 4 GB recommended).
+
+3.  After creation, SSH in.
+
+4.  The pre-installed version usually runs as user openclaw. Switch to it: su - openclaw
+
+5.  Run the onboarding wizard: openclaw onboard
+
+6.  Then apply the same Tailscale, UFW, and Firecrawl steps above (steps 5, 6, 8, 9).
+
+The 1-Click is convenient but some docs recommend reviewing its startup scripts. The manual method above gives you full control.Quick Test Commands (via Telegram)
+
+-   “What is the current time?”
+
+-   “Scrape <https://example.com> and summarize the main content”
+
+-   “Create a new research agent that uses Firecrawl”
+
+Your setup is now secure, uses Claude via Anthropic, communicates via Telegram (text + voice), and has strong web scraping that beats most anti-bot protections.Would you like me to add commands for:
+
+-   Enabling Tailscale Funnel (if you want occasional public access with password)?
+
+-   Specific Playwright MCP tweaks?
+
+-   Or troubleshooting tips for common issues?
+
+Just let me know! ![🦞](https://abs-0.twimg.com/emoji/v2/svg/1f99e.svg "Lobster"){alt="🦞"}
+
+39 web pages
+
+Explore OpenClaw advanced configurations
+
+Compare scraping tools like Scrapy
+
+Revise Firecrawl setup steps
+
+do these too Enabling Tailscale Funnel (if you want occasional public access with password)? Specific Playwright MCP tweaks? Or troubleshooting tips for common issues?
+
+Searching the web
+
+43 results
+
+Here's the complete final augmented guide with everything you requested added:
+
+-   Tailscale Funnel (for occasional public HTTPS access protected by a strong shared password — use with extreme caution)
+
+-   Specific Playwright MCP tweaks (for better anti-scrape performance on tough sites)
+
+-   Troubleshooting tips for the most common issues with Telegram, Anthropic, Firecrawl, and the overall setup
+
+11\. Enabling Tailscale Funnel (Occasional Public Access with Password)Strong warning: OpenClaw strongly recommends against exposing the gateway publicly. Funnel makes the dashboard and WebSocket available on the public internet. Use only if you need occasional access from non-Tailscale devices and you set a very strong password.After Tailscale is installed and you’ve run tailscale up:
+
+bash
+
+```         
+# Enable Funnel on your tailnet (one-time approval in browser) tailscale funnel --enable   # or do it via the Tailscale admin console  # Switch OpenClaw to Funnel mode with password protection openclaw config set gateway.tailscale.mode funnel openclaw config set gateway.auth.mode password openclaw config set gateway.auth.password "YourSuperStrongPasswordHere123!"  # Restart services openclaw gateway restart systemctl restart openclaw
+```
+
+-   Access URL will be something like <https://your-droplet-name.tailxxxxx.ts.net> (visible after restart).
+
+-   Always use a long, unique password. Never leave it as default or weak.
+
+-   To disable later: openclaw config set gateway.tailscale.mode serve (or off) and restart.
+
+Most users should stick with Tailscale Serve (private tailnet-only) or plain Tailnet binding for maximum security.12. Specific Playwright MCP Tweaks (Better Anti-Scraping)Playwright MCP gives full interactive browser control (clicking, forms, scrolling, screenshots). Here are targeted tweaks for tougher anti-bot sites (Cloudflare, Turnstile, etc.):First, ensure it's installed:
+
+bash
+
+```         
+su - openclaw clawhub install playwright-mcp
+```
+
+Then apply these tweaks (run as openclaw user):
+
+bash
+
+```         
+# Enable stealth mode and realistic browser fingerprinting openclaw config set tools.browser.playwright.stealth true openclaw config set tools.browser.playwright.headless false   # or true with stealth openclaw config set tools.browser.playwright.userAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"  # Add proxy support if you have residential proxies (highly effective) # openclaw config set tools.browser.playwright.proxy.server "http://your-proxy:port" # openclaw config set tools.browser.playwright.proxy.username "user" # openclaw config set tools.browser.playwright.proxy.password "pass"  # Increase timeouts and enable slow motion for debugging tricky sites openclaw config set tools.browser.playwright.timeout 60000 openclaw config set tools.browser.playwright.slowMo 100  # Restart to apply openclaw gateway restart
+```
+
+You can also combine it with Firecrawl: let Firecrawl handle simple scrapes and fall back to Playwright MCP for interactive sessions (e.g., "use playwright to log in and scrape the dashboard").Test with a command in Telegram:\
+“Use playwright to open <https://example.com> and take a screenshot”13. Troubleshooting Tips for Common IssuesHere are fixes for the issues you’re most likely to hit with this exact stack (Telegram + Anthropic + Firecrawl + Playwright on DigitalOcean):Telegram Issues
+
+-   Bot shows online but doesn’t reply → Disable privacy mode in
+
+    \@BotFather
+
+    (/setprivacy → Disable). Or mention the bot explicitly in groups.
+
+-   No responses at all → Check logs: journalctl -u openclaw -f. Look for 401 errors (wrong token) or network issues reaching api.telegram.org.
+
+-   Pairing fails → Run openclaw pairing list telegram and approve quickly. Restart with systemctl restart openclaw.
+
+Anthropic / Claude Rate Limits or High Costs
+
+-   Agent stops after a few messages → Your account is likely on a low tier (e.g., Tier 1). Upgrade tier in Anthropic console or set maxTokens lower per agent (e.g., 4000).
+
+-   Watchdog restarts burning tokens → Increase WatchdogSec or set retry attempts to 1.
+
+-   Slow responses → Use Claude 3.5 Sonnet or Haiku for lighter tasks; avoid over-long context by starting fresh conversations (/new).
+
+Firecrawl / Web Scraping Not Working Well
+
+-   Fallback not triggering → Verify config: openclaw config get tools.web.fetch.firecrawl. Make sure API key is set and Firecrawl skill is enabled.
+
+-   Blocked sites → Increase timeout or combine with Playwright: “Use firecrawl first, fallback to playwright”.
+
+-   Cache too stale → Lower maxAgeMs or run openclaw doctor --fix.
+
+Playwright / Browser Issues
+
+-   Out of memory or crashes → Add more swap (especially on 2GB droplet) or upgrade to 4GB RAM. Run headless=false during testing.
+
+-   Anti-bot still detects → Enable stealth + realistic userAgent + proxy as shown above.
+
+General / Gateway / Service Issues
+
+-   Service won’t start → systemctl status openclaw and journalctl -u openclaw -xe. Common fix: openclaw doctor --fix.
+
+-   Port conflicts → Kill old processes: pkill -f openclaw or systemctl stop openclaw before restart.
+
+-   Memory pressure on low RAM → Add 2GB swap as shown earlier.
+
+-   Skills not loading → Run as openclaw user: npx clawhub\@latest install \<skill\> then restart gateway.
+
+Quick Debug Commands
+
+bash
+
+```         
+openclaw doctor --deep          # Full system health check openclaw status                 # Overview journalctl -u openclaw -f       # Live logs tailscale status                # Check VPN sudo ufw status verbose         # Firewall check
+```
+
+Final VerificationAfter all changes:
+
+bash
+
+```         
+openclaw channels status openclaw models status openclaw skills list systemctl status openclaw tailscale status
+```
+
+Your setup is now fully featured:
+
+-   Telegram (text + voice notes)
+
+-   Anthropic Claude as brain
+
+-   Firecrawl as primary smart scraper with Playwright fallback
+
+-   Strict UFW + Tailscale (with optional Funnel)
+
+-   Secure and ready for building/directing agents 24/7
+
+Send a test message like:\
+“Create a research agent that uses Firecrawl to scrape news sites and Playwright for interactive pages when needed.”

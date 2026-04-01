@@ -1,0 +1,23 @@
+---
+title: "OpenClaw Build on Digital Ocean Droplet for Marketing Analytics"
+author: "J. Christopher Westland"
+date: "2026-03-28"
+output: html_document
+---
+
+
+Yes, you can absolutely install OpenClaw on a Digital Ocean Droplet (and it’s actually a very common and well-supported way to run it 24/7). OpenClaw is an open-source autonomous AI agent that you self-host. It turns LLMs (such as Anthropic Claude) into a real action-taking assistant that lives in your chat apps — in this project, primarily **Telegram**.
+
+You give it **text or voice commands** via Telegram, and it can:
+
+- Build / create new specialized agents
+- Direct those agents (or swarms of them)
+- Run shell commands, browser automation (via Firecrawl and Playwright), statistical analysis in Python or R, PDF generation, email sending with attachments, file operations, and more
+- Remember everything persistently and work autonomously with a heartbeat scheduler
+
+**Project-Specific Workflow (Marketing Class Requirement):**  
+All tasks must be initiated through **Telegram text or voice notes**. The main OpenClaw agent (or directed swarm) will:
+
+1. Research the marketing question or analyze provided/uploaded datasets (using Firecrawl for web data or local file access).
+2. Perform specified statistical analyses (e.g., descriptive stats, regression, segmentation, hypothesis testing, sentiment analysis).
+3....

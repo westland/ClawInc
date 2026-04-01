@@ -1,0 +1,105 @@
+{
+  "env": {
+    "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY"
+  },
+  "gateway": {
+    "mode": "local"
+  },
+  "agents": {
+    "defaults": {
+      "model": { "primary": "anthropic/claude-sonnet-4-5-20250929" }
+    },
+    "list": [
+      {
+        "id": "henry",
+        "name": "Henry",
+        "default": true,
+        "workspace": "~/.openclaw/workspace-henry",
+        "agentDir": "~/.openclaw/agents/henry",
+        "model": "anthropic/claude-opus-4-6",
+        "thinkingDefault": "high"
+      },
+      {
+        "id": "coder",
+        "name": "Coder",
+        "workspace": "~/.openclaw/workspace-coder",
+        "agentDir": "~/.openclaw/agents/coder",
+        "model": "anthropic/claude-sonnet-4-5-20250929",
+        "thinkingDefault": "high"
+      },
+      {
+        "id": "scout",
+        "name": "Scout",
+        "workspace": "~/.openclaw/workspace-scout",
+        "agentDir": "~/.openclaw/agents/scout",
+        "model": "anthropic/claude-haiku-4-5-20251001",
+        "thinkingDefault": "medium"
+      },
+      {
+        "id": "writer",
+        "name": "Writer",
+        "workspace": "~/.openclaw/workspace-writer",
+        "agentDir": "~/.openclaw/agents/writer",
+        "model": "anthropic/claude-sonnet-4-5-20250929",
+        "thinkingDefault": "medium"
+      },
+      {
+        "id": "watcher",
+        "name": "Watcher",
+        "workspace": "~/.openclaw/workspace-watcher",
+        "agentDir": "~/.openclaw/agents/watcher",
+        "model": "anthropic/claude-haiku-4-5-20251001",
+        "thinkingDefault": "low"
+      }
+    ]
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "open",
+      "allowFrom": ["*"],
+      "defaultAccount": "henry-bot",
+      "accounts": {
+        "henry-bot": {
+          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_HENRY",
+          "dmPolicy": "open",
+          "allowFrom": ["*"]
+        },
+        "coder-bot": {
+          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_CODER",
+          "dmPolicy": "open",
+          "allowFrom": ["*"]
+        },
+        "scout-bot": {
+          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_SCOUT",
+          "dmPolicy": "open",
+          "allowFrom": ["*"]
+        },
+        "writer-bot": {
+          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_WRITER",
+          "dmPolicy": "open",
+          "allowFrom": ["*"]
+        }
+      }
+    }
+  },
+  "bindings": [
+    { "agentId": "henry", "match": { "channel": "telegram", "accountId": "henry-bot" } },
+    { "agentId": "coder", "match": { "channel": "telegram", "accountId": "coder-bot" } },
+    { "agentId": "scout", "match": { "channel": "telegram", "accountId": "scout-bot" } },
+    { "agentId": "writer", "match": { "channel": "telegram", "accountId": "writer-bot" } }
+  ],
+  "memory": {
+    "backend": "qmd",
+    "qmd": {
+      "searchMode": "search"
+    }
+  },
+  "logging": {
+    "level": "info",
+    "file": "~/.openclaw/logs/openclaw.log"
+  },
+  "cron": {
+    "enabled": true
+  }
+}

@@ -1,0 +1,115 @@
+---
+title: "Untitled"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+ header-includes:
+   - \usepackage{pmboxdraw}
+   - \DeclareUnicodeCharacter{251C}{\mbox{--|}}
+date: "2026-04-01"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Part 1: Automating Market Intelligence with OpenClaw
+
+**OpenClaw** (formerly Clawdbot/Moltbot) is an open-source autonomous AI agent designed for the "always-on" proactive automation you are describing.
+
+### Why OpenClaw + Digital Ocean is a Great Fit
+
+-   **The "Army Commander":** OpenClaw acts as a central hub. You define "Skills" (plugins) that allow the AI to search the web, scrape news, and deliver reports via WhatsApp, Telegram, or Slack.
+-   **24/7 Automation:** It supports **cron jobs** for scheduled runs and can spawn **sub-agents** (an "army of bots") specialized for specific products or competitors.
+-   **Simple Deployment:** Digital Ocean offers a **1-Click Marketplace** install, making it easy to run on a self-hosted Droplet (\~\$12/month) to keep your data private.
+
+### High-Level Setup (15–30 Minutes)
+
+1.  **Deploy on Digital Ocean:**
+
+    -   Search "OpenClaw" in the Marketplace and click **Create OpenClaw Droplet**.
+    -   Choose a 2GB / 1 CPU Premium AMD Droplet for best performance.
+
+2.  **Configure Basics:**
+
+    -   SSH into your Droplet.
+    -   Add your LLM API keys (OpenAI, Anthropic, etc.).
+    -   Connect your messaging apps (Telegram/Slack).
+
+3.  **Build Your "Army":**
+
+    -   **Create Skills:** Write TypeScript plugins for Google News pulls, price monitoring, or social media mentions.
+    -   **Set Cron Jobs:** Tell OpenClaw: *"Every day at 7 AM, run the market-scout agent and Slack me the summary."*
+
+4.  **Long-Term Memory:**
+
+    -   OpenClaw remembers your preferences and product details. You can even ask the main agent to "Create a sub-agent that tracks Amazon prices" and it can often write the skill code itself.
+
+### Important Caveats
+
+-   **Ethics/Legal:** Stick to official APIs (NewsAPI, Google Search API) to avoid IP bans and respect `robots.txt`.
+-   **Anti-Bot Measures:** Some sites (Cloudflare-protected) may require tools like *Scrapling*.
+-   **Costs:** Monitor your LLM API usage, as heavy daily scraping can add up.
+
+------------------------------------------------------------------------
+
+# Part 2: Student Submission Guide (Blackboard)
+
+To ensure the **Grade-Bot** can process your assignment, please follow these exact formatting requirements. Students must submit **one single ZIP file**.
+
+### 1. Submission Instructions
+
+-   **File Name:** `LastName_FirstName_MarketingArmy.zip`
+-   **Format:** One ZIP file containing the folder structure below.
+-   **Limit:** 50 MB (Blackboard limit).
+-   **Penalty:** Incorrect naming or structure will result in a **10% deduction**.
+
+### 2. Required Project Structure
+
+Your ZIP file must contain the following folders and files:
+
+``` text
+LastName_FirstName_MarketingArmy/
+├── README.md                (Project overview with exact H2 headings)
+├── ARCHITECTURE.md          (Diagram or Mermaid code)
+├── .env.example             (Template for API keys)
+├── docker-compose.yml       (Preferred deployment method)
+├── requirements.txt         (Dependencies)
+├── src/                     (Source code: commander, agents, skills, tests)
+├── outputs/                 (At least two sample-run-1.md, sample-run-2.md)
+├── reflection.md            (One-page business/ethics reflection)
+├── submission_metadata.json (Student info)
+└── run_test.py              (Standardized test script)
+```
+
+### 3. Metadata Configuration (`submission_metadata.json`)
+
+Every submission must include this file:
+
+``` json
+{
+  "full_name": "Alex Rivera",
+  "student_id": "S12345678",
+  "business_use_case": "Daily pricing + sentiment alerts for wireless earbuds",
+  "llm_provider": "Claude 3.5 Sonnet"
+}
+```
+
+### 4. Automated Testing Commands
+
+The Grade-Bot will run the following commands to verify your agent works:
+
+1.  `docker compose exec army python src/run_test.py --task=news-scan`
+2.  `docker compose exec army python src/run_test.py --task=competitor-monitor`
+
+------------------------------------------------------------------------
+
+# Part 3: Instructor Workflow (Grade-Bot)
+
+By standardizing the ZIP structure, the grading process is fully automated:
+
+1.  **Bulk Download:** Use Blackboard’s “Download All Submissions.”
+2.  **Unzip & Validate:** The bot unzips each file and checks for the required files (README, Dockerfile, etc.).
+3.  **Docker Execution:** The bot runs `docker compose up`, executes the test commands, and captures the output.
+4.  **LLM Scoring:** The bot feeds the `reflection.md` and agent outputs into an LLM to score based on your rubric.
+5.  **Final Report:** Generates a master CSV and individual feedback Markdown files for every student.

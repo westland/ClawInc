@@ -1,0 +1,167 @@
+---
+title: "Untitled"
+author: "J. Christopher Westland"
+date: "2026-03-26"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Grading Rubric Design for the Assignment: “Build Your Own Army of Marketing Research Bots”This is a capstone-style project (marketing + AI + automation) that asks students to design, build, and deploy a scalable, autonomous multi-agent system that continuously gathers, analyzes, and reports marketing intelligence (competitor moves, customer sentiment, trends, pricing, social listening, etc.).The rubric below is calibrated for a university/college-level course (e.g., Digital Marketing, Marketing Analytics, AI for Business, or Entrepreneurship). It assumes a 100-point scale and is designed to reward practical working systems rather than just theory or screenshots.Final Rubric (100 points total)
+
+| **Category** | **Weight** | **Excellent (full points)** | **Good (70-89%)** | **Needs Improvement (\<70%)** | **Key Grading Questions** |
+|----|----|----|----|----|----|
+| 1\. Understanding of the Problem & Marketing Objectives | 10% | Clearly defines specific marketing research goals the “army” will solve (e.g., daily competitor pricing alerts, weekly sentiment dashboard, trend early-warning system). Ties goals to real business KPIs. | Goals are stated but somewhat generic. | Goals vague or missing business relevance. | Does the army actually solve a marketer’s pain point? |
+| 2\. System Architecture & “Army” Design | 20% | True multi-agent architecture: commander + specialized sub-agents (or equivalent via cron/skills/crew). Persistent memory, parallel execution, hand-off between agents, and autonomous scheduling (cron / triggers). | Basic multi-agent or single agent with some automation. | Single script or manual workflow only. | Is it really an “army” or just one bot? |
+| 3\. Technical Implementation & Functionality | 25% | Fully working, deployable system. Runs 24/7, produces usable output (reports, alerts, dashboards). Code is clean, modular, and uses appropriate tools (OpenClaw, CrewAI, AutoGen, LangGraph, n8n, etc.). Includes error handling and logging. | Works but has frequent failures or requires manual intervention. | Does not run end-to-end or relies on manual steps. | Can I clone the repo and have a working army in \<30 min? |
+| 4\. Marketing Research Capabilities | 15% | Agents perform at least 3 distinct research tasks (e.g., web scraping + API pulls + sentiment analysis + summarization). Output is synthesized, actionable, and includes sources/evidence. | Only 1–2 basic tasks. | Data collection is superficial or not synthesized. | Would a real marketing manager trust and use these insights? |
+| 5\. Ethics, Legality, Scalability & Risk Management | 10% | Thoughtful discussion of TOS compliance, rate-limiting, robots.txt, data privacy (GDPR), cost controls, bias in LLM outputs, and anti-bot countermeasures. Includes fallback strategies. | Mentions ethics but superficially. | Ignores legal/ethical issues entirely. | Could this army actually be used responsibly at a company? |
+| 6\. Documentation, Reproducibility & Clarity | 10% | Complete GitHub repo with: README (setup in \<5 min), architecture diagram, sample outputs, cost estimates, and video demo (2–4 min). Code is well-commented. | Basic README but missing key pieces. | Poor or missing documentation. | Could another student or a junior marketer replicate it? |
+| 7\. Creativity, Innovation & Polish | 10% | Unique features (self-improving agents, cross-agent peer review, natural-language skill creation, beautiful final dashboard, voice alerts, etc.). Professional presentation. | Solid but standard implementation. | Generic or copy-paste solution. | Does this stand out as “wow, I’d actually use this”? |
+
+Grading Scale
+
+-   A (90–100): Production-ready army that a startup or brand manager could deploy tomorrow.
+
+-   B (80–89): Functional and thoughtful but has clear gaps.
+
+-   C (70–79): Works in a demo but not autonomous or scalable.
+
+-   D/F (\<70): Non-functional or misses core “army” requirement.
+
+What Else Is Needed in the Assignment Specification (“the Workout”) to Make Grading Fair and RigorousThe original prompt (“make your own army…”) is too open-ended. To grade properly, the assignment must explicitly require these minimum deliverables and constraints:
+
+1.  Required Deliverables (must be submitted)
+
+    -   Public GitHub repository (link required).
+
+    -   Live deployment (URL or access instructions — Digital Ocean, Render, Railway, Replit, local Docker, etc.).
+
+    -   2–4 minute video demo showing the army running end-to-end (schedule a task → agents work → report/alert arrives).
+
+    -   One-page reflection/report answering: business use case, architecture diagram (Mermaid or draw.io), weekly operating cost estimate, and one ethical dilemma they had to solve.
+
+    -   Sample output from at least two different research runs.
+
+2.  Technical Constraints (to prevent low-effort solutions)
+
+    -   Must run autonomously for at least 72 hours without manual intervention.
+
+    -   Must use at least one LLM (OpenAI, Claude, Grok, local, etc.) + at least one external data source (API, scraping, RSS, etc.).
+
+    -   Must demonstrate multi-agent collaboration (or equivalent via skills/cron + memory).
+
+    -   Budget cap: total monthly cost \< \$30 (forces smart design).
+
+    -   No hard-coded credentials in repo (use .env or secrets).
+
+3.  Optional Stretch Goals (for A+ differentiation)
+
+    -   Self-healing (agent detects failure and fixes itself).
+
+    -   Natural-language interface (“Create new sub-agent for TikTok trend monitoring”).
+
+    -   Dashboard (Streamlit, Retool, or simple HTML).
+
+    -   Peer-review feature between sub-agents.
+
+4.  Grading Logistics
+
+    -   Students must submit the GitHub link + video by deadline.
+
+    -   Instructor (or TA) gets 1-click access to test the army live.
+
+    -   Late penalty: –10% per day (real-world marketing tools must be reliable on time).
+
+With this structure, even a submission that looks exactly like the OpenClaw + Digital Ocean tutorial you shared earlier can be graded objectively — it would score very high on architecture, feasibility, and documentation, but might lose a few points if it lacks a live demo, cost breakdown, or deeper marketing-specific metrics.Would you like me to also provide a ready-to-use assignment handout (full prompt you could give students) that includes this rubric and requirements?
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+## Original Idea
+
+Yes, you can absolutely do this.\*\* OpenClaw (the open-source autonomous AI agent, formerly Clawdbot/Moltbot) is specifically designed for exactly the kind of always-on, proactive task automation you're describing. It runs 24/7 on a server, supports cron jobs, custom skills/tools, sub-agents, persistent memory, and web-browsing/scraping capabilities. Digital Ocean has official 1-Click Marketplace support for it, so deployment is extremely straightforward. \### Why OpenClaw + Digital Ocean is a great fit - \*\*OpenClaw\*\* acts as your “army commander.” You define skills (tools/plugins) that let the AI search the web, scrape news, analyze competitor sites, pull market data, summarize findings, and deliver daily reports via WhatsApp, Telegram, Slack, etc. - It supports \*\*cron jobs\*\* for daily scheduled runs and can spawn \*\*sub-agents\*\* (your “army of bots”) — each specialized for a product, competitor, or data source. - You can give it browser-like tools (or integrate libraries like Scrapling for stealthier scraping if needed). - It’s fully self-hosted on your Droplet, so you control everything and keep data private. - Digital Ocean makes it cheap and easy: starts at \~\$12/month for a basic Droplet, with 1-Click install, auto-updates, and security hardening. \### High-level setup (takes \~15–30 minutes) 1. \*\*Deploy OpenClaw on Digital Ocean (1-Click way)\*\* - Go to the Digital Ocean Marketplace → search “OpenClaw”. - Click “Create OpenClaw Droplet”. Choose a region, size (start with 2 GB / 1 CPU Premium AMD — plenty for multiple agents), and SSH key. - It installs everything (Docker-based, secure by default) automatically. 2. \*\*Configure the basics\*\* - SSH into the Droplet (or use the console). - Add your LLM API keys (OpenAI, Anthropic/Claude, or local models). - Connect your messaging apps (WhatsApp, Telegram, etc.) so the agents can talk to you. 3. \*\*Build your market-intelligence “army”\*\* - \*\*Create custom skills\*\* (OpenClaw’s plugin system, written in TypeScript): - One skill for daily Google News / RSS / NewsAPI pulls on your product. - One for competitor site monitoring (pricing pages, press releases, social mentions). - One for market data (use free/paid APIs like Alpha Vantage, Google Shopping, or even SerpAPI for search results). - \*\*Set up cron jobs\*\* inside OpenClaw: e.g., “Every day at 7 AM, run market-scout agent for [your product] and email/slack summary to me.” - \*\*Spawn sub-agents\*\* (the “army”): One agent per competitor, one for news aggregation, one for trend analysis. They can work in parallel and even review each other’s findings. 4. \*\*Make it smarter over time\*\* - OpenClaw has long-term memory, so agents remember your product details, preferred competitors, and reporting style. - You can literally chat with the main agent: “Create a new sub-agent that tracks pricing on Amazon and Walmart for my wireless earbuds and alerts me on drops \>10%.” It can write the skill itself in many cases. \### Important real-world caveats - \*\*Legal / ethics of scraping\*\*: Daily “scoping the net” is fine for public news and your own research, but aggressively hitting competitor sites or search engines can violate their terms of service or trigger blocks. Use official APIs (NewsAPI, Google Custom Search JSON API, etc.) wherever possible — it’s more reliable and avoids getting your Droplet IP banned. Respect robots.txt and add delays/rate limits. - \*\*Anti-bot measures\*\*: Some sites use Cloudflare, etc. OpenClaw users sometimes pair it with tools like Scrapling, but that’s your responsibility. - \*\*Cost\*\*: LLM API calls + Droplet can add up if your army runs heavy scraping every day. Start small and monitor usage. - \*\*Maintenance\*\*: OpenClaw is actively developed — you’ll get easy updates via the Droplet or Docker. \### Quick start resources - Digital Ocean 1-Click OpenClaw: marketplace.digitalocean.com/apps/openclaw - Official site & install: openclaw.ai - GitHub (skills & docs): github.com/openclaw/openclaw - DO tutorial: digitalocean.com/community/tutorials/how-to-run-openclaw If you want, I can walk you through the exact commands for a specific skill (e.g., a daily product news scraper) or help design the agent workflow for your consumer product. Just let me know the product category or what data sources you care about most (news, pricing, reviews, social mentions, etc.). This is very doable and actually one of the coolest real-world uses of OpenClaw right now. Let’s build your market-intel lobster army
+
+## Grading
+
+Yes — here's the cleanest way to structure the entire assignment so it remains just as easy (or easier) for your Grade-Bot when students submit via Blackboard instead of GitHub.The key idea is: every student submits one single, predictably-named ZIP file.\
+Your Grade-Bot will simply loop through all downloaded ZIPs, unzip each one into a temporary folder, and run exactly the same grading pipeline I described earlier (static checks → docker build → test runs → LLM rubric scoring). No git cloning required.1. Assignment Submission Instructions (copy-paste this into Blackboard)How to Submit\
+You will submit ONE ZIP file only.
+
+-   Name the file exactly: LastName_FirstName_MarketingArmy.zip\
+    (example: Rivera_Alex_MarketingArmy.zip)
+
+-   Inside the ZIP, use the exact folder structure shown below.
+
+-   Do not include any .git folder or unnecessary files.
+
+-   Maximum file size: 50 MB (Blackboard limit).
+
+Late submissions or wrong file names will be automatically flagged by the Grade-Bot and may lose 10 %.2. Required Project Structure (inside the ZIP)Students must create their project exactly like this:
+
+bash
+
+```         
+LastName_FirstName_MarketingArmy/          ← root folder name does NOT matter ├── README.md                              ← MUST use the exact section headings ├── ARCHITECTURE.md                        ← or architecture.png + Mermaid code ├── .env.example ├── docker-compose.yml                     ← preferred (or Dockerfile) ├── requirements.txt                       ← (or package.json, pyproject.toml, etc.) ├── src/ │   ├── commander/ │   ├── agents/ │   ├── skills/ │   ├── tests/ │   └── utils/ ├── outputs/                               ← at least two sample runs │   ├── sample-run-1.md │   ├── sample-run-2.md │   └── daily-report-example.json ├── reflection.md                          ← one-page business + ethics reflection ├── grading.json                           ← optional but highly recommended (self-score) ├── submission_metadata.json               ← NEW: simple metadata file (see below) └── run_test.py                            ← optional top-level script (if you want)
+```
+
+3\. Required Files Explained (what the Grade-Bot will look for)
+
+| **File / Folder** | **Why the bot loves it** | **Required?** |
+|----|----|----|
+| README.md | Exact H2 headings so bot can parse with regex | Yes |
+| docker-compose.yml | Bot runs docker compose up --build -d | Strongly recommended |
+| src/run_test.py | Standardized test commands (see below) | Yes |
+| outputs/ folder | Bot checks for real sample reports | Yes |
+| reflection.md | Bot feeds to LLM for ethics/marketing score | Yes |
+| grading.json | Student self-score → bot compares & flags | Optional (great for extra credit) |
+| submission_metadata.json | Student name, ID, product category | Yes (one-line file) |
+
+Example submission_metadata.json (students just fill this in):
+
+json
+
+```         
+{   "full_name": "Alex Rivera",   "student_id": "S12345678",   "business_use_case": "Daily pricing + sentiment alerts for wireless earbuds",   "llm_provider": "Claude 3.5 Sonnet" }
+```
+
+4\. Standardized Test Commands (same as GitHub version)Tell students the Grade-Bot will automatically run these two commands after docker compose up:
+
+bash
+
+```         
+docker compose exec army python src/run_test.py --task=news-scan docker compose exec army python src/run_test.py --task=competitor-monitor
+```
+
+The outputs must land in the outputs/ folder within 60 seconds.5. Grade-Bot Workflow (almost zero changes)Your bot now does this instead of cloning:
+
+1.  Unzip LastName_FirstName_MarketingArmy.zip → temporary folder
+
+2.  Validate folder structure + required files (instant points)
+
+3.  Run the exact same Docker + test pipeline
+
+4.  Feed README + reflection + outputs to LLM with your rubric
+
+5.  Generate per-student Markdown report + master CSV
+
+The pipeline code you already have needs one tiny change: replace git clone with unzip + folder detection.6. Instructor Tips for Blackboard
+
+-   Use Blackboard’s “Download All Submissions” button → you get one big ZIP containing every student’s ZIP.
+
+-   Unzip that big file once → you now have a folder full of perfectly named student ZIPs.
+
+-   Point your Grade-Bot at that folder and let it run.
+
+This structure keeps 100 % of the automation benefits of the GitHub version while fitting perfectly into Blackboard’s upload system. Students still get to be creative inside the standardized box, and you (or the bot) can grade 30–50 submissions in minutes instead of hours.Would you like me to give you:
+
+-   The full ready-to-post assignment handout (complete prompt for Blackboard)?
+
+-   The exact README.md template students should copy?
+
+-   Or the tiny Python code snippet to add to your Grade-Bot for handling ZIPs instead of git clones?
+
+Just tell me which one you want next and I’ll generate it immediately.
