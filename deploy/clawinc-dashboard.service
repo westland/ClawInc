@@ -1,0 +1,18 @@
+[Unit]
+Description=ClawInc Dashboard (Shiny for Python)
+After=network.target openclaw.service
+Wants=openclaw.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/clawinc-dashboard
+ExecStart=/opt/clawinc-dashboard/venv/bin/shiny run app.py --host 0.0.0.0 --port 8050
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
