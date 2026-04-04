@@ -36,7 +36,6 @@ TELEGRAM_TOKEN_CODER="YOUR_TELEGRAM_BOT_TOKEN_CODER"
 TELEGRAM_TOKEN_SCOUT="YOUR_TELEGRAM_BOT_TOKEN_SCOUT"
 TELEGRAM_TOKEN_WRITER="YOUR_TELEGRAM_BOT_TOKEN_WRITER"
 TELEGRAM_TOKEN_WATCHER="YOUR_TELEGRAM_BOT_TOKEN_WATCHER"
-
 # Gateway Auth Token (auto-generated if left as default)
 GATEWAY_TOKEN="AUTO"
 
@@ -171,8 +170,9 @@ phase1_server_prep() {
     ufw default deny incoming > /dev/null
     ufw default allow outgoing > /dev/null
     ufw allow ssh > /dev/null
+    ufw allow 8050/tcp > /dev/null
     ufw --force enable > /dev/null
-    log "Firewall configured — only SSH allowed from outside"
+    log "Firewall configured — SSH (22) and dashboard (8050) open"
 
     # Create project directory
     mkdir -p /home/${CLAW_USER}/projects
@@ -321,7 +321,7 @@ Type=simple
 User=clawuser
 Group=clawuser
 WorkingDirectory=/home/clawuser
-ExecStart=/usr/bin/openclaw gateway start
+ExecStart=/usr/bin/openclaw gateway run
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 RestartSec=10
@@ -333,7 +333,7 @@ NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=read-only
 ReadWritePaths=/home/clawuser/.openclaw /tmp/openclaw
-PrivateTmp=true
+PrivateTmp=false
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true
@@ -564,12 +564,94 @@ verify() {
 }
 
 # =============================================================================
+# PHASE 5: Shiny Monitoring Dashboard
+# =============================================================================
+phase5_dashboard() {
+    header "Phase 5: Shiny Monitoring Dashboard"
+
+    local DASH_DIR="/opt/clawinc-dashboard"
+
+    # 5a. Install Python venv support
+    apt-get install -y -qq python3-venv python3-pip
+
+    # 5b. Create dashboard directory and venv
+    mkdir -p "${DASH_DIR}"
+    if [[ ! -d "${DASH_DIR}/venv" ]]; then
+        python3 -m venv "${DASH_DIR}/venv"
+        log "Python venv created at ${DASH_DIR}/venv"
+    else
+        log "Python venv already exists"
+    fi
+
+    # 5c. Install Python dependencies
+    "${DASH_DIR}/venv/bin/pip" install --quiet --upgrade pip
+    "${DASH_DIR}/venv/bin/pip" install --quiet shiny psutil
+    log "Installed shiny and psutil"
+
+    # 5d. Copy dashboard files from deploy bundle
+    if [[ -f "${DEPLOY_DIR}/../dashboard/app.py" ]]; then
+        cp "${DEPLOY_DIR}/../dashboard/app.py" "${DASH_DIR}/app.py"
+        cp "${DEPLOY_DIR}/../dashboard/requirements.txt" "${DASH_DIR}/requirements.txt"
+        log "Dashboard app.py installed"
+    elif [[ -f "${DEPLOY_DIR}/dashboard/app.py" ]]; then
+        cp "${DEPLOY_DIR}/dashboard/app.py" "${DASH_DIR}/app.py"
+        log "Dashboard app.py installed (from deploy/dashboard/)"
+    else
+        warn "dashboard/app.py not found in bundle — skipping file copy"
+        warn "Manually copy dashboard/app.py to ${DASH_DIR}/app.py before starting"
+    fi
+
+    # 5e. Install and enable systemd service
+    if [[ -f "${DEPLOY_DIR}/clawinc-dashboard.service" ]]; then
+        cp "${DEPLOY_DIR}/clawinc-dashboard.service" /etc/systemd/system/clawinc-dashboard.service
+    else
+        cat > /etc/systemd/system/clawinc-dashboard.service << 'DASHEOF'
+[Unit]
+Description=ClawInc Dashboard (Shiny for Python)
+After=network.target openclaw.service
+Wants=openclaw.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/clawinc-dashboard
+ExecStart=/opt/clawinc-dashboard/venv/bin/shiny run app.py --host 0.0.0.0 --port 8050
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+DASHEOF
+    fi
+
+    systemctl daemon-reload
+    systemctl enable clawinc-dashboard
+
+    if [[ -f "${DASH_DIR}/app.py" ]]; then
+        systemctl start clawinc-dashboard
+        sleep 3
+        if systemctl is-active --quiet clawinc-dashboard; then
+            log "Dashboard is RUNNING at http://$(curl -s ifconfig.me 2>/dev/null || echo 'YOUR_IP'):8050"
+        else
+            warn "Dashboard service not running — check: journalctl -u clawinc-dashboard -n 20"
+        fi
+    else
+        warn "Skipping dashboard start — app.py not present. Copy it and run: systemctl start clawinc-dashboard"
+    fi
+
+    log "Phase 5 complete"
+}
+
+# =============================================================================
 # MAIN EXECUTION
 # =============================================================================
 main() {
     echo "" > "$LOG_FILE"
 
-    header "ClawInc — OpenClaw Multi-Agent Deployment"
+    header "ClawInc — OpenClaw Multi-Agent Deployment v0.78"
     echo "Server: $(hostname) ($(curl -s ifconfig.me 2>/dev/null || echo 'unknown'))"
     echo "Date:   $(date)"
     echo "OS:     $(lsb_release -ds 2>/dev/null || cat /etc/os-release | head -1)"
@@ -581,6 +663,7 @@ main() {
     phase3_configure
     phase7_security
     phase6_systemd
+    phase5_dashboard
     phase6b_mission_control
     verify
 

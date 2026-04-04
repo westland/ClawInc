@@ -9,6 +9,7 @@ import subprocess
 import json
 import os
 import psutil
+import time
 from pathlib import Path
 from datetime import datetime
 
@@ -22,6 +23,7 @@ CONFIG_PATH      = OPENCLAW_HOME / "openclaw.json"
 LOG_PATH         = OPENCLAW_HOME / "logs" / "openclaw.log"
 DROPLET_IP       = "137.184.15.207"
 REFRESH_SECONDS  = 30
+CRON_CACHE_TTL   = 300    # re-run 'openclaw cron list' at most once every 5 min
 
 AGENT_ROLES = {
     "henry":   {"role": "Lead Agent",    "icon": "[H]"},
@@ -148,8 +150,15 @@ def get_workspace_summary(agent_id):
     }
 
 
+_cron_cache: list = []
+_cron_last_fetch: float = 0.0
+
 def get_cron_jobs():
-    """Try openclaw cron list, fall back to static known jobs."""
+    """Try openclaw cron list; time-cached to avoid subprocess pile-up."""
+    global _cron_cache, _cron_last_fetch
+    now = time.time()
+    if _cron_cache and (now - _cron_last_fetch) < CRON_CACHE_TTL:
+        return _cron_cache
     try:
         r = subprocess.run(
             ["sudo", "-u", OPENCLAW_USER, "openclaw", "cron", "list"],
@@ -157,10 +166,14 @@ def get_cron_jobs():
         )
         lines = r.stdout.strip().splitlines()
         if lines and "error" not in lines[0].lower():
+            _cron_cache = lines
+            _cron_last_fetch = now
             return lines
     except Exception:
         pass
-    return ["(cron list unavailable — run 'openclaw cron list' manually on the server)"]
+    _cron_cache = ["(cron list unavailable — run 'openclaw cron list' manually on the server)"]
+    _cron_last_fetch = now
+    return _cron_cache
 
 
 # ---------------------------------------------------------------------------
@@ -284,7 +297,8 @@ def server(input, output, session):
     @reactive.effect
     def _auto_refresh():
         reactive.invalidate_later(REFRESH_SECONDS)
-        trigger.set(trigger.get() + 1)
+        with reactive.isolate():
+            trigger.set(trigger.get() + 1)
 
     @reactive.effect
     @reactive.event(input.btn_refresh)

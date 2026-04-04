@@ -3,10 +3,12 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT 518 · J. Christopher Westland · University of Illinois at Chicago*
 
-[![Release](https://img.shields.io/github/v/release/westland/ClawInc)](https://github.com/westland/ClawInc/releases/tag/v0.56)
+[![Release](https://img.shields.io/github/v/release/westland/ClawInc)](https://github.com/westland/ClawInc/releases/tag/v0.78)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.3.31-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
+
+> **v0.78 Release Notes** — Watcher agent now has a Telegram bot binding (all 5 agents reachable via Telegram). Dashboard deployment automated in `deploy-openclaw.sh` (Phase 5). Fixed Shiny reactive loop bug that caused `openclaw cron list` to run every 3 seconds. Dashboard accessible directly at `http://YOUR_IP:8050` — no SSH tunnel required.
 
 ---
 
@@ -76,6 +78,7 @@ OpenClaw is open-source, self-hosted, and model-agnostic. You own your data, con
 │                                       @CoderClawBot             │
 │                                       @ScoutClawBot             │
 │                                       @WriterClawBot            │
+│                                       @WatcherClawBot           │
 └───────────────────────────┬─────────────────────────────────────┘
                             │  HTTPS (Telegram Bot API)
                             ▼
@@ -159,7 +162,8 @@ Each agent is an isolated workspace with its own system prompt, memory, skills, 
 
 ### Watcher — System Monitor
 - **Model:** `anthropic/claude-haiku-4-5-20251001`
-- **Role:** Background health monitoring only. No Telegram bot (operates autonomously). Checks server resources, log anomalies, and agent responsiveness. Reports to Henry on issues.
+- **Telegram:** @WatcherClawBot
+- **Role:** Background health monitoring. Checks server resources, log anomalies, and agent responsiveness. Reports to Henry on issues. Now reachable directly via Telegram for on-demand health queries.
 - **Skills:** `health-check`, `log-analyzer`, `session-cleanup`
 - **Cron:** Every 30 minutes (health check) + Sunday 4 AM (weekly cleanup)
 - **Thinking:** `low` — efficiency optimized
@@ -402,11 +406,42 @@ The script copies the `configs/` directory to `/home/clawuser/.openclaw/` and us
 
 ```bash
 sed -i "s|YOUR_ANTHROPIC_API_KEY|${ANTHROPIC_API_KEY}|g" "$CONFIG"
-sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_HENRY|${TELEGRAM_TOKEN_HENRY}|g" "$CONFIG"
-# ... and so on for each token
+sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_HENRY|${TELEGRAM_TOKEN_HENRY}|g"   "$CONFIG"
+sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_CODER|${TELEGRAM_TOKEN_CODER}|g"   "$CONFIG"
+sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_SCOUT|${TELEGRAM_TOKEN_SCOUT}|g"   "$CONFIG"
+sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_WRITER|${TELEGRAM_TOKEN_WRITER}|g" "$CONFIG"
+sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_WATCHER|${TELEGRAM_TOKEN_WATCHER}|g" "$CONFIG"
+```
+
+Set all five variables at the top of `deploy-openclaw.sh` before running:
+```bash
+ANTHROPIC_API_KEY="sk-ant-..."
+TELEGRAM_TOKEN_HENRY="..."
+TELEGRAM_TOKEN_CODER="..."
+TELEGRAM_TOKEN_SCOUT="..."
+TELEGRAM_TOKEN_WRITER="..."
+TELEGRAM_TOKEN_WATCHER="..."
 ```
 
 **Note:** After deploying, the `openclaw.json` must be replaced with the corrected 2026.x schema version (see [Section 15](#15-schema-fixes-for-openclaw-2026x)). The deploy script generates a config against the old schema.
+
+### Phase 5 — Dashboard Deployment
+
+The deploy script now automatically installs and enables the Shiny monitoring dashboard:
+
+```bash
+# Phase 5 (phase5_dashboard) — runs at the end of deploy-openclaw.sh
+apt-get install -y python3.12-venv
+python3 -m venv /opt/clawinc-dashboard/venv
+/opt/clawinc-dashboard/venv/bin/pip install shiny psutil
+cp dashboard/app.py /opt/clawinc-dashboard/
+cp deploy/clawinc-dashboard.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now clawinc-dashboard
+ufw allow 8050/tcp
+```
+
+After the deploy script completes, the dashboard is immediately accessible at `http://YOUR_IP:8050` — no SSH tunnel required.
 
 ### Phase 7 — Security Hardening
 
@@ -512,16 +547,17 @@ A single OpenClaw gateway can run multiple Telegram bots simultaneously, each co
 "channels": {
   "telegram": {
     "accounts": {
-      "henry-bot": { "botToken": "TOKEN_A" },
-      "coder-bot":  { "botToken": "TOKEN_B" },
-      "scout-bot":  { "botToken": "TOKEN_C" },
-      "writer-bot": { "botToken": "TOKEN_D" }
+      "henry-bot":   { "botToken": "TOKEN_A" },
+      "coder-bot":   { "botToken": "TOKEN_B" },
+      "scout-bot":   { "botToken": "TOKEN_C" },
+      "writer-bot":  { "botToken": "TOKEN_D" },
+      "watcher-bot": { "botToken": "TOKEN_E" }
     }
   }
 }
 ```
 
-The gateway opens four separate long-polling connections in parallel. The routing engine maps each `accountId` to an agent via the `bindings` array.
+The gateway opens five separate long-polling connections in parallel. The routing engine maps each `accountId` to an agent via the `bindings` array.
 
 ### Message Routing
 
@@ -1013,10 +1049,12 @@ The dashboard is **read-only** — it observes but does not control. API keys an
 
 ### Deployment
 
-The dashboard is deployed as `/etc/systemd/system/clawinc-dashboard.service` using a Python venv at `/opt/clawinc-dashboard/venv/`.
+The dashboard is deployed automatically by `deploy-openclaw.sh` as part of **Phase 5 (phase5_dashboard)**. No manual installation is required on a fresh server — after the deploy script completes, the dashboard is immediately accessible at `http://YOUR_IP:8050` with no SSH tunnel required.
+
+The dashboard runs as `/etc/systemd/system/clawinc-dashboard.service` using a Python venv at `/opt/clawinc-dashboard/venv/`.
 
 ```bash
-# Install (on a fresh server, after deploy-openclaw.sh)
+# Manual install only needed if skipping the deploy script
 apt-get install -y python3.12-venv
 python3 -m venv /opt/clawinc-dashboard/venv
 /opt/clawinc-dashboard/venv/bin/pip install shiny psutil
@@ -1026,6 +1064,12 @@ systemctl daemon-reload
 systemctl enable --now clawinc-dashboard
 ufw allow 8050/tcp
 ```
+
+### Bug Fixes in v0.78
+
+**Reactive loop fix:** Earlier versions had a bug where the Shiny reactive graph caused `openclaw cron list` (a subprocess call) to execute every 3 seconds as Shiny continuously re-evaluated reactive dependencies. This was fixed by wrapping the cron data fetch in `reactive.isolate()`, so the subprocess only runs on explicit refresh triggers, not on every reactive invalidation.
+
+**Cron data caching:** Cron job data is now cached for 5 minutes. This prevents subprocess pile-up on slower servers where `openclaw cron list` may take 1–2 seconds to return, which previously caused queued subprocesses to accumulate during the 30-second auto-refresh cycle.
 
 ```bash
 # Service management

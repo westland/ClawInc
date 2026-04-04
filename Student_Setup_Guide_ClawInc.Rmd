@@ -2,7 +2,7 @@
 title: "ClawInc Student Setup Guide: Your Own AI Agent Company"
 subtitle: "MKT 518 — Deploying OpenClaw on DigitalOcean with Telegram Control"
 author: "J. Christopher Westland"
-date: "2026-04-01"
+date: "2026-04-04"
 output:
   pdf_document:
     toc: true
@@ -71,7 +71,7 @@ You should see a prompt like `root@ClawInc:~#`. You are now inside your server.
 
 # Part 2: Create Your Telegram Bots
 
-You need **4 Telegram bots** (one per agent). This is free and takes about 5 minutes.
+You need **5 Telegram bots** (one per agent). This is free and takes about 5 minutes.
 
 ## Install Telegram
 
@@ -93,12 +93,13 @@ Create a Telegram account if you do not have one.
 | Coder ClawBot | `coderclawbot` | Software Engineer — writes and runs code |
 | Scout ClawBot | `scoutclawbot` | Research Analyst — web research and trends |
 | Writer ClawBot | `writerclawbot` | Content Creator — memos and reports |
+| Watcher ClawBot | `watcherclawbot` | System Monitor — health checks and alerts |
 
 4. After each `/newbot`, BotFather gives you a **bot token** that looks like:
    ```
    8732631641:AAHu1OuUh8uRXqpZqH_6G77DMOwIAXVaRKU
    ```
-5. **Save all 4 tokens in a text file.** You will need them in Part 4.
+5. **Save all 5 tokens in a text file.** You will need them in Part 4.
 
 > **Tip:** To create the next bot, just send `/newbot` to BotFather again. You do not need to start a new conversation.
 
@@ -155,6 +156,7 @@ TELEGRAM_TOKEN_HENRY="YOUR_HENRY_BOT_TOKEN"
 TELEGRAM_TOKEN_CODER="YOUR_CODER_BOT_TOKEN"
 TELEGRAM_TOKEN_SCOUT="YOUR_SCOUT_BOT_TOKEN"
 TELEGRAM_TOKEN_WRITER="YOUR_WRITER_BOT_TOKEN"
+TELEGRAM_TOKEN_WATCHER="YOUR_WATCHER_BOT_TOKEN"
 ```
 
 Save the file: press `Ctrl+X`, then `Y`, then `Enter`.
@@ -166,183 +168,16 @@ chmod +x /root/deploy/deploy-openclaw.sh
 /root/deploy/deploy-openclaw.sh
 ```
 
-This script takes **5–10 minutes** and will:
+This script takes **10–15 minutes** and will:
 
 - Create 2 GB of swap space (essential for a 1 GB RAM server)
 - Install Node.js 24 and OpenClaw
 - Set up the 5 agent workspaces
-- Configure the firewall
-- Attempt to start the gateway
+- Configure the firewall (opens SSH and port 8050 for the dashboard)
+- Deploy and start the Shiny monitoring dashboard on port 8050
+- Start the OpenClaw gateway service
 
 Watch the output scroll by. At the end you should see green checkmarks.
-
-## Fix the Configuration (Required — Schema Update)
-
-The deploy script uses an older config format. You need to replace `openclaw.json` with the corrected version that matches OpenClaw 2026.x. Run these commands on your server:
-
-```bash
-cat > /home/clawuser/.openclaw/openclaw.json << 'EOF'
-{
-  "env": {
-    "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY"
-  },
-  "gateway": {
-    "mode": "local"
-  },
-  "agents": {
-    "defaults": {
-      "model": { "primary": "anthropic/claude-sonnet-4-5-20250929" }
-    },
-    "list": [
-      {
-        "id": "henry",
-        "name": "Henry",
-        "default": true,
-        "workspace": "~/.openclaw/workspace-henry",
-        "agentDir": "~/.openclaw/agents/henry",
-        "model": "anthropic/claude-opus-4-6",
-        "thinkingDefault": "high"
-      },
-      {
-        "id": "coder",
-        "name": "Coder",
-        "workspace": "~/.openclaw/workspace-coder",
-        "agentDir": "~/.openclaw/agents/coder",
-        "model": "anthropic/claude-sonnet-4-5-20250929",
-        "thinkingDefault": "high"
-      },
-      {
-        "id": "scout",
-        "name": "Scout",
-        "workspace": "~/.openclaw/workspace-scout",
-        "agentDir": "~/.openclaw/agents/scout",
-        "model": "anthropic/claude-haiku-4-5-20251001",
-        "thinkingDefault": "medium"
-      },
-      {
-        "id": "writer",
-        "name": "Writer",
-        "workspace": "~/.openclaw/workspace-writer",
-        "agentDir": "~/.openclaw/agents/writer",
-        "model": "anthropic/claude-sonnet-4-5-20250929",
-        "thinkingDefault": "medium"
-      },
-      {
-        "id": "watcher",
-        "name": "Watcher",
-        "workspace": "~/.openclaw/workspace-watcher",
-        "agentDir": "~/.openclaw/agents/watcher",
-        "model": "anthropic/claude-haiku-4-5-20251001",
-        "thinkingDefault": "low"
-      }
-    ]
-  },
-  "channels": {
-    "telegram": {
-      "enabled": true,
-      "dmPolicy": "open",
-      "allowFrom": ["*"],
-      "defaultAccount": "henry-bot",
-      "accounts": {
-        "henry-bot": {
-          "botToken": "YOUR_HENRY_BOT_TOKEN",
-          "dmPolicy": "open",
-          "allowFrom": ["*"]
-        },
-        "coder-bot": {
-          "botToken": "YOUR_CODER_BOT_TOKEN",
-          "dmPolicy": "open",
-          "allowFrom": ["*"]
-        },
-        "scout-bot": {
-          "botToken": "YOUR_SCOUT_BOT_TOKEN",
-          "dmPolicy": "open",
-          "allowFrom": ["*"]
-        },
-        "writer-bot": {
-          "botToken": "YOUR_WRITER_BOT_TOKEN",
-          "dmPolicy": "open",
-          "allowFrom": ["*"]
-        }
-      }
-    }
-  },
-  "bindings": [
-    { "agentId": "henry", "match": { "channel": "telegram", "accountId": "henry-bot" } },
-    { "agentId": "coder", "match": { "channel": "telegram", "accountId": "coder-bot" } },
-    { "agentId": "scout", "match": { "channel": "telegram", "accountId": "scout-bot" } },
-    { "agentId": "writer", "match": { "channel": "telegram", "accountId": "writer-bot" } }
-  ],
-  "memory": {
-    "backend": "qmd",
-    "qmd": {
-      "searchMode": "search"
-    }
-  },
-  "logging": {
-    "level": "info",
-    "file": "~/.openclaw/logs/openclaw.log"
-  },
-  "cron": {
-    "enabled": true
-  }
-}
-EOF
-```
-
-**Replace the placeholder values** with your actual keys before running:
-- `YOUR_ANTHROPIC_API_KEY` → your `sk-ant-api03-...` key
-- `YOUR_HENRY_BOT_TOKEN` → the token BotFather gave you for the Henry bot
-- `YOUR_CODER_BOT_TOKEN` → the Coder bot token
-- `YOUR_SCOUT_BOT_TOKEN` → the Scout bot token
-- `YOUR_WRITER_BOT_TOKEN` → the Writer bot token
-
-Then set permissions:
-
-```bash
-chmod 600 /home/clawuser/.openclaw/openclaw.json
-chown clawuser:clawuser /home/clawuser/.openclaw/openclaw.json
-```
-
-Validate the config:
-
-```bash
-su - clawuser -c "openclaw config validate"
-# Should print: Config valid: ~/.openclaw/openclaw.json
-```
-
-## Fix the Systemd Service
-
-The deploy script starts the gateway with the wrong command. Fix it:
-
-```bash
-# Fix the command (gateway run, not gateway start)
-sed -i 's|ExecStart=/usr/bin/openclaw gateway start|ExecStart=/usr/bin/openclaw gateway run|' \
-    /etc/systemd/system/openclaw.service
-
-# Fix the PrivateTmp setting that blocks the tmp directory
-sed -i 's|PrivateTmp=true|PrivateTmp=false|' /etc/systemd/system/openclaw.service
-
-# Add performance environment variables
-sed -i '/Environment=NODE_ENV=production/a Environment=OPENCLAW_NO_RESPAWN=1' \
-    /etc/systemd/system/openclaw.service
-
-# Create the required temp directory
-CLAW_UID=$(id -u clawuser)
-mkdir -p /tmp/openclaw-${CLAW_UID}
-chown clawuser:clawuser /tmp/openclaw-${CLAW_UID}
-
-# Reload and start
-systemctl daemon-reload
-systemctl restart openclaw
-```
-
-Wait 10 seconds, then check the service is running:
-
-```bash
-systemctl is-active openclaw
-# Should print: active
-```
 
 ## Add Cron Jobs
 
@@ -424,60 +259,45 @@ Do the same for Coder, Scout, and Writer bots.
 
 ---
 
-# Part 6: Access the Dashboard in a Browser
+# Part 6: Access the Monitoring Dashboard
 
-OpenClaw has a built-in web dashboard at port 18789 on your server. Since your server's firewall blocks direct web access (for security), you access it through an **SSH tunnel** — a secure encrypted connection that forwards a local port on your computer to the server.
-
-## Open the SSH Tunnel
-
-**Mac/Linux — Terminal:**
-```bash
-ssh -L 18789:localhost:18789 root@YOUR_DROPLET_IP
-# Keep this terminal window open
-```
-
-**Windows — PowerShell or Command Prompt:**
-```
-ssh -L 18789:localhost:18789 root@YOUR_DROPLET_IP
-```
-
-**Windows — PuTTY (GUI):**
-1. Open PuTTY
-2. Enter your IP in **Host Name**
-3. Go to **Connection → SSH → Tunnels**
-4. Source port: `18789`, Destination: `localhost:18789`, click **Add**
-5. Click **Open** and log in
+ClawInc includes a **Shiny for Python** monitoring dashboard that runs publicly on port 8050. No SSH tunnel required — just open your browser.
 
 ## Open the Dashboard
 
-Once the tunnel is running, open your browser and go to:
-
 ```
-http://localhost:18789
+http://YOUR_DROPLET_IP:8050
 ```
 
-You will see the **OpenClaw Control Panel** showing:
+Replace `YOUR_DROPLET_IP` with your actual droplet IP address (the same one you use for SSH).
 
-- Live gateway status
-- All 5 agents
-- Active sessions
-- Cron job schedule
-- Memory contents
-- Real-time logs
+## What You Will See
 
-> **Keep the SSH tunnel terminal open** while using the dashboard. The tunnel closes when you close that window.
-
-## Dashboard Features
+The dashboard auto-refreshes every 30 seconds and shows:
 
 | Section | What it shows |
 |---------|---------------|
-| **Overview** | Server health, connected agents, memory stats |
-| **Agents** | Each agent's model, workspace, routing rules |
-| **Sessions** | Active and recent conversation sessions |
-| **Cron** | Scheduled jobs, run history, next run times |
-| **Memory** | Stored memories searchable across agents |
-| **Config** | Edit openclaw.json directly in the browser |
-| **Logs** | Real-time log stream from the gateway |
+| **System** | Gateway service status, CPU %, RAM, disk usage |
+| **Process** | OpenClaw PID, uptime, memory consumption |
+| **Telegram Bots** | All 5 bots connected with their agent routing |
+| **Agents** | Card for each agent — model, workspace state, thinking level |
+| **Cron Jobs** | Current scheduled job list |
+| **Activity Log** | Live tail of the OpenClaw log file |
+
+> **Note:** The dashboard is **read-only**. You can observe what your agents are doing, but you cannot send commands from the dashboard — use Telegram for that.
+
+## Dashboard Service Management
+
+```bash
+# Check if dashboard is running
+systemctl status clawinc-dashboard
+
+# Restart if needed
+systemctl restart clawinc-dashboard
+
+# View dashboard logs
+journalctl -u clawinc-dashboard -n 30 --no-pager
+```
 
 ---
 
@@ -719,18 +539,17 @@ Use this checklist to track your setup progress:
 - [ ] Created DigitalOcean account and droplet (Ubuntu 24.04, $6/mo)
 - [ ] Noted my droplet IP address: ________________
 - [ ] Installed Telegram on phone and/or desktop
-- [ ] Created 4 bots via @BotFather and saved all 4 tokens
+- [ ] Created 5 bots via @BotFather and saved all 5 tokens
 - [ ] Got Anthropic API key from console.anthropic.com
 - [ ] Uploaded `deploy/` folder to `/root/deploy/` on server
 - [ ] Edited deploy script with my API keys and bot tokens
 - [ ] Ran deploy script successfully
-- [ ] Replaced `openclaw.json` with corrected 2026.x schema version
-- [ ] Fixed systemd service (`gateway run` instead of `gateway start`)
 - [ ] Validated config with `openclaw config validate` — shows **Config valid**
 - [ ] Service is active: `systemctl is-active openclaw` shows **active**
 - [ ] Henry bot responds in Telegram
-- [ ] Coder, Scout, Writer bots all respond
-- [ ] Dashboard accessible at http://localhost:18789 (via SSH tunnel)
+- [ ] Coder, Scout, Writer, Watcher bots all respond
+- [ ] Dashboard accessible at http://YOUR_IP:8050 (no SSH tunnel needed)
+- [ ] Both services active: `systemctl is-active openclaw` and `systemctl is-active clawinc-dashboard`
 - [ ] All 6 cron jobs added and visible in `openclaw cron list`
 
 ---
@@ -743,7 +562,7 @@ Use this checklist to track your setup progress:
 | **Coder** | @YourCoderBot | Claude Sonnet 4.5 | Writing Python/R code, data analysis, debugging |
 | **Scout** | @YourScoutBot | Claude Haiku 4.5 | Web research, trend monitoring, news summaries |
 | **Writer** | @YourWriterBot | Claude Sonnet 4.5 | Reports, memos, executive summaries, content |
-| **Watcher** | *(no bot)* | Claude Haiku 4.5 | Automated system health monitoring (background only) |
+| **Watcher** | @YourWatcherBot | Claude Haiku 4.5 | System health monitoring and alerts |
 
 ---
 
@@ -760,4 +579,4 @@ Use this checklist to track your setup progress:
 
 ---
 
-*For questions about this setup, contact your instructor. For OpenClaw documentation, see the built-in docs at* `http://localhost:18789` *(requires SSH tunnel).*
+*For questions about this setup, contact your instructor. For live system status, open* `http://YOUR_DROPLET_IP:8050` *in your browser.*
