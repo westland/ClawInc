@@ -24,7 +24,7 @@ Environment=HOME=/home/clawuser
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/clawuser/.openclaw /tmp/openclaw
+ReadWritePaths=/home/clawuser/.openclaw /tmp/openclaw /tmp/openclaw-1000
 PrivateTmp=false
 ProtectKernelTunables=true
 ProtectKernelModules=true

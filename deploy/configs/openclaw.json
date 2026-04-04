@@ -108,5 +108,10 @@
   },
   "cron": {
     "enabled": true
+  },
+  "approvals": {
+    "exec": {
+      "enabled": false
+    }
   }
 }
