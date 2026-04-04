@@ -85,7 +85,7 @@ Create a Telegram account if you do not have one.
 
 1. In Telegram, search for **@BotFather** (the official Telegram bot creation service — blue checkmark).
 2. Start a chat and send the command `/newbot`.
-3. BotFather will ask for a name and a username. Create **4 bots** one at a time:
+3. BotFather will ask for a name and a username. Create **5 bots** one at a time:
 
 | Bot Name | Bot Username (must end in `bot`) | Agent Role |
 |----------|----------------------------------|------------|
@@ -253,7 +253,7 @@ This shows all 5 agents and their Telegram bot connections.
 3. Send a message: `Hello! Who are you and what can you do?`
 4. The Henry agent (powered by Claude Opus) should respond within a few seconds.
 
-Do the same for Coder, Scout, and Writer bots.
+Do the same for Coder, Scout, Writer, and Watcher bots.
 
 > **If the bot does not respond:** Check the logs on your server with `journalctl -u openclaw -f` and look for error messages.
 
