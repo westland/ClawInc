@@ -129,6 +129,31 @@ Your agents run on Claude language models hosted by Anthropic. You need an API k
 
 ---
 
+# Part 3b: Create Your Discord Webhook
+
+All agent reports are delivered to a Discord guild (server) automatically. You need one Discord **webhook URL** — a single URL that all 5 agents will post to, each signing their own messages.
+
+## Create a Discord Server (if you don't have one)
+
+1. Open [discord.com](https://discord.com) and sign in (or create a free account).
+2. Click the **+** button in the left sidebar → **Create My Own** → **For me and my friends**.
+3. Name it `ClawInc` (or your company name).
+4. Create a channel called `#reports` (this is where all agent posts will appear).
+
+## Create a Webhook for the Reports Channel
+
+1. Right-click the `#reports` channel → **Edit Channel**.
+2. Go to **Integrations** → **Webhooks** → **New Webhook**.
+3. Name it `ClawInc Reports` and click **Copy Webhook URL**.
+4. **Save this URL** — it looks like:
+   ```
+   https://discord.com/api/webhooks/1234567890/ABCdef...
+   ```
+
+> **One webhook is enough.** Each agent posts to the same channel but signs their messages with their own name, role, and color (Henry posts in gold, Scout in green, Writer in purple, Coder in blue, Watcher in orange).
+
+---
+
 # Part 4: Deploy ClawInc on Your Server
 
 ## Upload the Deploy Package
@@ -176,9 +201,10 @@ TELEGRAM_TOKEN_CODER="YOUR_CODER_BOT_TOKEN"
 TELEGRAM_TOKEN_SCOUT="YOUR_SCOUT_BOT_TOKEN"
 TELEGRAM_TOKEN_WRITER="YOUR_WRITER_BOT_TOKEN"
 TELEGRAM_TOKEN_WATCHER="YOUR_WATCHER_BOT_TOKEN"
+DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
 ```
 
-> **v0.78 note:** There are now **5 bot token variables**, not 4. The `TELEGRAM_TOKEN_WATCHER` line is new. The deploy script will refuse to run if any token is left as a placeholder.
+> **v0.78 note:** There are now **5 bot token variables** and a **Discord webhook URL**. Fill in all of them before running the script.
 
 Save and exit nano: press `Ctrl+X`, then `Y`, then `Enter`.
 
@@ -216,32 +242,32 @@ su - clawuser << 'CRONEOF'
 openclaw cron add \
   --name "morning-research" --agent "scout" \
   --cron "0 8 * * *" --session isolated \
-  --message "Run your morning research routine. Search the web for the latest trending topics in AI, marketing analytics, and technology. Focus on developments from the last 24 hours. Write a structured briefing with key findings, notable trends, and actionable insights. Save the briefing to your memory."
+  --message "Run your morning research routine. Search the web for the latest trending topics in AI, marketing analytics, and technology. Focus on developments from the last 24 hours. Write a structured briefing with key findings, notable trends, and actionable insights. Save the briefing to your memory. Then post a signed summary to the Discord guild using your discord-report skill."
 
 openclaw cron add \
   --name "daily-memo" --agent "writer" \
   --cron "0 9 * * *" --session isolated \
-  --message "Compile the morning memo. Search Scout memory for today's research briefing. Synthesize into a polished executive memo with sections: Top Stories, Trend Analysis, Action Items, Market Watch. Save to your memory."
+  --message "Compile the morning memo. Search Scout memory for today's research briefing. Synthesize into a polished executive memo with sections: Top Stories, Trend Analysis, Action Items, Market Watch. Save to your memory. Then post the full memo to the Discord guild using your discord-report skill, signed as Writer."
 
 openclaw cron add \
   --name "overnight-worker" --agent "coder" \
   --cron "0 2 * * *" --session isolated \
-  --message "Check your task queue and Henry's recent delegations. Work on the highest-priority pending development task. If no tasks are queued, review code for improvements and document any technical debt found."
+  --message "Check your task queue and Henry's recent delegations. Work on the highest-priority pending development task. If no tasks are queued, review code for improvements and document any technical debt found. Post a summary of what was completed to the Discord guild using your discord-report skill, signed as Coder."
 
 openclaw cron add \
   --name "health-check" --agent "watcher" \
   --cron "*/30 * * * *" --session isolated \
-  --message "Check system resources: CPU, RAM, disk, and swap usage. Verify all agents are responsive. Review error logs from the past 30 minutes. Alert Henry only if something requires attention."
+  --message "Check system resources: CPU, RAM, disk, and swap usage. Verify all agents are responsive. Review error logs from the past 30 minutes. Only post to the Discord guild (using your discord-report skill) if a metric exceeds warning thresholds or an error is found — do not post routine all-clear messages."
 
 openclaw cron add \
   --name "nightly-rnd" --agent "henry" \
   --cron "0 23 * * *" --session isolated \
-  --message "Initiate the nightly R&D session. Review today's memo from Writer, research from Scout, and any code from Coder. Identify strategic opportunities and improvements. Delegate follow-up tasks to team members as appropriate."
+  --message "Initiate the nightly R&D session. Review today's memo from Writer, research from Scout, and any code from Coder. Identify strategic opportunities and improvements. Delegate follow-up tasks to team members as appropriate. Post a summary of tonight's R&D findings and delegations to the Discord guild using your discord-report skill, signed as Henry."
 
 openclaw cron add \
   --name "session-cleanup" --agent "watcher" \
   --cron "0 4 * * 0" --session isolated \
-  --message "Perform weekly session cleanup. Archive sessions older than 7 days. Remove temporary files. Report storage savings and any anomalies to Henry."
+  --message "Perform weekly session cleanup. Archive sessions older than 7 days. Remove temporary files. Post a cleanup summary (storage freed, any anomalies) to the Discord guild using your discord-report skill, signed as Watcher."
 
 openclaw cron list
 CRONEOF

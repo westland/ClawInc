@@ -36,6 +36,12 @@ TELEGRAM_TOKEN_CODER="YOUR_TELEGRAM_BOT_TOKEN_CODER"
 TELEGRAM_TOKEN_SCOUT="YOUR_TELEGRAM_BOT_TOKEN_SCOUT"
 TELEGRAM_TOKEN_WRITER="YOUR_TELEGRAM_BOT_TOKEN_WRITER"
 TELEGRAM_TOKEN_WATCHER="YOUR_TELEGRAM_BOT_TOKEN_WATCHER"
+
+# Discord Webhook URL (paste the webhook URL from your Discord server channel settings)
+# All agent reports will be posted here, signed by each agent
+# Leave blank to disable Discord delivery
+DISCORD_WEBHOOK_URL="YOUR_DISCORD_WEBHOOK_URL"
+
 # Gateway Auth Token (auto-generated if left as default)
 GATEWAY_TOKEN="AUTO"
 
@@ -257,6 +263,7 @@ phase3_configure() {
     sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_SCOUT|${TELEGRAM_TOKEN_SCOUT}|g" "$CONFIG"
     sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_WRITER|${TELEGRAM_TOKEN_WRITER}|g" "$CONFIG"
     sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_WATCHER|${TELEGRAM_TOKEN_WATCHER}|g" "$CONFIG"
+    sed -i "s|YOUR_DISCORD_WEBHOOK_URL|${DISCORD_WEBHOOK_URL}|g" "$CONFIG"
     sed -i "s|YOUR_GATEWAY_AUTH_TOKEN_REPLACE_ME_WITH_50_PLUS_CHAR_RANDOM_STRING|${GATEWAY_TOKEN}|g" "$CONFIG"
 
     log "API keys and tokens configured"

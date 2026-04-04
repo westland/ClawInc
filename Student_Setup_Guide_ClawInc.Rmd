@@ -190,7 +190,7 @@ su - clawuser << 'CRONEOF'
 openclaw cron add \
   --name "morning-research" --agent "scout" \
   --cron "0 8 * * *" --session isolated \
-  --message "Run your morning research routine. Search the web for the latest trending topics in AI, marketing analytics, and technology. Focus on developments from the last 24 hours. Write a structured briefing with key findings, notable trends, and actionable insights. Save the briefing to your memory."
+  --message "Run your morning research routine. Search the web for the latest trending topics in AI, marketing analytics, and technology. Focus on developments from the last 24 hours. Write a structured briefing with key findings, notable trends, and actionable insights. Save the briefing to your memory. Then post a signed summary to the Discord guild using your discord-report skill."
 
 openclaw cron add \
   --name "daily-memo" --agent "writer" \
