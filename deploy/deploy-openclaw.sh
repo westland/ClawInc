@@ -658,7 +658,7 @@ DASHEOF
 main() {
     echo "" > "$LOG_FILE"
 
-    header "ClawInc — OpenClaw Multi-Agent Deployment v0.78"
+    header "ClawInc — OpenClaw Multi-Agent Deployment v0.90"
     echo "Server: $(hostname) ($(curl -s ifconfig.me 2>/dev/null || echo 'unknown'))"
     echo "Date:   $(date)"
     echo "OS:     $(lsb_release -ds 2>/dev/null || cat /etc/os-release | head -1)"

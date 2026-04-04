@@ -1,8 +1,8 @@
 ---
-title: "ClawInc v0.78 — Student Setup Guide"
+title: "ClawInc v0.90 — Student Setup Guide"
 subtitle: "Deploy Your Own AI Agent Company on DigitalOcean"
 author: "J. Christopher Westland"
-date: "2026-04-04"
+date: "2026-04-05"
 output:
   pdf_document:
     toc: true
@@ -131,26 +131,44 @@ Your agents run on Claude language models hosted by Anthropic. You need an API k
 
 # Part 3b: Create Your Discord Webhook
 
-All agent reports are delivered to a Discord guild (server) automatically. You need one Discord **webhook URL** — a single URL that all 5 agents will post to, each signing their own messages.
+All agent reports are automatically delivered to a Discord server channel. You need one **webhook URL** — a single URL that all 5 agents post to, each signing their messages with their own name and color.
 
-## Create a Discord Server (if you don't have one)
+## Step 1 — Create a Discord Account and Server
 
-1. Open [discord.com](https://discord.com) and sign in (or create a free account).
-2. Click the **+** button in the left sidebar → **Create My Own** → **For me and my friends**.
-3. Name it `ClawInc` (or your company name).
-4. Create a channel called `#reports` (this is where all agent posts will appear).
+1. Go to [discord.com](https://discord.com) and sign in, or create a free account.
+2. In the left sidebar, click the large **+** button at the bottom (Add a Server).
+3. Choose **Create My Own** → **For me and my friends**.
+4. Give it a name like `ClawInc` and click **Create**.
 
-## Create a Webhook for the Reports Channel
+## Step 2 — Create a Text Channel Called #reports
 
-1. Right-click the `#reports` channel → **Edit Channel**.
-2. Go to **Integrations** → **Webhooks** → **New Webhook**.
-3. Name it `ClawInc Reports` and click **Copy Webhook URL**.
-4. **Save this URL** — it looks like:
-   ```
-   https://discord.com/api/webhooks/1234567890/ABCdef...
-   ```
+1. In your new server, look at the left sidebar. You will see **TEXT CHANNELS** as a heading.
+2. Hover your mouse over the words **TEXT CHANNELS** — a small **+** icon appears to the right.
+3. Click the **+** icon.
+4. Leave the type as **Text Channel**.
+5. Type `reports` as the channel name.
+6. Click **Create Channel**.
 
-> **One webhook is enough.** Each agent posts to the same channel but signs their messages with their own name, role, and color (Henry posts in gold, Scout in green, Writer in purple, Coder in blue, Watcher in orange).
+You now have a `#reports` channel in your server.
+
+## Step 3 — Create the Webhook
+
+1. Click your **server name** at the very top of the left sidebar.
+2. Choose **Server Settings** from the dropdown menu.
+3. In the left menu of Server Settings, click **Integrations**.
+4. Click **Webhooks** → then click **New Webhook**.
+5. Give it a name: `ClawInc Reports`.
+6. Click the **Channel** dropdown and select `#reports`.
+7. Click **Copy Webhook URL**.
+
+The URL you just copied looks like this:
+```
+https://discord.com/api/webhooks/1234567890123456789/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+**That entire URL is your webhook.** There is no separate ID or token to find — just copy and paste the whole URL. Save it somewhere — you will paste it into the deploy script in the next step.
+
+> **One webhook is all you need.** All 5 agents post to the same `#reports` channel. Each agent signs their message with their own name and color: Henry in gold, Scout in green, Writer in purple, Coder in blue, Watcher in orange.
 
 ---
 
@@ -201,10 +219,12 @@ TELEGRAM_TOKEN_CODER="YOUR_CODER_BOT_TOKEN"
 TELEGRAM_TOKEN_SCOUT="YOUR_SCOUT_BOT_TOKEN"
 TELEGRAM_TOKEN_WRITER="YOUR_WRITER_BOT_TOKEN"
 TELEGRAM_TOKEN_WATCHER="YOUR_WATCHER_BOT_TOKEN"
-DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
+DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/paste-your-full-webhook-url-here"
 ```
 
-> **v0.78 note:** There are now **5 bot token variables** and a **Discord webhook URL**. Fill in all of them before running the script.
+> **Paste the entire webhook URL** you copied from Discord Server Settings → Integrations → Webhooks. Do not try to split it into an ID and token — just paste the whole URL between the quotes.
+
+> **v0.90 note:** There are now **5 bot token variables** and a **Discord webhook URL**. Fill in all of them before running the script.
 
 Save and exit nano: press `Ctrl+X`, then `Y`, then `Enter`.
 
@@ -274,6 +294,41 @@ CRONEOF
 ```
 
 The final command prints a table confirming all 6 jobs are registered.
+
+---
+
+# Part 4b: Adding Discord to an Already-Running Server
+
+If you already ran the deploy script and want to add Discord now, do this on your server (no re-deployment needed):
+
+```bash
+nano /home/clawuser/.openclaw/openclaw.json
+```
+
+Find the `"env"` section near the top. It currently looks like:
+
+```json
+"env": {
+    "ANTHROPIC_API_KEY": "sk-ant-api03-..."
+},
+```
+
+Add a comma after the API key line and add the Discord webhook URL on the next line:
+
+```json
+"env": {
+    "ANTHROPIC_API_KEY": "sk-ant-api03-...",
+    "DISCORD_WEBHOOK_URL": "https://discord.com/api/webhooks/paste-your-full-url-here"
+},
+```
+
+Save: press `Ctrl+X` → `Y` → `Enter`. Then restart:
+
+```bash
+systemctl restart openclaw
+```
+
+> **The webhook URL goes between the quotes exactly as you copied it from Discord.** It is one long URL — do not split it or change it.
 
 ---
 

@@ -3,12 +3,13 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT 518 · J. Christopher Westland · University of Illinois at Chicago*
 
-[![Release](https://img.shields.io/github/v/release/westland/ClawInc)](https://github.com/westland/ClawInc/releases/tag/v0.78)
+[![Release](https://img.shields.io/github/v/release/westland/ClawInc)](https://github.com/westland/ClawInc/releases/tag/v0.90)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.3.31-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
+[![Discord](https://img.shields.io/badge/reports-Discord-5865F2)](https://discord.com)
 
-> **v0.78 Release Notes** — Watcher agent now has a Telegram bot binding (all 5 agents reachable via Telegram). Dashboard deployment automated in `deploy-openclaw.sh` (Phase 5). Fixed Shiny reactive loop bug that caused `openclaw cron list` to run every 3 seconds. Dashboard accessible directly at `http://YOUR_IP:8050` — no SSH tunnel required.
+> **v0.90 Release Notes** — All 5 agents now deliver signed, color-coded reports to a Discord guild automatically via webhook. Each agent has a `discord-report` skill. Set `DISCORD_WEBHOOK_URL` in the deploy script or add it to `openclaw.json` on a running server. Student Setup Guide now includes step-by-step Discord server, channel, and webhook creation instructions. Previous: v0.79 (Discord skill framework), v0.78 (Watcher Telegram bot, automated dashboard, reactive loop fix).
 
 ---
 
