@@ -977,17 +977,17 @@ Executive Summary, Key Metrics, Top 3 Findings, 2 Recommendations. 400 words."
 
 ### Voice Commands — Verbal Orders
 
-You can speak commands instead of typing. Telegram transcribes the voice note automatically before delivering it to the agent as text — no configuration required, works on the current deployment out of the box.
+You can speak commands instead of typing, but voice transcription requires **Telegram Premium**.
 
-**Mobile (iPhone or Android):** Hold the **microphone icon** in the Telegram message bar, speak, release to send.
+**With Telegram Premium:** Hold the **microphone icon**, speak, release to send — the voice note is transcribed and delivered to the agent as text.
 
-**Telegram Desktop (Windows/Mac):** Click the **microphone icon** in the message bar, speak, click send.
+**Without Telegram Premium (free accounts):** Type commands as text. Agents respond identically to typed and transcribed input.
 
 **Best practice:** Direct voice commands at Henry. As Chief of Staff, Henry can decompose a spoken instruction and delegate to multiple agents in one step. Example:
 
 > *"Henry, have Scout research the latest trends in influencer marketing and have Writer turn the findings into a one-page executive brief. Post both to Discord when done."*
 
-> **Important:** Use **voice notes** (press-and-hold the mic), not voice calls. Voice calls bypass the bot entirely — only voice notes are transcribed and forwarded to the agent.
+> **Important:** Use **voice notes** (press-and-hold the mic), not voice calls. Voice calls bypass the bot entirely. Voice notes only work with Telegram Premium.
 
 ### Checking What Agents Have Learned
 
