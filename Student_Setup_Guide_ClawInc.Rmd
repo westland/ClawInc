@@ -385,9 +385,23 @@ using a formal business style. Include an executive abstract,
 3 key findings, and 2 recommendations.
 ```
 
-## Voice Commands
+## Voice Commands — Giving Verbal Orders
 
-Telegram supports voice notes. Record a voice note and send it to any bot — OpenClaw transcribes it and responds. This is useful for quick commands on mobile.
+You can speak your commands instead of typing them. Telegram transcribes the voice note automatically before passing it to the agent — no setup required, already working on your current deployment.
+
+**Mobile (iPhone or Android):** Hold the **microphone icon** in the message bar, speak your command, release to send.
+
+**Telegram Desktop (Windows/Mac):** Click the **microphone icon** in the message bar, speak, then click send.
+
+**Best practice — use Henry for multi-agent voice commands:**
+
+Henry is your Chief of Staff and can delegate to the whole team from a single voice message. For example:
+
+> *"Henry, have Scout research the latest trends in influencer marketing and have Writer turn the findings into a one-page brief. Post both to Discord when done."*
+
+Henry decomposes the request, delegates to Scout and Writer in sequence, and coordinates the result.
+
+> **Important:** Use **voice notes** (hold the mic button), not voice calls. Voice calls do not reach the agents — only voice notes do.
 
 ## Checking Agent Memory
 

@@ -533,9 +533,32 @@ Run a full system health check. Report RAM, disk, swap,
 and CPU usage. Tell me if anything looks abnormal.
 ```
 
-## Voice Messages
+## Voice Messages — Giving Verbal Orders
 
-Telegram supports voice notes on mobile. Record a voice note and send it to any bot — OpenClaw transcribes the audio and processes it as a text message. This is convenient for quick commands when you are away from a keyboard.
+You can speak your commands instead of typing them. Telegram transcribes the voice note automatically before passing it to the agent — no setup required, and it is already working on your current deployment.
+
+**How to record on mobile (iPhone or Android):**
+
+1. Open the chat with any of your bots in Telegram
+2. Hold the **microphone icon** in the message bar
+3. Speak your command
+4. Release to send — the agent receives it as text and replies
+
+**How to record on Telegram Desktop (Windows/Mac):**
+
+1. Click the **microphone icon** in the message bar
+2. Speak your command
+3. Click the send button — Telegram transcribes and delivers it
+
+**Best practice — use Henry for multi-agent voice commands:**
+
+Henry is your Chief of Staff and can delegate to the whole team from a single instruction. For example, say:
+
+> *"Henry, have Scout research the latest trends in influencer marketing and have Writer turn the findings into a one-page executive brief. Post both to Discord when done."*
+
+Henry will decompose the request, delegate to Scout and Writer in sequence, and coordinate the output — all from one voice message.
+
+> **Note:** Use **voice notes** (hold mic and release), not voice calls. Voice calls do not reach the agents. Voice notes are sent as audio files that Telegram transcribes before delivery.
 
 ## Searching Agent Memory
 

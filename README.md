@@ -975,9 +975,19 @@ To Writer:
 Executive Summary, Key Metrics, Top 3 Findings, 2 Recommendations. 400 words."
 ```
 
-### Voice Commands
+### Voice Commands — Verbal Orders
 
-Record a voice note in Telegram and send it to any bot. OpenClaw transcribes it automatically. This is useful for rapid mobile interaction.
+You can speak commands instead of typing. Telegram transcribes the voice note automatically before delivering it to the agent as text — no configuration required, works on the current deployment out of the box.
+
+**Mobile (iPhone or Android):** Hold the **microphone icon** in the Telegram message bar, speak, release to send.
+
+**Telegram Desktop (Windows/Mac):** Click the **microphone icon** in the message bar, speak, click send.
+
+**Best practice:** Direct voice commands at Henry. As Chief of Staff, Henry can decompose a spoken instruction and delegate to multiple agents in one step. Example:
+
+> *"Henry, have Scout research the latest trends in influencer marketing and have Writer turn the findings into a one-page executive brief. Post both to Discord when done."*
+
+> **Important:** Use **voice notes** (press-and-hold the mic), not voice calls. Voice calls bypass the bot entirely — only voice notes are transcribed and forwarded to the agent.
 
 ### Checking What Agents Have Learned
 
