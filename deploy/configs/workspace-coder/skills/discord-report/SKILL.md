@@ -70,7 +70,7 @@ else:
     data = json.dumps(payload).encode()
     req = urllib.request.Request(
         webhook, data=data,
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", "User-Agent": "ClawIncBot/1.0"},
         method="POST"
     )
     try:
