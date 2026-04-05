@@ -360,6 +360,19 @@ WantedBy=multi-user.target
 SERVICEEOF
     fi
 
+    # Install tmpfiles.d config so /tmp/openclaw* dirs are created at every boot
+    # (required for systemd ReadWritePaths namespace setup)
+    if [[ -f "${DEPLOY_DIR}/openclaw-tmpfiles.conf" ]]; then
+        cp "${DEPLOY_DIR}/openclaw-tmpfiles.conf" /etc/tmpfiles.d/openclaw.conf
+    else
+        cat > /etc/tmpfiles.d/openclaw.conf << 'TMPEOF'
+d /tmp/openclaw      0700 clawuser clawuser -
+d /tmp/openclaw-1000 0700 clawuser clawuser -
+TMPEOF
+    fi
+    systemd-tmpfiles --create /etc/tmpfiles.d/openclaw.conf
+    log "Tmpfiles config installed — /tmp/openclaw dirs created"
+
     systemctl daemon-reload
     systemctl enable openclaw
     log "Systemd service installed and enabled"
