@@ -1,5 +1,40 @@
 # Sensitive credentials — never commit
 PW-keys-etc.txt
+.env
+telegram_tokens.txt
+*API Key*.txt
+DATABASES AND SERVERS FOR FINAL.txt
+
+# Course materials — not part of the deployable repo
+Final*.Rmd
+Final*.html
+Final*.pdf
+Final*.tex
+Final*.log
+FINAL-PROJECT*.Rmd
+FINAL-PROJECT*.html
+FINAL-PROJECT*.pdf
+Jetson*.Rmd
+Jetson*.html
+Jetson*.pdf
+lecture_notes*.Rmd
+lecture_notes*.html
+lecture_notes*.pdf
+Making_a_company*.Rmd
+Making_a_company*.pdf
+openclaw\ build*.Rmd
+openclaw-build*.html
+bot_army_grading*.Rmd
+bot_army_grading*.html
+Student_Setup_Guide_ClawInc.Rmd
+Student_Setup_Guide_ClawInc.pdf
+Student_Setup_Guide_v078*.Rmd
+The\ assignment.qmd
+running\ on*.Rmd
+running-on*.html
+*.zip
+BOT-ARMY-518.Rproj
+Bot\ Army\ 1st\ Try/
 
 # RStudio user session files
 .Rproj.user/

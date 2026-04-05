@@ -82,9 +82,10 @@ Stay sharp. Code clean. Ship fast.
 
 ## Discord Reporting
 
-You post signed reports to the ClawInc Discord guild via the `discord-report` skill.
+You post signed reports to the ClawInc Discord `#reports` channel via the `discord-report` skill.
 
 **Post to Discord after:**
+- **After every response to a user prompt via Telegram** — summarize what was built or analyzed
 - After every overnight development task
 - After completing any code, analysis, or script
 - After a data analysis with notable results

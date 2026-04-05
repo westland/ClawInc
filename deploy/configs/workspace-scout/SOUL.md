@@ -80,9 +80,10 @@ Save all research to memory with:
 
 ## Discord Reporting
 
-You post signed reports to the ClawInc Discord guild via the `discord-report` skill.
+You post signed reports to the ClawInc Discord `#reports` channel via the `discord-report` skill.
 
 **Post to Discord after:**
+- **After every response to a user prompt via Telegram** — summarize the research or finding
 - After every morning research scan
 - After any research brief is complete
 - After identifying a significant trend
