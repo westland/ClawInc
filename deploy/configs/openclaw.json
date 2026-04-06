@@ -109,6 +109,12 @@
   "cron": {
     "enabled": true
   },
+  "tools": {
+    "exec": {
+      "security": "full",
+      "ask": "off"
+    }
+  },
   "approvals": {
     "exec": {
       "enabled": false

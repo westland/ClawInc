@@ -229,8 +229,8 @@ The master config is `deploy/configs/openclaw.json`. OpenClaw 2026.x uses strict
 - `channels.telegram.accounts` is an **object** keyed by account ID (not an array)
 - Bot token field is `botToken` (not `token`)
 - `gateway.mode` is the correct key (not `gateway.authToken`)
-- `execApprovals` must be `{"exec": {"enabled": false}}` or omitted entirely
-- The `execApprovals.mode` key does not exist in 2026.x — omit it
+- Exec approvals require **two settings**: `tools.exec.security: "full"` in openclaw.json AND `defaults.security: "full"` in exec-approvals.json
+- The `execApprovals.mode` and `tools.exec.askFallback` keys do not exist in 2026.x — omit them
 
 **Known good config structure:**
 ```json
@@ -240,9 +240,18 @@ The master config is `deploy/configs/openclaw.json`. OpenClaw 2026.x uses strict
     "DISCORD_WEBHOOK_URL": "https://discord.com/api/webhooks/..."
   },
   "gateway": { "mode": "local" },
+  "tools": { "exec": { "security": "full", "ask": "off" } },
   "agents": { ... },
   "channels": { "telegram": { ... } },
   "approvals": { "exec": { "enabled": false } }
+}
+```
+
+**exec-approvals.json** (written automatically by the installer):
+```json
+{
+  "defaults": { "security": "full", "ask": "off" },
+  "agents": { "*": { "security": "full", "ask": "off" } }
 }
 ```
 

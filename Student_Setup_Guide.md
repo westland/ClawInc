@@ -144,50 +144,41 @@ Every agent posts its responses and reports to a Discord channel. This gives you
 
 ### Upload the Deploy Package
 
-From your **local computer**, copy the deploy files to your server:
+From your **local computer**, copy the deploy files to your server.
 
+**Mac/Linux** — open Terminal and run:
 ```bash
-scp -r deploy/ root@YOUR_IP:/root/deploy/
+scp -r deploy/ root@YOUR_DROPLET_IP:/root/deploy/
 ```
 
-On Windows without `scp`, use [WinSCP](https://winscp.net):
-- Protocol: SCP, Host: YOUR_IP, Username: root, Password: your root password
-- Copy the entire `deploy/` folder to `/root/deploy/` on the server.
-
-### Edit the Deploy Script
-
-On your server:
-
-```bash
-nano /root/deploy/deploy-openclaw.sh
-```
-
-Fill in the **CONFIGURATION** section at the top:
-
-```bash
-# ============================================================
-# CONFIGURATION — EDIT THESE
-# ============================================================
-
-ANTHROPIC_API_KEY="sk-ant-api03-YOUR-KEY-HERE"
-
-DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/YOUR-WEBHOOK-HERE"
-
-TELEGRAM_TOKEN_HENRY="YOUR_HENRY_BOT_TOKEN"
-TELEGRAM_TOKEN_CODER="YOUR_CODER_BOT_TOKEN"
-TELEGRAM_TOKEN_SCOUT="YOUR_SCOUT_BOT_TOKEN"
-TELEGRAM_TOKEN_WRITER="YOUR_WRITER_BOT_TOKEN"
-TELEGRAM_TOKEN_WATCHER="YOUR_WATCHER_BOT_TOKEN"
-```
-
-Save: press `Ctrl+X`, then `Y`, then `Enter`.
+**Windows** — use [WinSCP](https://winscp.net) (free):
+1. Open WinSCP → New Session
+2. Protocol: SCP, Hostname: YOUR_DROPLET_IP, Username: `root`, Password: your root password
+3. Click Login, then drag the entire `deploy/` folder from your computer to `/root/` on the server.
 
 ### Run the Deploy Script
+
+SSH into your server, then run:
 
 ```bash
 chmod +x /root/deploy/deploy-openclaw.sh
 /root/deploy/deploy-openclaw.sh
 ```
+
+The installer is **interactive** — it will ask you for each credential one at a time. Have the following ready:
+
+| Prompt | Where to find it |
+|--------|-----------------|
+| Server IP address | DigitalOcean dashboard |
+| Anthropic API key | console.anthropic.com |
+| Discord webhook URL | Discord → #reports → Integrations → Webhooks |
+| Telegram token for Henry | Saved from @BotFather Step 2 |
+| Telegram token for Coder | Saved from @BotFather Step 2 |
+| Telegram token for Scout | Saved from @BotFather Step 2 |
+| Telegram token for Writer | Saved from @BotFather Step 2 |
+| Telegram token for Watcher | Saved from @BotFather Step 2 |
+
+Just type or paste each value when prompted and press Enter.
 
 This takes **10–15 minutes** and will:
 

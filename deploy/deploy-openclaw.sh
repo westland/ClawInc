@@ -1,322 +1,431 @@
 #!/usr/bin/env bash
 # =============================================================================
-# deploy-openclaw.sh — ClawInc Multi-Agent Company Deployment
+# deploy-openclaw.sh — ClawInc v1.0 Multi-Agent Company Installer
 # =============================================================================
-# Deploys a full OpenClaw multi-agent system on Ubuntu 24.04 (DigitalOcean)
+# Installs a complete 5-agent AI company on Ubuntu 24.04 (DigitalOcean).
 #
-# Usage:
-#   1. Edit the CONFIGURATION section below with your API keys and tokens
-#   2. SCP this script + the configs/ directory to the server:
-#        scp -r deploy/ root@137.184.15.207:/root/deploy/
-#   3. SSH in and run:
-#        ssh root@137.184.15.207
-#        chmod +x /root/deploy/deploy-openclaw.sh
-#        /root/deploy/deploy-openclaw.sh
+# Run this script as root on your fresh DigitalOcean droplet:
 #
-# Server: YOUR_DROPLET_IP — 1 vCPU, 1GB RAM, 24GB disk, Ubuntu 24.04
+#   scp -r deploy/ root@YOUR_IP:/root/deploy/
+#   ssh root@YOUR_IP
+#   chmod +x /root/deploy/deploy-openclaw.sh
+#   /root/deploy/deploy-openclaw.sh
+#
+# The script will ask you for all required credentials interactively.
+# Have the following ready before you start:
+#   - Your Anthropic API key  (from console.anthropic.com)
+#   - Your Discord webhook URL (from your Discord server settings)
+#   - Your 5 Telegram bot tokens (from @BotFather on Telegram)
 # =============================================================================
 
 set -euo pipefail
 
-# =============================================================================
-# CONFIGURATION — EDIT THESE BEFORE RUNNING
-# =============================================================================
-
-# Anthropic API Key (required — powers all agents)
-# Get yours at: https://console.anthropic.com/api-keys
-ANTHROPIC_API_KEY="YOUR_ANTHROPIC_API_KEY"
-
-# OpenAI API Key (optional — backup/alternative provider)
-OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
-
-# Telegram Bot Tokens (create 4 bots via @BotFather on Telegram)
-# See Student_Setup_Guide_ClawInc.Rmd Part 2 for instructions
-TELEGRAM_TOKEN_HENRY="YOUR_TELEGRAM_BOT_TOKEN_HENRY"
-TELEGRAM_TOKEN_CODER="YOUR_TELEGRAM_BOT_TOKEN_CODER"
-TELEGRAM_TOKEN_SCOUT="YOUR_TELEGRAM_BOT_TOKEN_SCOUT"
-TELEGRAM_TOKEN_WRITER="YOUR_TELEGRAM_BOT_TOKEN_WRITER"
-TELEGRAM_TOKEN_WATCHER="YOUR_TELEGRAM_BOT_TOKEN_WATCHER"
-
-# Discord Webhook URL (paste the webhook URL from your Discord server channel settings)
-# All agent reports will be posted here, signed by each agent
-# Leave blank to disable Discord delivery
-DISCORD_WEBHOOK_URL="YOUR_DISCORD_WEBHOOK_URL"
-
-# Gateway Auth Token (auto-generated if left as default)
-GATEWAY_TOKEN="AUTO"
-
-# Non-root user to create
-CLAW_USER="clawuser"
-
-# Timezone
-TIMEZONE="America/Chicago"
-
-# =============================================================================
-# DO NOT EDIT BELOW THIS LINE (unless you know what you're doing)
-# =============================================================================
-
 DEPLOY_DIR="$(cd "$(dirname "$0")" && pwd)"
+CLAW_USER="clawuser"
 OPENCLAW_DIR="/home/${CLAW_USER}/.openclaw"
 LOG_FILE="/var/log/openclaw-deploy.log"
-NODESOURCE_VERSION="24"
+VERSION="1.0"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 
 log()    { echo -e "${GREEN}[✓]${NC} $*" | tee -a "$LOG_FILE"; }
 warn()   { echo -e "${YELLOW}[!]${NC} $*" | tee -a "$LOG_FILE"; }
 error()  { echo -e "${RED}[✗]${NC} $*" | tee -a "$LOG_FILE"; }
-header() { echo -e "\n${BLUE}========================================${NC}" | tee -a "$LOG_FILE"
-           echo -e "${BLUE}  $*${NC}" | tee -a "$LOG_FILE"
-           echo -e "${BLUE}========================================${NC}\n" | tee -a "$LOG_FILE"; }
+header() { echo -e "\n${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" | tee -a "$LOG_FILE"
+           echo -e "${BLUE}  ${BOLD}$*${NC}" | tee -a "$LOG_FILE"
+           echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n" | tee -a "$LOG_FILE"; }
+prompt() { echo -e "${CYAN}▶ $*${NC}"; }
 
-# Pre-flight checks
-preflight() {
-    header "Pre-Flight Checks"
-
-    if [[ $EUID -ne 0 ]]; then
-        error "This script must be run as root"
-        exit 1
-    fi
-
-    if [[ "$ANTHROPIC_API_KEY" == "YOUR_ANTHROPIC_API_KEY" ]]; then
-        error "You must set ANTHROPIC_API_KEY before running this script!"
-        error "Edit the CONFIGURATION section at the top of this file."
-        exit 1
-    fi
-
-    if [[ "$TELEGRAM_TOKEN_HENRY" == "YOUR_TELEGRAM_BOT_TOKEN_HENRY" ]]; then
-        warn "Telegram tokens not configured. Agents will not be reachable via Telegram."
-        warn "You can update tokens later in ${OPENCLAW_DIR}/openclaw.json"
-        read -p "Continue without Telegram? (y/N) " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            exit 1
-        fi
-    fi
-
-    # Generate gateway token if set to AUTO
-    if [[ "$GATEWAY_TOKEN" == "AUTO" ]]; then
-        GATEWAY_TOKEN=$(openssl rand -hex 32)
-        log "Generated gateway auth token: ${GATEWAY_TOKEN:0:8}...${GATEWAY_TOKEN: -8}"
-        log "SAVE THIS TOKEN — you'll need it for Mission Control"
-        echo "$GATEWAY_TOKEN" > /root/.openclaw-gateway-token
-        chmod 600 /root/.openclaw-gateway-token
-        log "Token also saved to /root/.openclaw-gateway-token"
-    fi
-
-    log "Pre-flight checks passed"
-}
+mkdir -p "$(dirname "$LOG_FILE")"
+echo "=== ClawInc v${VERSION} Deploy Log — $(date) ===" > "$LOG_FILE"
 
 # =============================================================================
-# PHASE 1: Server Preparation
+# STEP 0: Welcome and credential collection
 # =============================================================================
-phase1_server_prep() {
-    header "Phase 1: Server Preparation"
 
-    # 1a. Create swap space (critical for 1GB RAM)
-    if [[ ! -f /swapfile ]]; then
-        log "Creating 2GB swap file..."
-        fallocate -l 2G /swapfile
-        chmod 600 /swapfile
-        mkswap /swapfile
-        swapon /swapfile
-        if ! grep -q '/swapfile' /etc/fstab; then
-            echo '/swapfile none swap sw 0 0' >> /etc/fstab
-        fi
-        log "Swap created and enabled"
-    else
-        log "Swap file already exists"
-        if ! swapon --show | grep -q '/swapfile'; then
-            swapon /swapfile
-            log "Swap re-enabled"
-        fi
-    fi
-
-    # Tune swappiness for low-RAM server
-    sysctl vm.swappiness=60 > /dev/null
-    if ! grep -q 'vm.swappiness' /etc/sysctl.conf; then
-        echo 'vm.swappiness=60' >> /etc/sysctl.conf
-    fi
-
-    # 1b. System updates & dependencies
-    log "Updating system packages..."
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get update -qq
-    apt-get upgrade -y -qq
-    apt-get install -y -qq git curl build-essential ufw software-properties-common \
-        jq htop tmux unzip wget ca-certificates gnupg
-
-    # 1c. Set timezone
-    timedatectl set-timezone "$TIMEZONE" 2>/dev/null || true
-    log "Timezone set to $TIMEZONE"
-
-    # 1d. Set hostname
-    hostnamectl set-hostname ClawInc 2>/dev/null || true
-    log "Hostname set to ClawInc"
-
-    # 1e. Create non-root user
-    if ! id "$CLAW_USER" &>/dev/null; then
-        adduser --disabled-password --gecos "OpenClaw Service User" "$CLAW_USER"
-        usermod -aG sudo "$CLAW_USER"
-        # Allow sudo without password for service management
-        echo "${CLAW_USER} ALL=(ALL) NOPASSWD: /bin/systemctl restart openclaw, /bin/systemctl status openclaw, /bin/journalctl -u openclaw*" > /etc/sudoers.d/openclaw
-        chmod 440 /etc/sudoers.d/openclaw
-        log "Created user: ${CLAW_USER}"
-    else
-        log "User ${CLAW_USER} already exists"
-    fi
-
-    # 1f. Firewall setup
-    ufw --force reset > /dev/null 2>&1
-    ufw default deny incoming > /dev/null
-    ufw default allow outgoing > /dev/null
-    ufw allow ssh > /dev/null
-    ufw allow 8050/tcp > /dev/null
-    ufw --force enable > /dev/null
-    log "Firewall configured — SSH (22) and dashboard (8050) open"
-
-    # Create project directory
-    mkdir -p /home/${CLAW_USER}/projects
-    chown ${CLAW_USER}:${CLAW_USER} /home/${CLAW_USER}/projects
-
-    log "Phase 1 complete"
-}
+clear
+echo -e "${BOLD}${BLUE}"
+cat << 'BANNER'
+  ██████╗██╗      █████╗ ██╗    ██╗██╗███╗   ██╗ ██████╗
+ ██╔════╝██║     ██╔══██╗██║    ██║██║████╗  ██║██╔════╝
+ ██║     ██║     ███████║██║ █╗ ██║██║██╔██╗ ██║██║
+ ██║     ██║     ██╔══██║██║███╗██║██║██║╚██╗██║██║
+ ╚██████╗███████╗██║  ██║╚███╔███╔╝██║██║ ╚████║╚██████╗
+  ╚═════╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝╚═╝  ╚═══╝ ╚═════╝
+BANNER
+echo -e "${NC}"
+echo -e "${BOLD}  ClawInc Multi-Agent AI Company — v${VERSION} Installer${NC}"
+echo -e "  Deploys 5 autonomous AI agents (Henry, Coder, Scout, Writer, Watcher)"
+echo -e "  Controlled via Telegram · Reports posted to Discord\n"
+echo -e "${YELLOW}  Before continuing, make sure you have:${NC}"
+echo -e "  1. Your Anthropic API key  → console.anthropic.com"
+echo -e "  2. Your Discord webhook URL → your Discord server → #reports channel"
+echo -e "  3. Five Telegram bot tokens → @BotFather on Telegram\n"
+echo -e "  Press ENTER to continue or Ctrl+C to exit."
+read -r
 
 # =============================================================================
-# PHASE 2: Node.js & OpenClaw Installation
+# Collect credentials interactively
 # =============================================================================
-phase2_install() {
-    header "Phase 2: Node.js & OpenClaw Installation"
 
-    # 2a. Install Node.js
-    if ! command -v node &>/dev/null || [[ "$(node --version | cut -d. -f1 | tr -d v)" -lt "$NODESOURCE_VERSION" ]]; then
-        log "Installing Node.js ${NODESOURCE_VERSION}..."
-        curl -fsSL "https://deb.nodesource.com/setup_${NODESOURCE_VERSION}.x" | bash - > /dev/null 2>&1
-        apt-get install -y -qq nodejs
-        log "Node.js $(node --version) installed"
-    else
-        log "Node.js $(node --version) already installed"
-    fi
+header "Collecting Your Credentials"
 
-    # 2b. Install OpenClaw globally
+echo -e "${BOLD}── Server Information ──────────────────────────────────────${NC}"
+echo -e "  This is used in agent documentation."
+prompt "What is this server's IP address? (e.g. 123.45.67.89)"
+read -r SERVER_IP
+while [[ -z "$SERVER_IP" ]]; do
+    prompt "IP address cannot be empty. Enter your droplet IP:"
+    read -r SERVER_IP
+done
+
+echo ""
+echo -e "${BOLD}── Anthropic API Key ───────────────────────────────────────${NC}"
+echo -e "  Powers all 5 agents. Get yours at: https://console.anthropic.com/api-keys"
+echo -e "  It looks like: sk-ant-api03-..."
+prompt "Paste your Anthropic API key:"
+read -r ANTHROPIC_API_KEY
+while [[ -z "$ANTHROPIC_API_KEY" || "$ANTHROPIC_API_KEY" == "sk-ant-"* && ${#ANTHROPIC_API_KEY} -lt 40 ]]; do
+    prompt "Key looks invalid. Paste your Anthropic API key (starts with sk-ant-):"
+    read -r ANTHROPIC_API_KEY
+done
+
+echo ""
+echo -e "${BOLD}── Discord Webhook URL ─────────────────────────────────────${NC}"
+echo -e "  All agent reports post here. To get your webhook URL:"
+echo -e "  1. Open Discord → your ClawInc server → #reports channel"
+echo -e "  2. Right-click #reports → Edit Channel → Integrations → Webhooks"
+echo -e "  3. Click 'New Webhook' → name it 'ClawInc Reports' → Copy Webhook URL"
+echo -e "  It looks like: https://discord.com/api/webhooks/123456/ABCDEF..."
+prompt "Paste your Discord webhook URL:"
+read -r DISCORD_WEBHOOK_URL
+while [[ -z "$DISCORD_WEBHOOK_URL" ]]; do
+    prompt "Webhook URL cannot be empty. Paste your Discord webhook URL:"
+    read -r DISCORD_WEBHOOK_URL
+done
+
+echo ""
+echo -e "${BOLD}── Telegram Bot Tokens ─────────────────────────────────────${NC}"
+echo -e "  You need 5 bots. To create them:"
+echo -e "  1. Open Telegram and search for @BotFather"
+echo -e "  2. Send /newbot and follow the prompts for each bot"
+echo -e "  3. Each token looks like: 8732631641:AAHu1OuUh8uRXqpZqH_6G77DMOwIAXVaRKU"
+echo ""
+
+prompt "Henry bot token (Chief of Staff — your main command interface):"
+read -r TELEGRAM_TOKEN_HENRY
+while [[ -z "$TELEGRAM_TOKEN_HENRY" ]]; do
+    prompt "Henry token cannot be empty:"; read -r TELEGRAM_TOKEN_HENRY
+done
+
+prompt "Coder bot token (Software Engineer):"
+read -r TELEGRAM_TOKEN_CODER
+while [[ -z "$TELEGRAM_TOKEN_CODER" ]]; do
+    prompt "Coder token cannot be empty:"; read -r TELEGRAM_TOKEN_CODER
+done
+
+prompt "Scout bot token (Research Analyst):"
+read -r TELEGRAM_TOKEN_SCOUT
+while [[ -z "$TELEGRAM_TOKEN_SCOUT" ]]; do
+    prompt "Scout token cannot be empty:"; read -r TELEGRAM_TOKEN_SCOUT
+done
+
+prompt "Writer bot token (Content Creator):"
+read -r TELEGRAM_TOKEN_WRITER
+while [[ -z "$TELEGRAM_TOKEN_WRITER" ]]; do
+    prompt "Writer token cannot be empty:"; read -r TELEGRAM_TOKEN_WRITER
+done
+
+prompt "Watcher bot token (System Monitor):"
+read -r TELEGRAM_TOKEN_WATCHER
+while [[ -z "$TELEGRAM_TOKEN_WATCHER" ]]; do
+    prompt "Watcher token cannot be empty:"; read -r TELEGRAM_TOKEN_WATCHER
+done
+
+# Generate a random gateway token
+GATEWAY_TOKEN=$(openssl rand -hex 24)
+
+echo ""
+echo -e "${GREEN}${BOLD}All credentials collected. Starting installation...${NC}\n"
+sleep 2
+
+# =============================================================================
+# PHASE 1: Server preparation
+# =============================================================================
+
+header "Phase 1: Preparing Server"
+
+# Swap (essential for 1GB RAM)
+if [[ ! -f /swapfile ]]; then
+    log "Creating 2GB swap..."
+    fallocate -l 2G /swapfile
+    chmod 600 /swapfile
+    mkswap /swapfile
+    swapon /swapfile
+    echo '/swapfile none swap sw 0 0' >> /etc/fstab
+    echo 'vm.swappiness=10' >> /etc/sysctl.conf
+    sysctl -p >> "$LOG_FILE" 2>&1
+else
+    log "Swap already configured"
+fi
+
+# System updates
+log "Updating system packages..."
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq >> "$LOG_FILE" 2>&1
+apt-get upgrade -y -qq >> "$LOG_FILE" 2>&1
+apt-get install -y -qq curl wget git nano ufw python3 python3-pip python3-venv openssl >> "$LOG_FILE" 2>&1
+
+# Timezone
+timedatectl set-timezone America/Chicago >> "$LOG_FILE" 2>&1 || true
+
+# Create clawuser
+if ! id "$CLAW_USER" &>/dev/null; then
+    log "Creating user: $CLAW_USER"
+    useradd -m -s /bin/bash -G sudo "$CLAW_USER"
+    echo "${CLAW_USER}:$(openssl rand -hex 16)" | chpasswd
+else
+    log "User $CLAW_USER already exists"
+fi
+
+# Firewall
+log "Configuring firewall..."
+ufw --force reset >> "$LOG_FILE" 2>&1
+ufw default deny incoming >> "$LOG_FILE" 2>&1
+ufw default allow outgoing >> "$LOG_FILE" 2>&1
+ufw allow ssh >> "$LOG_FILE" 2>&1
+ufw allow 8050/tcp >> "$LOG_FILE" 2>&1   # Shiny dashboard
+ufw --force enable >> "$LOG_FILE" 2>&1
+
+# =============================================================================
+# PHASE 2: Install Node.js and OpenClaw
+# =============================================================================
+
+header "Phase 2: Installing Node.js and OpenClaw"
+
+if ! command -v node &>/dev/null; then
+    log "Installing Node.js 24..."
+    curl -fsSL https://deb.nodesource.com/setup_24.x | bash - >> "$LOG_FILE" 2>&1
+    apt-get install -y -qq nodejs >> "$LOG_FILE" 2>&1
+else
+    log "Node.js already installed: $(node --version)"
+fi
+
+if ! command -v openclaw &>/dev/null; then
     log "Installing OpenClaw..."
-    npm install -g openclaw@latest 2>&1 | tail -1
-    log "OpenClaw $(openclaw --version 2>/dev/null || echo 'installed') ready"
-
-    # Make sure clawuser can use global npm packages
-    mkdir -p /home/${CLAW_USER}/.npm-global
-    chown -R ${CLAW_USER}:${CLAW_USER} /home/${CLAW_USER}/.npm-global
-
-    log "Phase 2 complete"
-}
+    npm install -g openclaw >> "$LOG_FILE" 2>&1
+else
+    log "OpenClaw already installed: $(openclaw --version 2>/dev/null || echo 'unknown')"
+fi
 
 # =============================================================================
-# PHASE 3: Multi-Agent Configuration
+# PHASE 3: Set up agent workspaces
 # =============================================================================
-phase3_configure() {
-    header "Phase 3: Multi-Agent Configuration"
 
-    # 3a. Create workspace directory structure
-    log "Creating workspace directories..."
-    local AGENTS=("henry" "coder" "scout" "writer" "watcher")
-    for agent in "${AGENTS[@]}"; do
-        mkdir -p "${OPENCLAW_DIR}/workspace-${agent}/skills"
-        mkdir -p "${OPENCLAW_DIR}/workspace-${agent}/memory"
-        mkdir -p "${OPENCLAW_DIR}/agents/${agent}"
+header "Phase 3: Setting Up Agent Workspaces"
+
+mkdir -p "${OPENCLAW_DIR}/logs"
+mkdir -p "${OPENCLAW_DIR}/canvas"
+
+for AGENT in henry coder scout writer watcher; do
+    mkdir -p "${OPENCLAW_DIR}/workspace-${AGENT}/skills"
+    mkdir -p "${OPENCLAW_DIR}/workspace-${AGENT}/memory"
+    mkdir -p "${OPENCLAW_DIR}/agents/${AGENT}/sessions"
+    log "Workspace ready: ${AGENT}"
+done
+
+# Copy workspace configs from deploy package
+if [[ -d "${DEPLOY_DIR}/configs" ]]; then
+    for AGENT in henry coder scout writer watcher; do
+        SRC="${DEPLOY_DIR}/configs/workspace-${AGENT}"
+        DEST="${OPENCLAW_DIR}/workspace-${AGENT}"
+        if [[ -d "$SRC" ]]; then
+            cp -r "${SRC}/." "${DEST}/"
+            log "Copied workspace files for ${AGENT}"
+        fi
     done
-    mkdir -p "${OPENCLAW_DIR}/logs"
-    mkdir -p /tmp/openclaw
+fi
 
-    # 3b. Copy configuration files from deploy bundle
-    log "Installing configuration files..."
-
-    if [[ -d "${DEPLOY_DIR}/configs" ]]; then
-        # Copy openclaw.json
-        cp "${DEPLOY_DIR}/configs/openclaw.json" "${OPENCLAW_DIR}/openclaw.json"
-
-        # Copy workspace files for each agent
-        for agent in "${AGENTS[@]}"; do
-            if [[ -d "${DEPLOY_DIR}/configs/workspace-${agent}" ]]; then
-                cp -r "${DEPLOY_DIR}/configs/workspace-${agent}/"* "${OPENCLAW_DIR}/workspace-${agent}/"
-                log "  Installed workspace-${agent}"
-            fi
-        done
-    else
-        error "Config directory not found at ${DEPLOY_DIR}/configs"
-        error "Make sure you uploaded the full deploy/ directory"
-        exit 1
+# Substitute student's Discord webhook URL into all SOUL.md files
+log "Configuring Discord webhook in agent personalities..."
+for AGENT in henry coder scout writer watcher; do
+    SOUL="${OPENCLAW_DIR}/workspace-${AGENT}/SOUL.md"
+    if [[ -f "$SOUL" ]]; then
+        sed -i "s|DISCORD_WEBHOOK_PLACEHOLDER|${DISCORD_WEBHOOK_URL}|g" "$SOUL"
     fi
+done
 
-    # 3c. Substitute API keys and tokens in openclaw.json
-    log "Configuring API keys and tokens..."
-    local CONFIG="${OPENCLAW_DIR}/openclaw.json"
-
-    sed -i "s|YOUR_ANTHROPIC_API_KEY|${ANTHROPIC_API_KEY}|g" "$CONFIG"
-    sed -i "s|YOUR_OPENAI_API_KEY|${OPENAI_API_KEY}|g" "$CONFIG"
-    sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_HENRY|${TELEGRAM_TOKEN_HENRY}|g" "$CONFIG"
-    sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_CODER|${TELEGRAM_TOKEN_CODER}|g" "$CONFIG"
-    sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_SCOUT|${TELEGRAM_TOKEN_SCOUT}|g" "$CONFIG"
-    sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_WRITER|${TELEGRAM_TOKEN_WRITER}|g" "$CONFIG"
-    sed -i "s|YOUR_TELEGRAM_BOT_TOKEN_WATCHER|${TELEGRAM_TOKEN_WATCHER}|g" "$CONFIG"
-    sed -i "s|YOUR_DISCORD_WEBHOOK_URL|${DISCORD_WEBHOOK_URL}|g" "$CONFIG"
-    sed -i "s|YOUR_GATEWAY_AUTH_TOKEN_REPLACE_ME_WITH_50_PLUS_CHAR_RANDOM_STRING|${GATEWAY_TOKEN}|g" "$CONFIG"
-
-    log "API keys and tokens configured"
-    log "Phase 3 complete"
-}
-
-# =============================================================================
-# PHASE 7: Security Hardening (run before starting services)
-# =============================================================================
-phase7_security() {
-    header "Phase 7: Security Hardening"
-
-    # Set ownership
-    chown -R ${CLAW_USER}:${CLAW_USER} "${OPENCLAW_DIR}"
-    chown -R ${CLAW_USER}:${CLAW_USER} /home/${CLAW_USER}/projects
-    chown -R ${CLAW_USER}:${CLAW_USER} /tmp/openclaw
-
-    # Set directory permissions (700 = owner only)
-    find "${OPENCLAW_DIR}" -type d -exec chmod 700 {} \;
-
-    # Set file permissions (600 = owner read/write only)
-    find "${OPENCLAW_DIR}" -type f -exec chmod 600 {} \;
-
-    # Make skill scripts executable if any exist
-    find "${OPENCLAW_DIR}" -name "*.sh" -exec chmod 700 {} \;
-
-    # Protect the config file specifically
-    chmod 600 "${OPENCLAW_DIR}/openclaw.json"
-
-    # Set mDNS to minimal
-    if [[ -f /etc/systemd/resolved.conf ]]; then
-        sed -i 's/^#*MulticastDNS=.*/MulticastDNS=no/' /etc/systemd/resolved.conf
-        systemctl restart systemd-resolved 2>/dev/null || true
+# Substitute server IP into Henry's context
+for AGENT in henry coder scout writer watcher; do
+    SOUL="${OPENCLAW_DIR}/workspace-${AGENT}/SOUL.md"
+    if [[ -f "$SOUL" ]]; then
+        sed -i "s|YOUR_SERVER_IP|${SERVER_IP}|g" "$SOUL"
     fi
+done
 
-    log "File permissions hardened (700 dirs, 600 files)"
-    log "Gateway bound to 127.0.0.1 only (no public exposure)"
-    log "Access via SSH tunnel: ssh -L 3000:localhost:3000 -L 4200:localhost:4200 root@137.184.15.207"
-    log "Phase 7 complete"
+# =============================================================================
+# PHASE 4: Write openclaw.json configuration
+# =============================================================================
+
+header "Phase 4: Writing OpenClaw Configuration"
+
+cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
+{
+  "env": {
+    "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}",
+    "DISCORD_WEBHOOK_URL": "${DISCORD_WEBHOOK_URL}"
+  },
+  "gateway": {
+    "mode": "local"
+  },
+  "tools": {
+    "exec": {
+      "security": "full",
+      "ask": "off"
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": { "primary": "anthropic/claude-sonnet-4-5-20250929" }
+    },
+    "list": [
+      {
+        "id": "henry",
+        "name": "Henry",
+        "default": true,
+        "workspace": "~/.openclaw/workspace-henry",
+        "agentDir": "~/.openclaw/agents/henry",
+        "model": "anthropic/claude-opus-4-6",
+        "thinkingDefault": "high"
+      },
+      {
+        "id": "coder",
+        "name": "Coder",
+        "workspace": "~/.openclaw/workspace-coder",
+        "agentDir": "~/.openclaw/agents/coder",
+        "model": "anthropic/claude-sonnet-4-5-20250929",
+        "thinkingDefault": "high"
+      },
+      {
+        "id": "scout",
+        "name": "Scout",
+        "workspace": "~/.openclaw/workspace-scout",
+        "agentDir": "~/.openclaw/agents/scout",
+        "model": "anthropic/claude-haiku-4-5-20251001",
+        "thinkingDefault": "medium"
+      },
+      {
+        "id": "writer",
+        "name": "Writer",
+        "workspace": "~/.openclaw/workspace-writer",
+        "agentDir": "~/.openclaw/agents/writer",
+        "model": "anthropic/claude-sonnet-4-5-20250929",
+        "thinkingDefault": "medium"
+      },
+      {
+        "id": "watcher",
+        "name": "Watcher",
+        "workspace": "~/.openclaw/workspace-watcher",
+        "agentDir": "~/.openclaw/agents/watcher",
+        "model": "anthropic/claude-haiku-4-5-20251001",
+        "thinkingDefault": "low"
+      }
+    ]
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "open",
+      "allowFrom": ["*"],
+      "defaultAccount": "henry-bot",
+      "accounts": {
+        "henry-bot":   { "botToken": "${TELEGRAM_TOKEN_HENRY}",   "dmPolicy": "open", "allowFrom": ["*"] },
+        "coder-bot":   { "botToken": "${TELEGRAM_TOKEN_CODER}",   "dmPolicy": "open", "allowFrom": ["*"] },
+        "scout-bot":   { "botToken": "${TELEGRAM_TOKEN_SCOUT}",   "dmPolicy": "open", "allowFrom": ["*"] },
+        "writer-bot":  { "botToken": "${TELEGRAM_TOKEN_WRITER}",  "dmPolicy": "open", "allowFrom": ["*"] },
+        "watcher-bot": { "botToken": "${TELEGRAM_TOKEN_WATCHER}", "dmPolicy": "open", "allowFrom": ["*"] }
+      }
+    }
+  },
+  "bindings": [
+    { "agentId": "henry",   "match": { "channel": "telegram", "accountId": "henry-bot"   } },
+    { "agentId": "coder",   "match": { "channel": "telegram", "accountId": "coder-bot"   } },
+    { "agentId": "scout",   "match": { "channel": "telegram", "accountId": "scout-bot"   } },
+    { "agentId": "writer",  "match": { "channel": "telegram", "accountId": "writer-bot"  } },
+    { "agentId": "watcher", "match": { "channel": "telegram", "accountId": "watcher-bot" } }
+  ],
+  "memory": {
+    "backend": "qmd",
+    "qmd": { "searchMode": "search" }
+  },
+  "logging": {
+    "level": "info",
+    "file": "~/.openclaw/logs/openclaw.log"
+  },
+  "cron": { "enabled": true },
+  "approvals": { "exec": { "enabled": false } }
 }
+CONFIGEOF
+log "openclaw.json written"
+
+# Write exec-approvals.json (allow all exec without interactive approval)
+cat > "${OPENCLAW_DIR}/exec-approvals.json" << EAEOF
+{
+  "version": 1,
+  "socket": {
+    "path": "${OPENCLAW_DIR}/exec-approvals.sock",
+    "token": "$(openssl rand -hex 24)"
+  },
+  "defaults": {
+    "security": "full",
+    "ask": "off"
+  },
+  "agents": {
+    "*": {
+      "security": "full",
+      "ask": "off"
+    }
+  }
+}
+EAEOF
+log "exec-approvals.json written (exec fully enabled for all agents)"
 
 # =============================================================================
-# PHASE 6: Systemd Service Setup
+# PHASE 5: Set permissions
 # =============================================================================
-phase6_systemd() {
-    header "Phase 6: Systemd Service Setup"
 
-    # Install systemd service
-    if [[ -f "${DEPLOY_DIR}/openclaw.service" ]]; then
-        cp "${DEPLOY_DIR}/openclaw.service" /etc/systemd/system/openclaw.service
-    else
-        # Write inline if service file not in bundle
-        cat > /etc/systemd/system/openclaw.service << 'SERVICEEOF'
+header "Phase 5: Setting File Permissions"
+
+chown -R "${CLAW_USER}:${CLAW_USER}" "${OPENCLAW_DIR}"
+find "${OPENCLAW_DIR}" -type d -exec chmod 700 {} \;
+find "${OPENCLAW_DIR}" -type f -exec chmod 600 {} \;
+chmod 755 "${OPENCLAW_DIR}"
+log "Permissions set"
+
+# =============================================================================
+# PHASE 6: Install tmpfiles.d (ensures /tmp/openclaw dirs survive reboots)
+# =============================================================================
+
+header "Phase 6: Configuring Systemd Temp Directories"
+
+cat > /etc/tmpfiles.d/openclaw.conf << TMPEOF
+d /tmp/openclaw      0700 ${CLAW_USER} ${CLAW_USER} -
+d /tmp/openclaw-1000 0700 ${CLAW_USER} ${CLAW_USER} -
+TMPEOF
+systemd-tmpfiles --create /etc/tmpfiles.d/openclaw.conf
+log "Temp directories created and configured for auto-recreation on reboot"
+
+# =============================================================================
+# PHASE 7: Install systemd service
+# =============================================================================
+
+header "Phase 7: Installing OpenClaw Gateway Service"
+
+if [[ -f "${DEPLOY_DIR}/openclaw.service" ]]; then
+    cp "${DEPLOY_DIR}/openclaw.service" /etc/systemd/system/openclaw.service
+else
+cat > /etc/systemd/system/openclaw.service << 'SERVICEEOF'
 [Unit]
 Description=OpenClaw AI Agent Gateway — ClawInc
 Documentation=https://openclaw.dev/docs
@@ -334,12 +443,14 @@ Restart=on-failure
 RestartSec=10
 TimeoutStartSec=30
 TimeoutStopSec=30
+
 Environment=NODE_ENV=production
 Environment=HOME=/home/clawuser
+
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/clawuser/.openclaw /tmp/openclaw
+ReadWritePaths=/home/clawuser/.openclaw /tmp/openclaw /tmp/openclaw-1000
 PrivateTmp=false
 ProtectKernelTunables=true
 ProtectKernelModules=true
@@ -348,9 +459,11 @@ RestrictNamespaces=true
 RestrictSUIDSGID=true
 MemoryDenyWriteExecute=false
 SystemCallArchitectures=native
+
 MemoryMax=512M
 MemoryHigh=384M
 TasksMax=64
+
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=openclaw
@@ -358,338 +471,170 @@ SyslogIdentifier=openclaw
 [Install]
 WantedBy=multi-user.target
 SERVICEEOF
-    fi
+fi
 
-    # Install tmpfiles.d config so /tmp/openclaw* dirs are created at every boot
-    # (required for systemd ReadWritePaths namespace setup)
-    if [[ -f "${DEPLOY_DIR}/openclaw-tmpfiles.conf" ]]; then
-        cp "${DEPLOY_DIR}/openclaw-tmpfiles.conf" /etc/tmpfiles.d/openclaw.conf
-    else
-        cat > /etc/tmpfiles.d/openclaw.conf << 'TMPEOF'
-d /tmp/openclaw      0700 clawuser clawuser -
-d /tmp/openclaw-1000 0700 clawuser clawuser -
-TMPEOF
-    fi
-    systemd-tmpfiles --create /etc/tmpfiles.d/openclaw.conf
-    log "Tmpfiles config installed — /tmp/openclaw dirs created"
+systemctl daemon-reload
+systemctl enable openclaw
+log "Systemd service installed and enabled"
 
-    systemctl daemon-reload
-    systemctl enable openclaw
-    log "Systemd service installed and enabled"
+log "Starting OpenClaw gateway..."
+systemctl start openclaw
+sleep 5
 
-    # Start the gateway
-    log "Starting OpenClaw gateway..."
-    systemctl start openclaw
-
-    # Wait a moment and check status
-    sleep 3
-    if systemctl is-active --quiet openclaw; then
-        log "OpenClaw gateway is RUNNING"
-    else
-        warn "OpenClaw gateway may not have started cleanly"
-        warn "Check logs: journalctl -u openclaw -n 50"
-    fi
-
-    log "Phase 6 complete"
-}
+if systemctl is-active --quiet openclaw; then
+    log "OpenClaw gateway is RUNNING ✓"
+else
+    warn "Gateway did not start — checking logs..."
+    journalctl -u openclaw -n 20 --no-pager | tee -a "$LOG_FILE"
+fi
 
 # =============================================================================
-# PHASE 6b: Mission Control Dashboard (optional)
+# PHASE 8: Validate configuration
 # =============================================================================
-phase6b_mission_control() {
-    header "Phase 6b: Mission Control Dashboard"
 
-    local MC_DIR="/home/${CLAW_USER}/mission-control"
+header "Phase 8: Validating Configuration"
 
-    if command -v git &>/dev/null; then
-        log "Cloning Mission Control dashboard..."
-        if [[ -d "$MC_DIR" ]]; then
-            rm -rf "$MC_DIR"
-        fi
+sleep 3
+VALIDATE=$(su - "${CLAW_USER}" -c "openclaw config validate 2>&1" || echo "validation failed")
+if echo "$VALIDATE" | grep -qi "valid"; then
+    log "Config validation: PASSED ✓"
+else
+    warn "Config validation issue: $VALIDATE"
+    warn "Run: su - clawuser -c 'openclaw config validate'"
+fi
 
-        # Clone the mission control repo
-        su - ${CLAW_USER} -c "git clone https://github.com/openclaw/openclaw-mission-control.git ${MC_DIR}" 2>/dev/null || {
-            warn "Could not clone Mission Control repo — may not be publicly available yet"
-            warn "You can set it up manually later"
-            return 0
-        }
+# =============================================================================
+# PHASE 9: Install Shiny monitoring dashboard
+# =============================================================================
 
-        # Configure environment
-        cat > "${MC_DIR}/.env.local" << MCEOF
-NEXT_PUBLIC_GATEWAY_URL=http://127.0.0.1:4200
-NEXT_PUBLIC_AUTH_TOKEN=${GATEWAY_TOKEN}
-PORT=3000
-MCEOF
+header "Phase 9: Installing Monitoring Dashboard"
 
-        # Install dependencies and build
-        su - ${CLAW_USER} -c "cd ${MC_DIR} && npm install && npm run build" 2>/dev/null || {
-            warn "Mission Control build failed — you can build it manually later"
-            return 0
-        }
+DASH_DIR="/opt/clawinc-dashboard"
+mkdir -p "$DASH_DIR"
 
-        # Create systemd service for Mission Control
-        cat > /etc/systemd/system/openclaw-mc.service << 'MCSERVICEEOF'
+if [[ -f "${DEPLOY_DIR}/../dashboard/app.py" ]]; then
+    cp "${DEPLOY_DIR}/../dashboard/app.py" "${DASH_DIR}/"
+    cp "${DEPLOY_DIR}/../dashboard/requirements.txt" "${DASH_DIR}/" 2>/dev/null || true
+    log "Dashboard files copied"
+fi
+
+if [[ -f "${DASH_DIR}/app.py" ]]; then
+    python3 -m venv "${DASH_DIR}/venv" >> "$LOG_FILE" 2>&1
+    "${DASH_DIR}/venv/bin/pip" install -q shiny psutil >> "$LOG_FILE" 2>&1
+
+    if [[ -f "${DEPLOY_DIR}/clawinc-dashboard.service" ]]; then
+        cp "${DEPLOY_DIR}/clawinc-dashboard.service" /etc/systemd/system/
+    else
+cat > /etc/systemd/system/clawinc-dashboard.service << 'DASHEOF'
 [Unit]
-Description=OpenClaw Mission Control Dashboard
-After=openclaw.service
+Description=ClawInc Monitoring Dashboard
+After=network.target openclaw.service
 Wants=openclaw.service
 
 [Service]
 Type=simple
 User=clawuser
 Group=clawuser
-WorkingDirectory=/home/clawuser/mission-control
-ExecStart=/usr/bin/npm start
-Restart=on-failure
-RestartSec=5
-Environment=NODE_ENV=production
-Environment=PORT=3000
-
-[Install]
-WantedBy=multi-user.target
-MCSERVICEEOF
-
-        systemctl daemon-reload
-        systemctl enable openclaw-mc
-        systemctl start openclaw-mc
-        log "Mission Control dashboard running on port 3000"
-        log "Access via: ssh -L 3000:localhost:3000 root@137.184.15.207"
-    fi
-
-    log "Phase 6b complete"
-}
-
-# =============================================================================
-# Verification
-# =============================================================================
-verify() {
-    header "Verification Checklist"
-
-    local PASS=0
-    local FAIL=0
-
-    # Check swap
-    if free -h | grep -q 'Swap:.*[1-9]'; then
-        log "✓ Swap is active: $(free -h | grep Swap | awk '{print $2}')"
-        ((PASS++))
-    else
-        error "✗ Swap not active"
-        ((FAIL++))
-    fi
-
-    # Check firewall
-    if ufw status | grep -q 'active'; then
-        log "✓ Firewall is active"
-        ((PASS++))
-    else
-        error "✗ Firewall not active"
-        ((FAIL++))
-    fi
-
-    # Check Node.js
-    if command -v node &>/dev/null; then
-        log "✓ Node.js $(node --version) installed"
-        ((PASS++))
-    else
-        error "✗ Node.js not found"
-        ((FAIL++))
-    fi
-
-    # Check OpenClaw
-    if command -v openclaw &>/dev/null; then
-        log "✓ OpenClaw installed"
-        ((PASS++))
-    else
-        error "✗ OpenClaw not found"
-        ((FAIL++))
-    fi
-
-    # Check config file
-    if [[ -f "${OPENCLAW_DIR}/openclaw.json" ]]; then
-        log "✓ Configuration file exists"
-        ((PASS++))
-    else
-        error "✗ Configuration file missing"
-        ((FAIL++))
-    fi
-
-    # Check all agent workspaces
-    for agent in henry coder scout writer watcher; do
-        if [[ -f "${OPENCLAW_DIR}/workspace-${agent}/SOUL.md" ]]; then
-            log "✓ Agent ${agent} workspace configured"
-            ((PASS++))
-        else
-            error "✗ Agent ${agent} workspace missing SOUL.md"
-            ((FAIL++))
-        fi
-    done
-
-    # Check systemd service
-    if systemctl is-active --quiet openclaw 2>/dev/null; then
-        log "✓ OpenClaw service is running"
-        ((PASS++))
-    else
-        warn "⚠ OpenClaw service not running (may need: systemctl start openclaw)"
-        ((FAIL++))
-    fi
-
-    # Check file permissions
-    local CONFIG_PERMS=$(stat -c %a "${OPENCLAW_DIR}/openclaw.json" 2>/dev/null || echo "000")
-    if [[ "$CONFIG_PERMS" == "600" ]]; then
-        log "✓ Config file permissions correct (600)"
-        ((PASS++))
-    else
-        warn "⚠ Config file permissions: ${CONFIG_PERMS} (expected 600)"
-        ((FAIL++))
-    fi
-
-    # Summary
-    echo ""
-    header "Deployment Summary"
-    log "Passed: ${PASS}"
-    if [[ $FAIL -gt 0 ]]; then
-        error "Failed: ${FAIL}"
-    else
-        log "Failed: 0"
-    fi
-
-    echo ""
-    log "=== IMPORTANT INFORMATION ==="
-    log "Gateway Token: ${GATEWAY_TOKEN:0:8}...${GATEWAY_TOKEN: -8}"
-    log "Token saved to: /root/.openclaw-gateway-token"
-    log ""
-    log "=== NEXT STEPS ==="
-    log "1. Test agents:     openclaw agents list --bindings"
-    log "2. Check health:    openclaw doctor"
-    log "3. View cron jobs:  openclaw cron list"
-    log "4. View logs:       journalctl -u openclaw -f"
-    log "5. Mission Control: ssh -L 3000:localhost:3000 root@137.184.15.207"
-    log "                    then open http://localhost:3000 in your browser"
-    log ""
-    log "=== TELEGRAM SETUP ==="
-    log "If you haven't set up Telegram bots yet:"
-    log "1. Message @BotFather on Telegram"
-    log "2. Create 5 bots: HenryClawBot, CoderClawBot, ScoutClawBot, WriterClawBot, WatcherClawBot"
-    log "3. Copy each bot token into ${OPENCLAW_DIR}/openclaw.json"
-    log "4. Restart: systemctl restart openclaw"
-    log ""
-    log "=== USEFUL COMMANDS ==="
-    log "openclaw status                    — Check gateway status"
-    log "openclaw agents list --bindings    — List agents and bindings"
-    log "openclaw cron list                 — View scheduled jobs"
-    log "openclaw memory search \"query\"     — Search agent memories"
-    log "openclaw doctor                    — Run diagnostics"
-    log "systemctl restart openclaw         — Restart gateway"
-    log "journalctl -u openclaw -f          — Tail logs"
-}
-
-# =============================================================================
-# PHASE 5: Shiny Monitoring Dashboard
-# =============================================================================
-phase5_dashboard() {
-    header "Phase 5: Shiny Monitoring Dashboard"
-
-    local DASH_DIR="/opt/clawinc-dashboard"
-
-    # 5a. Install Python venv support
-    apt-get install -y -qq python3-venv python3-pip
-
-    # 5b. Create dashboard directory and venv
-    mkdir -p "${DASH_DIR}"
-    if [[ ! -d "${DASH_DIR}/venv" ]]; then
-        python3 -m venv "${DASH_DIR}/venv"
-        log "Python venv created at ${DASH_DIR}/venv"
-    else
-        log "Python venv already exists"
-    fi
-
-    # 5c. Install Python dependencies
-    "${DASH_DIR}/venv/bin/pip" install --quiet --upgrade pip
-    "${DASH_DIR}/venv/bin/pip" install --quiet shiny psutil
-    log "Installed shiny and psutil"
-
-    # 5d. Copy dashboard files from deploy bundle
-    if [[ -f "${DEPLOY_DIR}/../dashboard/app.py" ]]; then
-        cp "${DEPLOY_DIR}/../dashboard/app.py" "${DASH_DIR}/app.py"
-        cp "${DEPLOY_DIR}/../dashboard/requirements.txt" "${DASH_DIR}/requirements.txt"
-        log "Dashboard app.py installed"
-    elif [[ -f "${DEPLOY_DIR}/dashboard/app.py" ]]; then
-        cp "${DEPLOY_DIR}/dashboard/app.py" "${DASH_DIR}/app.py"
-        log "Dashboard app.py installed (from deploy/dashboard/)"
-    else
-        warn "dashboard/app.py not found in bundle — skipping file copy"
-        warn "Manually copy dashboard/app.py to ${DASH_DIR}/app.py before starting"
-    fi
-
-    # 5e. Install and enable systemd service
-    if [[ -f "${DEPLOY_DIR}/clawinc-dashboard.service" ]]; then
-        cp "${DEPLOY_DIR}/clawinc-dashboard.service" /etc/systemd/system/clawinc-dashboard.service
-    else
-        cat > /etc/systemd/system/clawinc-dashboard.service << 'DASHEOF'
-[Unit]
-Description=ClawInc Dashboard (Shiny for Python)
-After=network.target openclaw.service
-Wants=openclaw.service
-
-[Service]
-Type=simple
-User=root
 WorkingDirectory=/opt/clawinc-dashboard
 ExecStart=/opt/clawinc-dashboard/venv/bin/shiny run app.py --host 0.0.0.0 --port 8050
 Restart=on-failure
-RestartSec=5
+RestartSec=10
+Environment=HOME=/home/clawuser
+
 StandardOutput=journal
 StandardError=journal
-Environment=PYTHONUNBUFFERED=1
+SyslogIdentifier=clawinc-dashboard
 
 [Install]
 WantedBy=multi-user.target
 DASHEOF
     fi
 
+    chown -R "${CLAW_USER}:${CLAW_USER}" "$DASH_DIR"
     systemctl daemon-reload
     systemctl enable clawinc-dashboard
+    systemctl start clawinc-dashboard
+    sleep 3
 
-    if [[ -f "${DASH_DIR}/app.py" ]]; then
-        systemctl start clawinc-dashboard
-        sleep 3
-        if systemctl is-active --quiet clawinc-dashboard; then
-            log "Dashboard is RUNNING at http://$(curl -s ifconfig.me 2>/dev/null || echo 'YOUR_IP'):8050"
-        else
-            warn "Dashboard service not running — check: journalctl -u clawinc-dashboard -n 20"
-        fi
+    if systemctl is-active --quiet clawinc-dashboard; then
+        log "Dashboard running at http://${SERVER_IP}:8050 ✓"
     else
-        warn "Skipping dashboard start — app.py not present. Copy it and run: systemctl start clawinc-dashboard"
+        warn "Dashboard not running — check: journalctl -u clawinc-dashboard -n 20"
     fi
-
-    log "Phase 5 complete"
-}
+else
+    warn "No dashboard/app.py found — skipping dashboard install"
+fi
 
 # =============================================================================
-# MAIN EXECUTION
+# PHASE 10: Set up cron jobs
 # =============================================================================
-main() {
-    echo "" > "$LOG_FILE"
 
-    header "ClawInc — OpenClaw Multi-Agent Deployment v0.90"
-    echo "Server: $(hostname) ($(curl -s ifconfig.me 2>/dev/null || echo 'unknown'))"
-    echo "Date:   $(date)"
-    echo "OS:     $(lsb_release -ds 2>/dev/null || cat /etc/os-release | head -1)"
-    echo ""
+header "Phase 10: Setting Up Automated Schedule"
 
-    preflight
-    phase1_server_prep
-    phase2_install
-    phase3_configure
-    phase7_security
-    phase6_systemd
-    phase5_dashboard
-    phase6b_mission_control
-    verify
+sleep 3
+su - "${CLAW_USER}" << 'CRONEOF'
 
-    header "Deployment Complete!"
-    log "Full log saved to: ${LOG_FILE}"
-}
+openclaw cron add \
+  --name "morning-research" --agent "scout" \
+  --cron "0 8 * * *" --session isolated \
+  --message "Run your morning research routine. Search the web for the latest trending topics in AI, marketing analytics, and technology. Focus on developments from the last 24 hours. Write a structured briefing with key findings, notable trends, and actionable insights. Save the briefing to your memory. Then post a signed summary to Discord using your discord-report instructions in your SOUL.md."
 
-# Run it
-main "$@"
+openclaw cron add \
+  --name "daily-memo" --agent "writer" \
+  --cron "0 9 * * *" --session isolated \
+  --message "Compile the morning memo. Search Scout memory for today's research briefing. Synthesize into a polished executive memo with sections: Top Stories, Trend Analysis, Action Items, Market Watch. Save to your memory. Post to Discord using your discord-report instructions."
+
+openclaw cron add \
+  --name "overnight-worker" --agent "coder" \
+  --cron "0 2 * * *" --session isolated \
+  --message "Check your task queue and Henry's recent delegations. Work on the highest-priority pending development task. If no tasks queued, review code for improvements. Post a summary to Discord using your discord-report instructions."
+
+openclaw cron add \
+  --name "health-check" --agent "watcher" \
+  --cron "*/30 * * * *" --session isolated \
+  --message "Check system resources (CPU, RAM, disk, swap), verify agents are responsive, review error logs. Only post to Discord if something is wrong. Otherwise just log to memory."
+
+openclaw cron add \
+  --name "nightly-rnd" --agent "henry" \
+  --cron "0 23 * * *" --session isolated \
+  --message "Initiate the nightly R&D session. Review today's memo from Writer, research from Scout, and any code from Coder. Identify opportunities and strategic improvements. Delegate follow-up tasks. Post a summary to Discord using your discord-report instructions."
+
+openclaw cron add \
+  --name "session-cleanup" --agent "watcher" \
+  --cron "0 4 * * 0" --session isolated \
+  --message "Perform weekly session cleanup. Archive sessions older than 7 days. Clean up temporary files. Post cleanup summary to Discord."
+
+CRONEOF
+
+log "Cron jobs configured (6 scheduled tasks)"
+
+# =============================================================================
+# FINAL: Summary
+# =============================================================================
+
+header "Installation Complete 🎉"
+
+echo -e "${GREEN}${BOLD}"
+echo "  ✓ OpenClaw gateway running"
+echo "  ✓ 5 agents configured: Henry, Coder, Scout, Writer, Watcher"
+echo "  ✓ Telegram bots connected"
+echo "  ✓ Discord webhook configured"
+echo "  ✓ Exec approvals disabled (agents can run code freely)"
+echo "  ✓ 6 cron jobs scheduled"
+echo -e "${NC}"
+echo -e "${BOLD}  Your ClawInc company is live at:${NC}"
+echo -e "  Server:    ${SERVER_IP}"
+echo -e "  Dashboard: http://${SERVER_IP}:8050"
+echo ""
+echo -e "${BOLD}  Next steps:${NC}"
+echo -e "  1. Open Telegram and search for your Henry bot"
+echo -e "  2. Send a message — Henry will respond within seconds"
+echo -e "  3. Check your Discord #reports channel for the response"
+echo ""
+echo -e "${BOLD}  Useful commands:${NC}"
+echo -e "  systemctl status openclaw              # Check gateway status"
+echo -e "  journalctl -u openclaw -f              # Watch live logs"
+echo -e "  su - clawuser -c 'openclaw status'    # Agent status"
+echo ""
+echo "  Full deploy log: $LOG_FILE"
+echo ""

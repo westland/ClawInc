@@ -1,148 +1,147 @@
-# ClawInc — OpenClaw Multi-Agent Deployment
+# ClawInc — OpenClaw Deployment Package v1.0
+
+Everything needed to install ClawInc on a fresh Ubuntu 24.04 DigitalOcean droplet.
+
+---
 
 ## Quick Start
 
-### 1. Edit Configuration
-Open `deploy-openclaw.sh` and fill in the CONFIGURATION section at the top:
+### 1. Upload this folder to your server
 
-```bash
-ANTHROPIC_API_KEY="sk-ant-..."          # Required
-OPENAI_API_KEY="sk-proj-..."            # Optional
-TELEGRAM_TOKEN_HENRY="123456:ABC..."    # From @BotFather
-TELEGRAM_TOKEN_CODER="123456:ABC..."
-TELEGRAM_TOKEN_SCOUT="123456:ABC..."
-TELEGRAM_TOKEN_WRITER="123456:ABC..."
-TELEGRAM_TOKEN_WATCHER="123456:ABC..."
-```
-
-### 2. Create Telegram Bots
-Message [@BotFather](https://t.me/BotFather) on Telegram and create 4 bots (Watcher runs headlessly with no Telegram bot):
-1. `HenryClawBot` — Chief of Staff
-2. `CoderClawBot` — Software Engineer
-3. `ScoutClawBot` — Research Analyst
-4. `WriterClawBot` — Content Creator
-
-Copy each bot token into the script.
-
-### 3. Upload to Server
+**Mac/Linux:**
 ```bash
 scp -r deploy/ root@YOUR_DROPLET_IP:/root/deploy/
-scp -r dashboard/ root@YOUR_DROPLET_IP:/opt/clawinc-dashboard/
 ```
 
-### 4. SSH in and Run
+**Windows:** Use [WinSCP](https://winscp.net) (SCP, port 22) to copy the `deploy/` folder to `/root/deploy/` on the server.
+
+### 2. SSH in and run the installer
+
 ```bash
 ssh root@YOUR_DROPLET_IP
 chmod +x /root/deploy/deploy-openclaw.sh
 /root/deploy/deploy-openclaw.sh
 ```
 
-The script will:
-- Create 2GB swap (critical for 1GB RAM server)
-- Install Node.js 24 and OpenClaw
-- Configure all 5 agents with their workspaces
-- Set up 6 cron jobs (morning research, daily memo, overnight coding, health checks, R&D, cleanup)
-- Harden security (firewall, file permissions, gateway on localhost only)
-- Start the OpenClaw gateway as a systemd service
+The installer **asks for credentials interactively** — no manual file editing needed. Have these ready:
 
-### 5. Install Shiny Dashboard
+- Your Anthropic API key → [console.anthropic.com](https://console.anthropic.com)
+- Your Discord webhook URL → Discord server → #reports channel → Integrations → Webhooks
+- Five Telegram bot tokens → [@BotFather](https://t.me/BotFather) on Telegram
+
+### 3. Verify
+
 ```bash
-apt-get install -y python3.12-venv
-python3 -m venv /opt/clawinc-dashboard/venv
-/opt/clawinc-dashboard/venv/bin/pip install shiny psutil
-cp /root/deploy/clawinc-dashboard.service /etc/systemd/system/
-systemctl daemon-reload
-systemctl enable --now clawinc-dashboard
-ufw allow 8050/tcp
+systemctl is-active openclaw            # should say: active
+su - clawuser -c "openclaw status"      # gateway + 5 agents
+su - clawuser -c "openclaw agents list --bindings"
 ```
 
-### 6. Verify
-```bash
-systemctl is-active openclaw           # should say: active
-systemctl is-active clawinc-dashboard  # should say: active
-sudo -u clawuser openclaw status
-sudo -u clawuser openclaw cron list
-free -h                                # should show 2GB swap
-ufw status                             # should show SSH + 8050
-```
+Full student walkthrough: **[../Student_Setup_Guide.md](../Student_Setup_Guide.md)**
 
 ---
 
-## Accessing Your Dashboards
+## What the Installer Does
 
-### Shiny Monitoring Dashboard (recommended for students)
-Open directly in any browser — no SSH required, no token needed:
-```
-http://YOUR_DROPLET_IP:8050
-```
-Shows: all 5 agent cards, CPU/RAM/disk gauges, Telegram bot bindings, cron job schedule, live activity log. Auto-refreshes every 30 seconds.
+The `deploy-openclaw.sh` script runs 10 phases automatically:
 
-### OpenClaw Control UI (admin / instructor use)
-Requires an SSH tunnel because the gateway binds to localhost only:
-
-**Step 1** — open the tunnel on your local machine (leave this terminal open):
-```bash
-ssh -N -L 18789:127.0.0.1:18789 root@YOUR_DROPLET_IP
-```
-
-**Step 2** — get the tokenized URL from the server:
-```bash
-sudo -u clawuser openclaw dashboard
-# Outputs: http://localhost:18789/#token=<your-token>
-```
-
-**Step 3** — open that URL in your browser. The token authenticates automatically.
-
-The Control UI lets you chat with agents directly, browse session history, view real-time logs, and manage configuration.
+| Phase | What happens |
+|-------|-------------|
+| 1. Server Prep | Creates 2 GB swap, installs packages, configures UFW firewall |
+| 2. Node.js | Installs Node.js 24 via NodeSource |
+| 3. OpenClaw | Installs OpenClaw globally via npm, creates `clawuser` |
+| 4. Workspaces | Deploys all 5 agent workspaces (SOUL.md, skills, memory) |
+| 5. Config | Writes `openclaw.json` with your API keys, bot tokens, exec permissions |
+| 6. Permissions | Sets correct file ownership and modes |
+| 7. tmpfiles.d | Creates persistent temp dirs that survive reboots |
+| 8. Systemd | Installs and starts `openclaw.service` |
+| 9. Dashboard | Installs Shiny for Python dashboard on port 8050 |
+| 10. Cron | Adds 6 scheduled jobs (research, memo, coding, monitoring, R&D, cleanup) |
 
 ---
 
 ## Agent Roster
 
-| Agent | Role | Model | Telegram | Schedule |
-|-------|------|-------|----------|----------|
-| **Henry** | Chief of Staff / Orchestrator | Claude Opus 4.6 | @HenryClawBot | 11PM R&D session |
-| **Coder** | Software Engineer | Claude Sonnet 4.5 | @CoderClawBot | 2AM overnight dev |
-| **Scout** | Research Analyst | Claude Haiku 4.5 | @ScoutClawBot | 8AM daily research |
-| **Writer** | Content Creator | Claude Sonnet 4.5 | @WriterClawBot | 9AM daily memo |
-| **Watcher** | System Monitor | Claude Haiku 4.5 | — (headless) | Every 30min health check |
+| Agent | Telegram Bot | Model | Role |
+|-------|-------------|-------|------|
+| **Henry** | @YourHenryBot | Claude Opus 4.6 | Chief of Staff — orchestrates the team |
+| **Coder** | @YourCoderBot | Claude Sonnet 4.5 | Software Engineer — code, data analysis |
+| **Scout** | @YourScoutBot | Claude Haiku 4.5 | Research Analyst — web research, trends |
+| **Writer** | @YourWriterBot | Claude Sonnet 4.5 | Content Creator — memos, reports |
+| **Watcher** | @YourWatcherBot | Claude Haiku 4.5 | System Monitor — health checks, alerts |
+
+All 5 agents post responses to the Discord `#reports` channel automatically.
+
+---
 
 ## Cron Schedule
 
 | Time | Agent | Task |
 |------|-------|------|
-| Every 30 min | Watcher | System health check |
-| 8:00 AM | Scout | Web research scan |
-| 9:00 AM | Writer | Compile morning memo |
-| 11:00 PM | Henry | R&D analysis session |
-| 2:00 AM | Coder | Overnight development |
-| 4:00 AM Sun | Watcher | Weekly session cleanup |
+| Every 30 min | Watcher | System health check (Discord alert only if issue) |
+| 8:00 AM daily | Scout | Web research scan → Discord #reports |
+| 9:00 AM daily | Writer | Morning intelligence memo → Discord #reports |
+| 11:00 PM daily | Henry | Nightly R&D strategy session → Discord #reports |
+| 2:00 AM daily | Coder | Process queued dev tasks → Discord #reports |
+| 4:00 AM Sundays | Watcher | Weekly session cleanup → Discord #reports |
 
-## Server File Structure
+---
+
+## Package Contents
+
 ```
-~/.openclaw/                       (clawuser's home)
-├── openclaw.json                  ← Master configuration
-├── logs/openclaw.log              ← Gateway activity log
-├── workspace-henry/               ← Orchestrator
-│   ├── SOUL.md, AGENTS.md, MEMORY.md
-│   ├── memory/
-│   └── skills/ (delegate-task, daily-standup, rnd-meeting)
-├── workspace-coder/               ← Software Engineer
-├── workspace-scout/               ← Research Analyst
-├── workspace-writer/              ← Content Creator
-└── workspace-watcher/             ← System Monitor
-
-/opt/clawinc-dashboard/            (Shiny dashboard)
-├── app.py
-├── requirements.txt
-└── venv/
-
-/etc/systemd/system/
-├── openclaw.service               ← Gateway service
-└── clawinc-dashboard.service      ← Dashboard service
+deploy/
+├── deploy-openclaw.sh           ← Main interactive installer (run this)
+├── openclaw.service             ← Systemd unit for OpenClaw gateway
+├── clawinc-dashboard.service    ← Systemd unit for Shiny dashboard
+├── openclaw-tmpfiles.conf       ← tmpfiles.d config (persistent /tmp dirs)
+└── configs/
+    ├── openclaw.json            ← Gateway config template
+    ├── workspace-henry/
+    │   ├── SOUL.md              ← Henry's personality / system prompt
+    │   ├── AGENTS.md            ← Henry's knowledge of other agents
+    │   ├── MEMORY.md            ← Bootstrap memory
+    │   └── skills/
+    │       ├── delegate-task/SKILL.md
+    │       ├── daily-standup/SKILL.md
+    │       ├── discord-report/SKILL.md
+    │       └── rnd-meeting/SKILL.md
+    ├── workspace-coder/
+    │   └── skills/ (vibe-code, debug-app, deploy-app, discord-report)
+    ├── workspace-scout/
+    │   └── skills/ (web-research, trend-monitor, news-digest, discord-report)
+    ├── workspace-writer/
+    │   └── skills/ (write-memo, write-report, content-plan, discord-report)
+    └── workspace-watcher/
+        ├── HEARTBEAT.md
+        └── skills/ (health-check, log-analyzer, session-cleanup, discord-report)
 ```
+
+---
+
+## Server File Layout (after install)
+
+```
+/home/clawuser/.openclaw/
+├── openclaw.json                ← Master config (contains your API keys)
+├── exec-approvals.json          ← Exec permission settings
+├── logs/openclaw.log            ← Gateway activity log
+├── workspace-henry/
+├── workspace-coder/
+├── workspace-scout/
+├── workspace-writer/
+└── workspace-watcher/
+
+/opt/clawinc-dashboard/          ← Shiny monitoring dashboard
+/etc/systemd/system/openclaw.service
+/etc/systemd/system/clawinc-dashboard.service
+/etc/tmpfiles.d/openclaw.conf
+```
+
+---
 
 ## Useful Commands
+
 ```bash
 # Service management
 systemctl status openclaw
@@ -150,29 +149,47 @@ systemctl restart openclaw
 journalctl -u openclaw -f
 
 systemctl status clawinc-dashboard
-systemctl restart clawinc-dashboard
-journalctl -u clawinc-dashboard -f
+journalctl -u clawinc-dashboard -n 30 --no-pager
 
-# Agent management
-sudo -u clawuser openclaw status
-sudo -u clawuser openclaw cron list
-sudo -u clawuser openclaw doctor
+# Agent management (run as clawuser)
+su - clawuser -c "openclaw status"
+su - clawuser -c "openclaw agents list --bindings"
+su - clawuser -c "openclaw cron list"
+su - clawuser -c "openclaw doctor"
+su - clawuser -c "openclaw config validate"
 
 # Memory search
-sudo -u clawuser openclaw memory search "query" --agent henry
+su - clawuser -c "openclaw memory search 'query' --agent scout"
 
-# Manual agent trigger
-sudo -u clawuser openclaw chat henry "run the daily standup"
-
-# Get dashboard token
-sudo -u clawuser openclaw dashboard
+# Test Discord webhook
+curl -X POST "YOUR_WEBHOOK_URL" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "test from ClawInc"}'
 ```
 
-## Security Notes
-- Gateway listens on 127.0.0.1 only — not publicly accessible
-- OpenClaw Control UI (port 18789): SSH tunnel + gateway auth token required
-- Shiny Dashboard (port 8050): publicly accessible, read-only (no write access to agents)
-- UFW allows: SSH (22) + dashboard (8050). All other ports blocked.
-- Config files: chmod 600 (owner read/write only)
-- Systemd: `NoNewPrivileges=true`, `ProtectSystem=strict`, `MemoryMax=512M`
-- Gateway runs as `clawuser`, not root
+---
+
+## Dashboard
+
+ClawInc includes a read-only Shiny for Python dashboard on port 8050. No SSH tunnel needed.
+
+```
+http://YOUR_DROPLET_IP:8050
+```
+
+Shows: gateway status, all 5 agent cards, CPU/RAM/disk gauges, Telegram bot bindings, cron schedule, live activity log.
+
+---
+
+## Security
+
+- OpenClaw gateway: listens on `127.0.0.1:18789` only (not publicly accessible)
+- Shiny dashboard: port 8050 is public and read-only (no write access)
+- UFW firewall: only SSH (22) and dashboard (8050) open
+- All config files: `chmod 600` (owner only)
+- Gateway runs as `clawuser` (not root)
+- systemd: `NoNewPrivileges=true`, `ProtectSystem=strict`, `MemoryMax=512M`
+
+---
+
+*MKT/IDS 518 · University of Illinois at Chicago · J. Christopher Westland*
