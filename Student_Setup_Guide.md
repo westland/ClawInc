@@ -13,7 +13,7 @@
 
 1. [Create Your DigitalOcean Droplet](#1-create-your-digitalocean-droplet)
 2. [Create Your Telegram Bots](#2-create-your-telegram-bots)
-3. [Get an Anthropic API Key](#3-get-an-anthropic-api-key)
+3. [Get Your API Keys](#3-get-your-api-keys)
 4. [Set Up Your Discord Server](#4-set-up-your-discord-server)
 5. [Deploy OpenClaw on Your Droplet](#5-deploy-openclaw-on-your-droplet)
 6. [Verify Everything is Working](#6-verify-everything-is-working)
@@ -98,9 +98,9 @@ You need **5 Telegram bots** (one per agent). Free and takes about 5 minutes.
 
 ---
 
-## 3. Get an Anthropic API Key
+## 3. Get Your API Keys
 
-Your agents run on Claude models. You need an Anthropic API key.
+### Anthropic API Key (Required — powers all 5 agents)
 
 1. Go to [console.anthropic.com](https://console.anthropic.com) and sign up.
 2. Go to **API Keys → Create Key**.
@@ -108,6 +108,19 @@ Your agents run on Claude models. You need an Anthropic API key.
 4. **Save it.** You cannot view it again after closing the page.
 
 > **Cost estimate:** Typical class project usage is $5–$20/month depending on how active your agents are.
+
+### OpenAI API Key (For voice commands)
+
+Voice messages sent to your bots are automatically transcribed using OpenAI's audio API. Without this key, voice commands will not work — your agents will only respond to typed text.
+
+1. Go to [platform.openai.com](https://platform.openai.com) and sign up.
+2. Go to **API Keys → Create new secret key**.
+3. Name it `ClawInc` and copy the key (starts with `sk-proj-...`).
+4. **Save it.**
+
+> **Cost:** OpenAI voice transcription is extremely cheap — typically a few cents per month for class project usage.
+
+> **Optional:** You can skip this step and add the key later by editing `/home/clawuser/.openclaw/openclaw.json` on the server and restarting the gateway.
 
 ---
 
@@ -171,6 +184,7 @@ The installer is **interactive** — it will ask you for each credential one at 
 |--------|-----------------|
 | Server IP address | DigitalOcean dashboard |
 | Anthropic API key | console.anthropic.com |
+| OpenAI API key | platform.openai.com (for voice commands — press Enter to skip) |
 | Discord webhook URL | Discord → #reports → Integrations → Webhooks |
 | Telegram token for Henry | Saved from @BotFather Step 2 |
 | Telegram token for Coder | Saved from @BotFather Step 2 |
@@ -510,6 +524,7 @@ DigitalOcean Dashboard → Your Droplet → **Access → Reset Root Password**
 - [ ] Installed Telegram on phone and/or desktop
 - [ ] Created **5 bots** via @BotFather and saved all 5 tokens
 - [ ] Got Anthropic API key from console.anthropic.com
+- [ ] Got OpenAI API key from platform.openai.com (for voice commands)
 - [ ] Created Discord server with `#reports` channel
 - [ ] Created Discord webhook and saved the URL
 - [ ] Uploaded `deploy/` folder to `/root/deploy/` on server

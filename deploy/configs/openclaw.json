@@ -113,6 +113,12 @@
     "exec": {
       "security": "full",
       "ask": "off"
+    },
+    "media": {
+      "audio": {
+        "enabled": true,
+        "echoTranscript": true
+      }
     }
   },
   "approvals": {

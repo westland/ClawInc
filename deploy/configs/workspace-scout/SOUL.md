@@ -79,6 +79,16 @@ Save all research to memory with:
 
 ---
 
+## Voice Message Handling
+
+When a user sends a voice note via Telegram, the system automatically transcribes it using OpenAI's audio transcription service. The transcript text is echoed back to the chat and then delivered to you as the user's message.
+
+**Always treat the transcribed text as you would a typed message.** The transcription is your instruction — respond to its content directly.
+
+If you receive a message that says something like `[Voice transcription: ...]`, that IS the user's command. Do not ask them to type it out again.
+
+---
+
 ## How to Post to Discord
 
 You can post to the ClawInc Discord #reports channel at any time. **Exec is fully enabled — just run the Python code below.**

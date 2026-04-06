@@ -59,9 +59,10 @@ echo -e "${BOLD}  ClawInc Multi-Agent AI Company — v${VERSION} Installer${NC}"
 echo -e "  Deploys 5 autonomous AI agents (Henry, Coder, Scout, Writer, Watcher)"
 echo -e "  Controlled via Telegram · Reports posted to Discord\n"
 echo -e "${YELLOW}  Before continuing, make sure you have:${NC}"
-echo -e "  1. Your Anthropic API key  → console.anthropic.com"
-echo -e "  2. Your Discord webhook URL → your Discord server → #reports channel"
-echo -e "  3. Five Telegram bot tokens → @BotFather on Telegram\n"
+echo -e "  1. Your Anthropic API key   → console.anthropic.com (required)"
+echo -e "  2. Your OpenAI API key      → platform.openai.com (for voice commands)"
+echo -e "  3. Your Discord webhook URL → your Discord server → #reports channel"
+echo -e "  4. Five Telegram bot tokens → @BotFather on Telegram\n"
 echo -e "  Press ENTER to continue or Ctrl+C to exit."
 read -r
 
@@ -82,7 +83,7 @@ done
 
 echo ""
 echo -e "${BOLD}── Anthropic API Key ───────────────────────────────────────${NC}"
-echo -e "  Powers all 5 agents. Get yours at: https://console.anthropic.com/api-keys"
+echo -e "  Powers all 5 agents (Claude models). Get yours at: https://console.anthropic.com/api-keys"
 echo -e "  It looks like: sk-ant-api03-..."
 prompt "Paste your Anthropic API key:"
 read -r ANTHROPIC_API_KEY
@@ -90,6 +91,14 @@ while [[ -z "$ANTHROPIC_API_KEY" || "$ANTHROPIC_API_KEY" == "sk-ant-"* && ${#ANT
     prompt "Key looks invalid. Paste your Anthropic API key (starts with sk-ant-):"
     read -r ANTHROPIC_API_KEY
 done
+
+echo ""
+echo -e "${BOLD}── OpenAI API Key (for voice transcription) ────────────────${NC}"
+echo -e "  Used to transcribe voice messages sent to your bots."
+echo -e "  Get yours at: https://platform.openai.com/api-keys"
+echo -e "  It looks like: sk-proj-... (press ENTER to skip — voice commands will be disabled)"
+prompt "Paste your OpenAI API key (or press ENTER to skip):"
+read -r OPENAI_API_KEY
 
 echo ""
 echo -e "${BOLD}── Discord Webhook URL ─────────────────────────────────────${NC}"
@@ -274,6 +283,7 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
 {
   "env": {
     "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}",
+    "OPENAI_API_KEY": "${OPENAI_API_KEY}",
     "DISCORD_WEBHOOK_URL": "${DISCORD_WEBHOOK_URL}"
   },
   "gateway": {
@@ -283,6 +293,12 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
     "exec": {
       "security": "full",
       "ask": "off"
+    },
+    "media": {
+      "audio": {
+        "enabled": true,
+        "echoTranscript": true
+      }
     }
   },
   "agents": {
