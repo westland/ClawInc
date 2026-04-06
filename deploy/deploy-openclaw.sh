@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# deploy-openclaw.sh — ClawInc v1.0 Multi-Agent Company Installer
+# deploy-openclaw.sh — ClawInc v1.01 Multi-Agent Company Installer
 # =============================================================================
 # Installs a complete 5-agent AI company on Ubuntu 24.04 (DigitalOcean).
 #
@@ -24,7 +24,7 @@ DEPLOY_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAW_USER="clawuser"
 OPENCLAW_DIR="/home/${CLAW_USER}/.openclaw"
 LOG_FILE="/var/log/openclaw-deploy.log"
-VERSION="1.0"
+VERSION="1.01"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
@@ -56,6 +56,7 @@ cat << 'BANNER'
 BANNER
 echo -e "${NC}"
 echo -e "${BOLD}  ClawInc Multi-Agent AI Company — v${VERSION} Installer${NC}"
+echo -e "  Voice commands supported via OpenAI audio transcription"
 echo -e "  Deploys 5 autonomous AI agents (Henry, Coder, Scout, Writer, Watcher)"
 echo -e "  Controlled via Telegram · Reports posted to Discord\n"
 echo -e "${YELLOW}  Before continuing, make sure you have:${NC}"

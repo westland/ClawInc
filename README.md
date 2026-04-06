@@ -3,6 +3,7 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT/IDS 518 · J. Christopher Westland · University of Illinois at Chicago*
 
+[![Release](https://img.shields.io/badge/release-v1.01-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v1.01)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.3.31-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
@@ -12,7 +13,7 @@
 
 ## What Is ClawInc?
 
-ClawInc is a multi-agent AI company that runs 24/7 on a $6/month cloud server. You control five specialized AI agents through Telegram — from any phone or computer — and every agent response is automatically posted to a Discord `#reports` channel for team visibility.
+ClawInc is a multi-agent AI company that runs 24/7 on a $6/month cloud server. You control five specialized AI agents through Telegram — from any phone or computer, by voice or text — and every agent response is automatically posted to a Discord `#reports` channel for team visibility.
 
 The five agents are:
 
@@ -51,16 +52,17 @@ DigitalOcean Droplet — Ubuntu 24.04 — $6/month
         └── Shiny Dashboard (port 8050, public)
 ```
 
-**Data flow for every Telegram message:**
+**Data flow for every Telegram message (text or voice):**
 
-1. User sends message to a bot (e.g., @HenryBot)
-2. Telegram delivers it to the OpenClaw gateway via HTTPS
-3. The routing engine matches the bot to the correct agent workspace
-4. Agent loads its SOUL.md (system prompt) + memory context
-5. OpenClaw calls the Anthropic API with the Claude model assigned to that agent
-6. Claude responds, optionally using tools (web search, shell, file ops, agent delegation)
-7. Response is sent back to the user's Telegram chat
-8. A signed, color-coded embed is posted to Discord `#reports`
+1. User sends a message or voice note to a bot (e.g., @HenryBot)
+2. If a voice note: OpenClaw downloads the audio and transcribes it via OpenAI (gpt-4o-mini-transcribe); transcript is echoed to the chat, then used as the user's command
+3. Telegram delivers the text to the OpenClaw gateway via HTTPS
+4. The routing engine matches the bot to the correct agent workspace
+5. Agent loads its SOUL.md (system prompt) + memory context
+6. OpenClaw calls the Anthropic API with the Claude model assigned to that agent
+7. Claude responds, optionally using tools (web search, shell, file ops, agent delegation)
+8. Response is sent back to the user's Telegram chat
+9. A signed, color-coded embed is posted to Discord `#reports`
 
 ---
 
@@ -209,10 +211,11 @@ Agents are color-coded in Discord: Henry (gold), Coder (blue), Scout (green), Wr
 |-----------|-----------|
 | Agent runtime | OpenClaw 2026.3.31 |
 | AI models | Anthropic Claude (Opus 4.6, Sonnet 4.5, Haiku 4.5) |
+| Voice transcription | OpenAI gpt-4o-mini-transcribe (Whisper API) |
 | Server | Ubuntu 24.04 on DigitalOcean ($6/month) |
 | Runtime | Node.js 24 |
 | Process management | systemd |
-| Messaging | Telegram Bot API |
+| Messaging | Telegram Bot API (text + voice notes) |
 | Reporting | Discord webhooks → #reports |
 | Memory | QMD vector + full-text hybrid search |
 | Monitoring dashboard | Shiny for Python (port 8050, public) |
@@ -263,17 +266,16 @@ The master config is `deploy/configs/openclaw.json`. OpenClaw 2026.x uses strict
 # 1. Copy deploy package to your server
 scp -r deploy/ root@YOUR_IP:/root/deploy/
 
-# 2. Edit credentials
+# 2. SSH in and run — the script asks for credentials interactively
 ssh root@YOUR_IP
-nano /root/deploy/deploy-openclaw.sh   # fill in API key, Discord webhook, 5 bot tokens
-
-# 3. Run
 chmod +x /root/deploy/deploy-openclaw.sh
 /root/deploy/deploy-openclaw.sh
 
-# 4. Verify
+# 3. Verify
 su - clawuser -c "openclaw status"
 ```
+
+Have ready: Anthropic API key, OpenAI API key (for voice), Discord webhook URL, 5 Telegram bot tokens.
 
 Full walkthrough: **[Student_Setup_Guide.md](Student_Setup_Guide.md)**
 

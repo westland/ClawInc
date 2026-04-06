@@ -1,4 +1,4 @@
-# ClawInc — OpenClaw Deployment Package v1.0
+# ClawInc — OpenClaw Deployment Package v1.01
 
 Everything needed to install ClawInc on a fresh Ubuntu 24.04 DigitalOcean droplet.
 
@@ -26,6 +26,7 @@ chmod +x /root/deploy/deploy-openclaw.sh
 The installer **asks for credentials interactively** — no manual file editing needed. Have these ready:
 
 - Your Anthropic API key → [console.anthropic.com](https://console.anthropic.com)
+- Your OpenAI API key → [platform.openai.com](https://platform.openai.com) (for voice commands — optional)
 - Your Discord webhook URL → Discord server → #reports channel → Integrations → Webhooks
 - Five Telegram bot tokens → [@BotFather](https://t.me/BotFather) on Telegram
 

@@ -1,11 +1,11 @@
 # ClawInc Student Setup Guide: Your Own AI Agent Company
 
 **MKT/IDS 518 — Deploying OpenClaw on DigitalOcean with Telegram and Discord**  
-*J. Christopher Westland · University of Illinois at Chicago*
+*J. Christopher Westland · University of Illinois at Chicago · v1.01*
 
 ---
 
-> **What you will build:** A company of 5 autonomous AI agents (Henry, Coder, Scout, Writer, Watcher) running 24/7 on a cloud server. You control them by sending messages in Telegram — from your phone or desktop — and they autonomously research, analyze, code, write reports, and monitor your system. Every response is also posted to your Discord server for team visibility.
+> **What you will build:** A company of 5 autonomous AI agents (Henry, Coder, Scout, Writer, Watcher) running 24/7 on a cloud server. You control them by sending text or voice messages in Telegram — from your phone or desktop — and they autonomously research, analyze, code, write reports, and monitor your system. Every response is also posted to your Discord server for team visibility.
 
 ---
 
@@ -414,9 +414,16 @@ Henry decomposes the request, delegates to Scout and Writer in sequence, and syn
 
 ### Voice Commands
 
-Voice notes in Telegram require **Telegram Premium**. Without Premium, type your commands as text — agents respond identically.
+Voice notes work with **any Telegram account** — no Premium required.
 
-> Voice *calls* do not reach the agents. Only voice *notes* (hold the mic button) work, and only with Telegram Premium.
+1. In any bot chat, hold the **microphone button** (bottom right) and speak your command.
+2. Release to send. The bot will transcribe your voice note using OpenAI's audio API.
+3. The transcript is echoed back to the chat so you can confirm it was understood correctly.
+4. The agent then responds to your spoken command exactly as it would to typed text.
+
+> Voice *calls* do not reach the agents. Only voice *notes* (hold the mic button) are transcribed and processed.
+>
+> Voice transcription requires an OpenAI API key (configured in Step 3). If you skipped that step, only typed text will work.
 
 ### Checking Agent Memory
 
