@@ -231,7 +231,7 @@ app_ui = ui.page_fluid(
     # ---- Header -----------------------------------------------------------
     ui.h1("ClawInc  //  OpenClaw Dashboard"),
     ui.p(
-        f"Droplet: {DROPLET_IP}  ·  OpenClaw 2026.3.31  ·  5 agents  ·  "
+        f"ClawInc v1.01  ·  Droplet: {DROPLET_IP}  ·  OpenClaw 2026.3.31  ·  5 agents  ·  "
         "auto-refreshes every 30s"
     ),
     ui.output_text("last_refresh_ts"),
