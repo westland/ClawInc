@@ -155,29 +155,31 @@ Every agent posts its responses and reports to a Discord channel. This gives you
 
 ## 5. Deploy OpenClaw on Your Droplet
 
-### Upload the Deploy Package
+Run these four commands **one at a time, in order**. Wait for each one to complete before typing the next.
 
-From your **local computer**, open a terminal and copy the deploy files to your server.
-
-- **Windows:** open **Windows Terminal** or **PowerShell** (not Git Bash — the built-in OpenSSH `scp` is used)
-- **Mac/Linux:** open **Terminal**
-
-Navigate to your local ClawInc project folder, then run:
-
+**Step 1 — Connect to your server:**
 ```bash
-scp -r deploy root@YOUR_DROPLET_IP:/root/
+ssh root@YOUR_DROPLET_IP
 ```
+Enter your root password when prompted. You should see a prompt like `root@ClawInc:~#` before continuing.
 
-Enter your root password when prompted. You should see each file being transferred. If `scp` is not found on Windows, go to **Settings → Optional Features → Add a feature → OpenSSH Client** and install it, then try again.
-
-### Run the Deploy Script
-
-SSH into your server, then run:
-
+**Step 2 — Clone the ClawInc repository from GitHub:**
 ```bash
-chmod +x /root/deploy/deploy-openclaw.sh
-/root/deploy/deploy-openclaw.sh
+git clone https://github.com/westland/ClawInc /root/ClawInc
 ```
+Wait for the clone to finish. You will see a message like `Cloning into '/root/ClawInc'...` followed by `done.`
+
+**Step 3 — Make the deploy script executable:**
+```bash
+chmod +x /root/ClawInc/deploy/deploy-openclaw.sh
+```
+This command produces no output — that is normal.
+
+**Step 4 — Run the installer:**
+```bash
+/root/ClawInc/deploy/deploy-openclaw.sh
+```
+The installer will ask for your credentials one at a time (see table below). This takes 10–15 minutes to complete.
 
 The installer is **interactive** — it will ask you for each credential one at a time. Have the following ready:
 
@@ -535,7 +537,7 @@ DigitalOcean Dashboard → Your Droplet → **Access → Reset Root Password**
 - [ ] Got OpenAI API key from platform.openai.com (for voice commands)
 - [ ] Created Discord server with `#reports` channel
 - [ ] Created Discord webhook and saved the URL
-- [ ] Uploaded `deploy/` folder to `/root/deploy/` on server
+- [ ] Cloned the ClawInc repository on the server: `git clone https://github.com/westland/ClawInc /root/ClawInc`
 - [ ] Ran deploy script and entered all credentials when prompted
 - [ ] Deploy script completed successfully
 - [ ] Config valid: `openclaw config validate` shows **Config valid**
