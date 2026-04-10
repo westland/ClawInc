@@ -157,17 +157,18 @@ Every agent posts its responses and reports to a Discord channel. This gives you
 
 ### Upload the Deploy Package
 
-From your **local computer**, copy the deploy files to your server.
+From your **local computer**, open a terminal and copy the deploy files to your server.
 
-**Mac/Linux** — open Terminal and run:
+- **Windows:** open **Windows Terminal** or **PowerShell** (not Git Bash — the built-in OpenSSH `scp` is used)
+- **Mac/Linux:** open **Terminal**
+
+Navigate to your local ClawInc project folder, then run:
+
 ```bash
-scp -r deploy/ root@YOUR_DROPLET_IP:/root/deploy/
+scp -r deploy root@YOUR_DROPLET_IP:/root/
 ```
 
-**Windows** — use [WinSCP](https://winscp.net) (free):
-1. Open WinSCP → New Session
-2. Protocol: SCP, Hostname: YOUR_DROPLET_IP, Username: `root`, Password: your root password
-3. Click Login, then drag the entire `deploy/` folder from your computer to `/root/` on the server.
+Enter your root password when prompted. You should see each file being transferred. If `scp` is not found on Windows, go to **Settings → Optional Features → Add a feature → OpenSSH Client** and install it, then try again.
 
 ### Run the Deploy Script
 
@@ -535,8 +536,8 @@ DigitalOcean Dashboard → Your Droplet → **Access → Reset Root Password**
 - [ ] Created Discord server with `#reports` channel
 - [ ] Created Discord webhook and saved the URL
 - [ ] Uploaded `deploy/` folder to `/root/deploy/` on server
-- [ ] Edited deploy script with API key, Discord webhook, and all 5 bot tokens
-- [ ] Ran deploy script successfully
+- [ ] Ran deploy script and entered all credentials when prompted
+- [ ] Deploy script completed successfully
 - [ ] Config valid: `openclaw config validate` shows **Config valid**
 - [ ] Service active: `systemctl is-active openclaw` shows **active**
 - [ ] All 5 bots respond in Telegram
