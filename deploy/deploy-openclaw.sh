@@ -304,7 +304,7 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
   },
   "agents": {
     "defaults": {
-      "model": { "primary": "anthropic/claude-sonnet-4-5-20250929" }
+      "model": { "primary": "anthropic/claude-sonnet-4-6" }
     },
     "list": [
       {
@@ -313,16 +313,14 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
         "default": true,
         "workspace": "~/.openclaw/workspace-henry",
         "agentDir": "~/.openclaw/agents/henry",
-        "model": "anthropic/claude-opus-4-6",
-        "thinkingDefault": "high"
+        "model": "anthropic/claude-opus-4-7",
       },
       {
         "id": "coder",
         "name": "Coder",
         "workspace": "~/.openclaw/workspace-coder",
         "agentDir": "~/.openclaw/agents/coder",
-        "model": "anthropic/claude-sonnet-4-5-20250929",
-        "thinkingDefault": "high"
+        "model": "anthropic/claude-sonnet-4-6",
       },
       {
         "id": "scout",
@@ -330,15 +328,13 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
         "workspace": "~/.openclaw/workspace-scout",
         "agentDir": "~/.openclaw/agents/scout",
         "model": "anthropic/claude-haiku-4-5-20251001",
-        "thinkingDefault": "medium"
       },
       {
         "id": "writer",
         "name": "Writer",
         "workspace": "~/.openclaw/workspace-writer",
         "agentDir": "~/.openclaw/agents/writer",
-        "model": "anthropic/claude-sonnet-4-5-20250929",
-        "thinkingDefault": "medium"
+        "model": "anthropic/claude-sonnet-4-6",
       },
       {
         "id": "watcher",
@@ -346,7 +342,6 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
         "workspace": "~/.openclaw/workspace-watcher",
         "agentDir": "~/.openclaw/agents/watcher",
         "model": "anthropic/claude-haiku-4-5-20251001",
-        "thinkingDefault": "low"
       }
     ]
   },
@@ -458,11 +453,12 @@ ExecStart=/usr/bin/openclaw gateway run
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 RestartSec=10
-TimeoutStartSec=30
+TimeoutStartSec=120
 TimeoutStopSec=30
 
 Environment=NODE_ENV=production
 Environment=HOME=/home/clawuser
+Environment=NODE_OPTIONS=--max-old-space-size=384
 
 NoNewPrivileges=true
 ProtectSystem=strict
@@ -477,8 +473,8 @@ RestrictSUIDSGID=true
 MemoryDenyWriteExecute=false
 SystemCallArchitectures=native
 
-MemoryMax=512M
-MemoryHigh=384M
+MemoryMax=768M
+MemoryHigh=640M
 TasksMax=64
 
 StandardOutput=journal
