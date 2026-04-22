@@ -1,7 +1,7 @@
 # ClawInc Student Setup Guide: Your Own AI Agent Company
 
 **MKT/IDS 518 — Deploying OpenClaw on DigitalOcean with Telegram and Discord**  
-*J. Christopher Westland · University of Illinois at Chicago · v1.01*
+*J. Christopher Westland · University of Illinois at Chicago · v1.50*
 
 ---
 
@@ -208,43 +208,22 @@ This takes **10–15 minutes** and will:
 
 ### Add Cron Jobs
 
-Run these commands to set up the automated daily schedule:
+Run each command below individually. The heredoc (`<< 'EOF'`) pattern does not work reliably with `su` — run one line at a time and wait for each to complete before typing the next.
 
 ```bash
-su - clawuser << 'CRONEOF'
+su - clawuser -c "openclaw cron add --name 'morning-research' --agent 'scout' --cron '0 8 * * *' --session isolated --message 'Run your morning research routine. Search the web for the latest trending topics in AI, marketing analytics, and technology. Focus on developments from the last 24 hours. Write a structured briefing with key findings, notable trends, and actionable insights. Save the briefing to your memory. Then post a signed summary to the Discord #reports channel using your discord-report skill.'"
 
-openclaw cron add \
-  --name "morning-research" --agent "scout" \
-  --cron "0 8 * * *" --session isolated \
-  --message "Run your morning research routine. Search the web for the latest trending topics in AI, marketing analytics, and technology. Focus on developments from the last 24 hours. Write a structured briefing with key findings, notable trends, and actionable insights. Save the briefing to your memory. Then post a signed summary to the Discord #reports channel using your discord-report skill."
+su - clawuser -c "openclaw cron add --name 'daily-memo' --agent 'writer' --cron '0 9 * * *' --session isolated --message 'Compile the morning memo. Search Scout memory for today'"'"'s research briefing. Synthesize into a polished executive memo with sections: Top Stories, Trend Analysis, Action Items, Market Watch. Save to your memory. Post the memo to Discord #reports using your discord-report skill.'"
 
-openclaw cron add \
-  --name "daily-memo" --agent "writer" \
-  --cron "0 9 * * *" --session isolated \
-  --message "Compile the morning memo. Search Scout memory for today's research briefing. Synthesize into a polished executive memo with sections: Top Stories, Trend Analysis, Action Items, Market Watch. Save to your memory. Post the memo to Discord #reports using your discord-report skill."
+su - clawuser -c "openclaw cron add --name 'overnight-worker' --agent 'coder' --cron '0 2 * * *' --session isolated --message 'Check your task queue and Henry'"'"'s recent delegations. Work on the highest-priority pending development task. If no tasks queued, review code for improvements and document technical debt found. Post a summary to Discord #reports using your discord-report skill.'"
 
-openclaw cron add \
-  --name "overnight-worker" --agent "coder" \
-  --cron "0 2 * * *" --session isolated \
-  --message "Check your task queue and Henry's recent delegations. Work on the highest-priority pending development task. If no tasks queued, review code for improvements and document technical debt found. Post a summary to Discord #reports using your discord-report skill."
+su - clawuser -c "openclaw cron add --name 'health-check' --agent 'watcher' --cron '*/30 * * * *' --session isolated --message 'Check system resources (CPU, RAM, disk, swap), verify agents are responsive, review error logs. Only alert Henry and post to Discord if something is wrong.'"
 
-openclaw cron add \
-  --name "health-check" --agent "watcher" \
-  --cron "*/30 * * * *" --session isolated \
-  --message "Check system resources (CPU, RAM, disk, swap), verify agents are responsive, review error logs. Only alert Henry and post to Discord if something is wrong."
+su - clawuser -c "openclaw cron add --name 'nightly-rnd' --agent 'henry' --cron '0 23 * * *' --session isolated --message 'Initiate the nightly R&D session. Review today'"'"'s memo from Writer, research from Scout, and any code from Coder. Identify opportunities and strategic improvements. Delegate follow-up tasks to team members as needed. Post a summary to Discord #reports using your discord-report skill.'"
 
-openclaw cron add \
-  --name "nightly-rnd" --agent "henry" \
-  --cron "0 23 * * *" --session isolated \
-  --message "Initiate the nightly R&D session. Review today's memo from Writer, research from Scout, and any code from Coder. Identify opportunities and strategic improvements. Delegate follow-up tasks to team members as needed. Post a summary to Discord #reports using your discord-report skill."
+su - clawuser -c "openclaw cron add --name 'session-cleanup' --agent 'watcher' --cron '0 4 * * 0' --session isolated --message 'Perform weekly session cleanup. Archive sessions older than 7 days. Clean up temporary files. Report storage savings to Henry and post to Discord #reports using your discord-report skill.'"
 
-openclaw cron add \
-  --name "session-cleanup" --agent "watcher" \
-  --cron "0 4 * * 0" --session isolated \
-  --message "Perform weekly session cleanup. Archive sessions older than 7 days. Clean up temporary files. Report storage savings to Henry and post to Discord #reports using your discord-report skill."
-
-openclaw cron list
-CRONEOF
+su - clawuser -c "openclaw cron list"
 ```
 
 You should see a table of 6 scheduled jobs.
@@ -355,8 +334,8 @@ nano /home/clawuser/.openclaw/openclaw.json
 
 | Model | Speed | Intelligence | Cost |
 |-------|-------|-------------|------|
-| `anthropic/claude-opus-4-6` | Slow | Highest | High |
-| `anthropic/claude-sonnet-4-5-20250929` | Medium | High | Medium |
+| `anthropic/claude-opus-4-7` | Slow | Highest | High |
+| `anthropic/claude-sonnet-4-6` | Medium | High | Medium |
 | `anthropic/claude-haiku-4-5-20251001` | Fast | Good | Low |
 
 After editing:
@@ -374,14 +353,14 @@ systemctl restart openclaw
 
 Send messages directly to any Telegram bot. Every response also posts to Discord `#reports`.
 
-**Henry — Chief of Staff (Claude Opus 4.6):**
+**Henry — Chief of Staff (Claude Opus 4.7):**
 ```
 Research the top 3 trends in social media marketing in Q1 2026,
 then have Scout do a deep web analysis and Writer produce
 a 2-page executive brief. Post everything to Discord when done.
 ```
 
-**Coder — Software Engineer (Claude Sonnet 4.5):**
+**Coder — Software Engineer (Claude Sonnet 4.6):**
 ```
 I'm uploading a CSV of customer purchase data. Run a regression
 analysis to find the top predictors of purchase frequency.
@@ -394,7 +373,7 @@ Search the web for recent academic papers on customer segmentation
 using AI. Summarize the top 5 findings with citations.
 ```
 
-**Writer — Content Creator (Claude Sonnet 4.5):**
+**Writer — Content Creator (Claude Sonnet 4.6):**
 ```
 Write a 500-word executive summary of our Q1 marketing strategy,
 using a formal business style. Include an executive abstract,
@@ -553,10 +532,10 @@ DigitalOcean Dashboard → Your Droplet → **Access → Reset Root Password**
 
 | Agent | Telegram Bot | Model | Role | Discord Color |
 |-------|-------------|-------|------|---------------|
-| **Henry** | @YourHenryBot | Claude Opus 4.6 | Chief of Staff — orchestrates the team | Gold |
-| **Coder** | @YourCoderBot | Claude Sonnet 4.5 | Software Engineer — code, data analysis | Blue |
+| **Henry** | @YourHenryBot | Claude Opus 4.7 | Chief of Staff — orchestrates the team | Gold |
+| **Coder** | @YourCoderBot | Claude Sonnet 4.6 | Software Engineer — code, data analysis | Blue |
 | **Scout** | @YourScoutBot | Claude Haiku 4.5 | Research Analyst — web research, trends | Green |
-| **Writer** | @YourWriterBot | Claude Sonnet 4.5 | Content Creator — reports, memos | Purple |
+| **Writer** | @YourWriterBot | Claude Sonnet 4.6 | Content Creator — reports, memos | Purple |
 | **Watcher** | @YourWatcherBot | Claude Haiku 4.5 | System Monitor — health checks, alerts | Orange |
 
 ---
