@@ -13,12 +13,13 @@ ExecStart=/usr/bin/openclaw gateway run
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 RestartSec=10
-TimeoutStartSec=30
+TimeoutStartSec=120
 TimeoutStopSec=30
 
 # Environment
 Environment=NODE_ENV=production
 Environment=HOME=/home/clawuser
+Environment=NODE_OPTIONS=--max-old-space-size=384
 
 # Security Hardening
 NoNewPrivileges=true
@@ -35,8 +36,8 @@ MemoryDenyWriteExecute=false
 SystemCallArchitectures=native
 
 # Resource Limits (conservative for 1GB RAM server)
-MemoryMax=512M
-MemoryHigh=384M
+MemoryMax=768M
+MemoryHigh=640M
 TasksMax=64
 
 # Logging
