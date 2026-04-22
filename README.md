@@ -3,7 +3,7 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT/IDS 518 · J. Christopher Westland · University of Illinois at Chicago*
 
-[![Release](https://img.shields.io/badge/release-v1.01-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v1.01)
+[![Release](https://img.shields.io/badge/release-v1.50-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v1.50)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.3.31-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
@@ -19,10 +19,10 @@ The five agents are:
 
 | Agent | Model | Role | Discord Color |
 |-------|-------|------|---------------|
-| **Henry** | Claude Opus 4.6 | Chief of Staff — orchestrates the team, delegates tasks | Gold |
-| **Coder** | Claude Sonnet 4.5 | Software Engineer — writes code, runs data analysis | Blue |
+| **Henry** | Claude Opus 4.7 | Chief of Staff — orchestrates the team, delegates tasks | Gold |
+| **Coder** | Claude Sonnet 4.6 | Software Engineer — writes code, runs data analysis | Blue |
 | **Scout** | Claude Haiku 4.5 | Research Analyst — web research, trend monitoring | Green |
-| **Writer** | Claude Sonnet 4.5 | Content Creator — memos, reports, executive summaries | Purple |
+| **Writer** | Claude Sonnet 4.6 | Content Creator — memos, reports, executive summaries | Purple |
 | **Watcher** | Claude Haiku 4.5 | System Monitor — health checks, alerts, maintenance | Orange |
 
 ---
@@ -41,10 +41,10 @@ Your Phone / Computer
 DigitalOcean Droplet — Ubuntu 24.04 — $6/month
         │
         │  OpenClaw Gateway (port 18789, systemd service)
-        ├── Henry workspace  (Claude Opus 4.6)
-        ├── Coder workspace  (Claude Sonnet 4.5)
+        ├── Henry workspace  (Claude Opus 4.7)
+        ├── Coder workspace  (Claude Sonnet 4.6)
         ├── Scout workspace  (Claude Haiku 4.5)
-        ├── Writer workspace (Claude Sonnet 4.5)
+        ├── Writer workspace (Claude Sonnet 4.6)
         └── Watcher workspace (Claude Haiku 4.5)
         │
         ├── Anthropic API (Claude models)
@@ -138,7 +138,7 @@ ClawInc/
 ## The Five Agents
 
 ### Henry — Chief of Staff
-- **Model:** `anthropic/claude-opus-4-6` (highest intelligence, extended thinking)
+- **Model:** `anthropic/claude-opus-4-7` (highest intelligence)
 - **Telegram:** @YourHenryBot
 - **Role:** Primary user interface. Receives high-level goals, delegates to other agents. Has agent-to-agent delegation authority over all four others.
 - **Skills:** `delegate-task`, `daily-standup`, `rnd-meeting`, `discord-report`
@@ -146,7 +146,7 @@ ClawInc/
 - **Discord:** Posts after every user prompt and every nightly session (gold embed)
 
 ### Coder — Software Engineer
-- **Model:** `anthropic/claude-sonnet-4-5-20250929`
+- **Model:** `anthropic/claude-sonnet-4-6`
 - **Telegram:** @YourCoderBot
 - **Role:** Writes, debugs, and executes code. Handles Python/R data analysis, statistical modeling, and automation scripts.
 - **Skills:** `vibe-code`, `debug-app`, `deploy-app`, `discord-report`
@@ -162,7 +162,7 @@ ClawInc/
 - **Discord:** Posts after every user prompt and every morning scan (green embed)
 
 ### Writer — Content Creator
-- **Model:** `anthropic/claude-sonnet-4-5-20250929`
+- **Model:** `anthropic/claude-sonnet-4-6`
 - **Telegram:** @YourWriterBot
 - **Role:** Produces polished written output: executive memos, research reports, marketing content, summaries.
 - **Skills:** `write-memo`, `write-report`, `content-plan`, `discord-report`
@@ -210,7 +210,7 @@ Agents are color-coded in Discord: Henry (gold), Coder (blue), Scout (green), Wr
 | Component | Technology |
 |-----------|-----------|
 | Agent runtime | OpenClaw 2026.3.31 |
-| AI models | Anthropic Claude (Opus 4.6, Sonnet 4.5, Haiku 4.5) |
+| AI models | Anthropic Claude (Opus 4.7, Sonnet 4.6, Haiku 4.5) |
 | Voice transcription | OpenAI gpt-4o-mini-transcribe (Whisper API) |
 | Server | Ubuntu 24.04 on DigitalOcean ($6/month) |
 | Runtime | Node.js 24 |
