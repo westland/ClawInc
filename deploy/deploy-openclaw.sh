@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# deploy-openclaw.sh — ClawInc v1.60 Multi-Agent Company Installer
+# deploy-openclaw.sh — ClawInc v1.61 Multi-Agent Company Installer
 # =============================================================================
 # Installs a complete 5-agent AI company on Ubuntu 24.04 (DigitalOcean).
 #
@@ -24,7 +24,7 @@ DEPLOY_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAW_USER="clawuser"
 OPENCLAW_DIR="/home/${CLAW_USER}/.openclaw"
 LOG_FILE="/var/log/openclaw-deploy.log"
-VERSION="1.60"
+VERSION="1.61"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
@@ -486,18 +486,41 @@ WantedBy=multi-user.target
 SERVICEEOF
 fi
 
+# Stop any pre-existing user-level gateway service running as root (wrong config)
+for SVC in openclaw-gateway openclaw; do
+    if systemctl --user is-active --quiet "$SVC" 2>/dev/null; then
+        warn "Found user-level $SVC service running as root — stopping and disabling"
+        systemctl --user stop "$SVC" 2>/dev/null || true
+        systemctl --user disable "$SVC" 2>/dev/null || true
+    fi
+    USER_SVC="/root/.config/systemd/user/${SVC}.service"
+    if [[ -f "$USER_SVC" ]]; then
+        warn "Removing user-level service file: $USER_SVC"
+        rm -f "$USER_SVC"
+    fi
+done
+
 systemctl daemon-reload
 systemctl enable openclaw
 log "Systemd service installed and enabled"
 
 log "Starting OpenClaw gateway..."
 systemctl start openclaw
-sleep 5
 
-if systemctl is-active --quiet openclaw; then
+# Wait up to 20 seconds for the gateway to become active
+GW_READY=false
+for i in $(seq 1 4); do
+    sleep 5
+    if systemctl is-active --quiet openclaw; then
+        GW_READY=true
+        break
+    fi
+done
+
+if $GW_READY; then
     log "OpenClaw gateway is RUNNING ✓"
 else
-    warn "Gateway did not start — checking logs..."
+    warn "Gateway did not start within 20 seconds — checking logs..."
     journalctl -u openclaw -n 20 --no-pager | tee -a "$LOG_FILE"
 fi
 
@@ -584,7 +607,25 @@ fi
 
 header "Phase 10: Setting Up Automated Schedule"
 
-sleep 3
+# Wait for gateway to be ready after the config-change restart triggered by Phase 4
+log "Waiting for gateway to be ready before adding cron jobs..."
+CRON_READY=false
+for i in $(seq 1 6); do
+    sleep 5
+    if su - "${CLAW_USER}" -c "openclaw status 2>&1" | grep -qi "running\|active\|connected"; then
+        CRON_READY=true
+        break
+    elif systemctl is-active --quiet openclaw; then
+        CRON_READY=true
+        break
+    fi
+done
+
+if ! $CRON_READY; then
+    warn "Gateway not responding after 30 seconds — cron jobs may need to be added manually"
+    warn "Run: su - clawuser -c 'openclaw cron list' to check after install"
+fi
+
 su - "${CLAW_USER}" << 'CRONEOF'
 
 openclaw cron add \
