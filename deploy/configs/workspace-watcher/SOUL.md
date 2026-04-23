@@ -105,7 +105,7 @@ payload = {
         "title": "Watcher — Monitor Bot's Report",
         "description": body[:4096],
         "color": 15105570,
-        "footer": {"text": "ClawInc · Watcher · Claude Haiku 4.5 · " + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")}
+        "footer": {"text": "ClawInc · Watcher · Claude Haiku 4.5 · " + datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}
     }]
 }
 data = json.dumps(payload).encode()

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# deploy-openclaw.sh — ClawInc v1.01 Multi-Agent Company Installer
+# deploy-openclaw.sh — ClawInc v1.60 Multi-Agent Company Installer
 # =============================================================================
 # Installs a complete 5-agent AI company on Ubuntu 24.04 (DigitalOcean).
 #
@@ -24,7 +24,7 @@ DEPLOY_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAW_USER="clawuser"
 OPENCLAW_DIR="/home/${CLAW_USER}/.openclaw"
 LOG_FILE="/var/log/openclaw-deploy.log"
-VERSION="1.01"
+VERSION="1.60"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
@@ -313,35 +313,35 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
         "default": true,
         "workspace": "~/.openclaw/workspace-henry",
         "agentDir": "~/.openclaw/agents/henry",
-        "model": "anthropic/claude-opus-4-7",
+        "model": "anthropic/claude-opus-4-7"
       },
       {
         "id": "coder",
         "name": "Coder",
         "workspace": "~/.openclaw/workspace-coder",
         "agentDir": "~/.openclaw/agents/coder",
-        "model": "anthropic/claude-sonnet-4-6",
+        "model": "anthropic/claude-sonnet-4-6"
       },
       {
         "id": "scout",
         "name": "Scout",
         "workspace": "~/.openclaw/workspace-scout",
         "agentDir": "~/.openclaw/agents/scout",
-        "model": "anthropic/claude-haiku-4-5-20251001",
+        "model": "anthropic/claude-haiku-4-5-20251001"
       },
       {
         "id": "writer",
         "name": "Writer",
         "workspace": "~/.openclaw/workspace-writer",
         "agentDir": "~/.openclaw/agents/writer",
-        "model": "anthropic/claude-sonnet-4-6",
+        "model": "anthropic/claude-sonnet-4-6"
       },
       {
         "id": "watcher",
         "name": "Watcher",
         "workspace": "~/.openclaw/workspace-watcher",
         "agentDir": "~/.openclaw/agents/watcher",
-        "model": "anthropic/claude-haiku-4-5-20251001",
+        "model": "anthropic/claude-haiku-4-5-20251001"
       }
     ]
   },

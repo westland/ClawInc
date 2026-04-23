@@ -1,4 +1,4 @@
-# ClawInc — OpenClaw Deployment Package v1.01
+# ClawInc — OpenClaw Deployment Package v1.60
 
 Everything needed to install ClawInc on a fresh Ubuntu 24.04 DigitalOcean droplet.
 
@@ -65,10 +65,10 @@ The `deploy-openclaw.sh` script runs 10 phases automatically:
 
 | Agent | Telegram Bot | Model | Role |
 |-------|-------------|-------|------|
-| **Henry** | @YourHenryBot | Claude Opus 4.6 | Chief of Staff — orchestrates the team |
-| **Coder** | @YourCoderBot | Claude Sonnet 4.5 | Software Engineer — code, data analysis |
+| **Henry** | @YourHenryBot | Claude Opus 4.7 | Chief of Staff — orchestrates the team |
+| **Coder** | @YourCoderBot | Claude Sonnet 4.6 | Software Engineer — code, data analysis |
 | **Scout** | @YourScoutBot | Claude Haiku 4.5 | Research Analyst — web research, trends |
-| **Writer** | @YourWriterBot | Claude Sonnet 4.5 | Content Creator — memos, reports |
+| **Writer** | @YourWriterBot | Claude Sonnet 4.6 | Content Creator — memos, reports |
 | **Watcher** | @YourWatcherBot | Claude Haiku 4.5 | System Monitor — health checks, alerts |
 
 All 5 agents post responses to the Discord `#reports` channel automatically.
