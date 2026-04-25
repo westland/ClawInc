@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "health-check-main",
+      "name": "health-check",
+      "agentId": "watcher",
+      "sessionTarget": "isolated",
+      "delivery": { "mode": "none" },
+      "schedule": { "kind": "cron", "expr": "*/5 * * * *" },
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run your health-check skill now. Check system resources (CPU, RAM, disk, swap), verify the OpenClaw gateway is running, and review recent error logs. If any metrics exceed warning thresholds, post an alert to Discord using your discord-report skill. Otherwise log the check to your workspace."
+      },
+      "enabled": true,
+      "createdAtMs": 1745535600000,
+      "state": {}
+    },
+    {
+      "id": "session-cleanup-hourly",
+      "name": "session-cleanup",
+      "agentId": "watcher",
+      "sessionTarget": "isolated",
+      "delivery": { "mode": "none" },
+      "schedule": { "kind": "cron", "expr": "0 * * * *" },
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run your session-cleanup skill now. Archive old sessions, clean up temporary files, and ensure disk usage stays healthy."
+      },
+      "enabled": true,
+      "createdAtMs": 1745535600000,
+      "state": {}
+    },
+    {
+      "id": "morning-research-daily",
+      "name": "morning-research",
+      "agentId": "scout",
+      "sessionTarget": "isolated",
+      "delivery": { "mode": "none" },
+      "schedule": { "kind": "cron", "expr": "0 8 * * *" },
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run your news-digest skill. Search for the latest trending topics in AI, marketing analytics, and technology from the last 24 hours. Write a structured briefing with key findings, notable trends, and actionable insights. Save the briefing to your memory. Then post a signed summary to Discord using your discord-report skill."
+      },
+      "enabled": true,
+      "createdAtMs": 1745535600000,
+      "state": {}
+    },
+    {
+      "id": "daily-memo-writer",
+      "name": "daily-memo",
+      "agentId": "writer",
+      "sessionTarget": "isolated",
+      "delivery": { "mode": "none" },
+      "schedule": { "kind": "cron", "expr": "0 9 * * *" },
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run your write-memo skill. Search Scout memory for today's research briefing. Synthesize into a polished executive memo with sections: Top Stories, Trend Analysis, Action Items, Market Watch. Save to your memory. Post to Discord using your discord-report skill."
+      },
+      "enabled": true,
+      "createdAtMs": 1745535600000,
+      "state": {}
+    },
+    {
+      "id": "nightly-rnd-henry",
+      "name": "nightly-rnd",
+      "agentId": "henry",
+      "sessionTarget": "isolated",
+      "delivery": { "mode": "none" },
+      "schedule": { "kind": "cron", "expr": "0 23 * * *" },
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run your rnd-meeting skill. Review today's memo from Writer, research from Scout, and any code from Coder. Identify opportunities and strategic improvements. Delegate follow-up tasks. Post a summary to Discord using your discord-report skill."
+      },
+      "enabled": true,
+      "createdAtMs": 1745535600000,
+      "state": {}
+    }
+  ]
+}

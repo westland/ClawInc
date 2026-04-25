@@ -9,6 +9,7 @@ Type=simple
 User=clawuser
 Group=clawuser
 WorkingDirectory=/home/clawuser
+ExecStartPre=/usr/local/bin/fix-openclaw-symlinks.sh
 ExecStart=/usr/bin/openclaw gateway run
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
@@ -20,13 +21,15 @@ TimeoutStopSec=30
 Environment=NODE_ENV=production
 Environment=HOME=/home/clawuser
 Environment=NODE_OPTIONS=--max-old-space-size=384
+# Increase server-side WS handshake timeout so openclaw-cron has time to
+# JIT-compile before the gateway drops the connection (default is 10 s).
+Environment=OPENCLAW_HANDSHAKE_TIMEOUT_MS=120000
 
 # Security Hardening
+# NOTE: ProtectSystem=strict and ProtectHome=read-only are intentionally
+# omitted — they conflict with clawuser (UID 1001) temp paths under
+# /tmp/openclaw-1000 and cause the gateway to OOM-crash on startup.
 NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=read-only
-ReadWritePaths=/home/clawuser/.openclaw /tmp/openclaw /tmp/openclaw-1000
-PrivateTmp=false
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true
@@ -35,9 +38,11 @@ RestrictSUIDSGID=true
 MemoryDenyWriteExecute=false
 SystemCallArchitectures=native
 
-# Resource Limits (conservative for 1GB RAM server)
-MemoryMax=768M
-MemoryHigh=640M
+# Resource Limits — tuned for 1 GB RAM DigitalOcean droplet.
+# 1200 M hard cap leaves ~100 MB for the OS; 1024 M soft limit
+# triggers swap before the hard cap kills the process.
+MemoryMax=1200M
+MemoryHigh=1024M
 TasksMax=64
 
 # Logging

@@ -3,8 +3,8 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT/IDS 518 · J. Christopher Westland · University of Illinois at Chicago*
 
-[![Release](https://img.shields.io/badge/release-v1.60-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v1.60)
-[![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.3.31-blue)](https://openclaw.dev)
+[![Release](https://img.shields.io/badge/release-v2.00-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v2.00)
+[![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4.22-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
 [![Discord](https://img.shields.io/badge/reports-Discord-5865F2)](https://discord.com)
@@ -303,7 +303,28 @@ su - clawuser -c "openclaw doctor"
 curl -X POST "YOUR_WEBHOOK_URL" \
   -H "Content-Type: application/json" \
   -d '{"content": "test from ClawInc"}'
+
+# Check cron job status (requires ~90 s for JIT warmup on first run)
+su - clawuser -c "timeout 120 openclaw cron list"
+
+# Inspect cron run results directly (no CLI needed)
+cat ~/.openclaw/cron/jobs-state.json
+
+# Clear cron error backoff after fixing a jobs.json mistake
+echo '{"version":1,"jobs":{}}' > ~/.openclaw/cron/jobs-state.json
+systemctl restart openclaw
 ```
+
+### Known issues on 1 GB DigitalOcean droplets (v2.00 fixes)
+
+| Symptom | Root cause | Fix applied |
+|---------|-----------|-------------|
+| Gateway OOM-kills on startup | `ProtectSystem=strict` prevents writing to `/tmp/openclaw-1000`; process retries until killed | Removed `ProtectSystem` and `ProtectHome`; raised `MemoryMax` to 1200 M |
+| Telegram extension fails to import | `openclaw` not symlinked inside `plugin-runtime-deps/*/node_modules` after npm update | `fix-openclaw-symlinks.sh` runs as `ExecStartPre` on every start |
+| Cron jobs show `lastStatus: "error"` — `TypeError: Cannot read properties of undefined (reading 'startsWith')` | `sessionTarget` field missing from `jobs.json` | All jobs require `"sessionTarget": "isolated"` |
+| Cron jobs show `lastStatus: "error"` — `Delivering to Telegram requires target <chatId>` | No `delivery` field → OpenClaw defaults to `announce` mode, looks for last chatId | All jobs require `"delivery": {"mode": "none"}` |
+| `openclaw cron list` hangs for 60+ seconds then times out | `openclaw-cron` subprocess JIT-compiles the full Node.js runtime (~60 s) before connecting; default server-side WS handshake timeout (10 s) fires first | Added `OPENCLAW_HANDSHAKE_TIMEOUT_MS=120000` to service; use `--timeout 120000` or read `jobs-state.json` directly |
+| `openclaw cron add` hangs during deploy | Same JIT issue — the CLI always races against a freshly started gateway | Replaced `openclaw cron add` calls with direct `jobs.json` file write |
 
 ---
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# deploy-openclaw.sh — ClawInc v1.61 Multi-Agent Company Installer
+# deploy-openclaw.sh — ClawInc v2.00 Multi-Agent Company Installer
 # =============================================================================
 # Installs a complete 5-agent AI company on Ubuntu 24.04 (DigitalOcean).
 #
@@ -24,7 +24,7 @@ DEPLOY_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAW_USER="clawuser"
 OPENCLAW_DIR="/home/${CLAW_USER}/.openclaw"
 LOG_FILE="/var/log/openclaw-deploy.log"
-VERSION="1.61"
+VERSION="2.00"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
@@ -56,6 +56,7 @@ cat << 'BANNER'
 BANNER
 echo -e "${NC}"
 echo -e "${BOLD}  ClawInc Multi-Agent AI Company — v${VERSION} Installer${NC}"
+echo -e "  OOM fixes · Symlink repair · Cron jobs via jobs.json · Handshake timeout fix"
 echo -e "  Voice commands supported via OpenAI audio transcription"
 echo -e "  Deploys 5 autonomous AI agents (Henry, Coder, Scout, Writer, Watcher)"
 echo -e "  Controlled via Telegram · Reports posted to Discord\n"
@@ -419,7 +420,24 @@ log "Permissions set"
 # PHASE 6: Install tmpfiles.d (ensures /tmp/openclaw dirs survive reboots)
 # =============================================================================
 
-header "Phase 6: Configuring Systemd Temp Directories"
+header "Phase 6: Installing Symlink Repair Script and Temp Directories"
+
+# Install the ExecStartPre script that repairs openclaw symlinks in
+# plugin-runtime-deps before the gateway starts each time.
+if [[ -f "${DEPLOY_DIR}/fix-openclaw-symlinks.sh" ]]; then
+    cp "${DEPLOY_DIR}/fix-openclaw-symlinks.sh" /usr/local/bin/fix-openclaw-symlinks.sh
+else
+    cat > /usr/local/bin/fix-openclaw-symlinks.sh << 'SYMLINKEOF'
+#!/bin/bash
+for dir in /home/clawuser/.openclaw/plugin-runtime-deps/openclaw-*/node_modules; do
+    [ -d "$dir" ] && ln -sfn /usr/lib/node_modules/openclaw "$dir/openclaw"
+done
+SYMLINKEOF
+fi
+chmod +x /usr/local/bin/fix-openclaw-symlinks.sh
+log "Symlink repair script installed at /usr/local/bin/fix-openclaw-symlinks.sh"
+
+header "Phase 6b: Configuring Systemd Temp Directories"
 
 cat > /etc/tmpfiles.d/openclaw.conf << TMPEOF
 d /tmp/openclaw      0700 ${CLAW_USER} ${CLAW_USER} -
@@ -449,6 +467,7 @@ Type=simple
 User=clawuser
 Group=clawuser
 WorkingDirectory=/home/clawuser
+ExecStartPre=/usr/local/bin/fix-openclaw-symlinks.sh
 ExecStart=/usr/bin/openclaw gateway run
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
@@ -459,12 +478,9 @@ TimeoutStopSec=30
 Environment=NODE_ENV=production
 Environment=HOME=/home/clawuser
 Environment=NODE_OPTIONS=--max-old-space-size=384
+Environment=OPENCLAW_HANDSHAKE_TIMEOUT_MS=120000
 
 NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=read-only
-ReadWritePaths=/home/clawuser/.openclaw /tmp/openclaw /tmp/openclaw-1000
-PrivateTmp=false
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true
@@ -473,8 +489,8 @@ RestrictSUIDSGID=true
 MemoryDenyWriteExecute=false
 SystemCallArchitectures=native
 
-MemoryMax=768M
-MemoryHigh=640M
+MemoryMax=1200M
+MemoryHigh=1024M
 TasksMax=64
 
 StandardOutput=journal
@@ -607,60 +623,122 @@ fi
 
 header "Phase 10: Setting Up Automated Schedule"
 
-# Wait for gateway to be ready after the config-change restart triggered by Phase 4
-log "Waiting for gateway to be ready before adding cron jobs..."
-CRON_READY=false
-for i in $(seq 1 6); do
-    sleep 5
-    if su - "${CLAW_USER}" -c "openclaw status 2>&1" | grep -qi "running\|active\|connected"; then
-        CRON_READY=true
-        break
-    elif systemctl is-active --quiet openclaw; then
-        CRON_READY=true
-        break
-    fi
-done
+# Write jobs.json directly — do NOT use 'openclaw cron add' here.
+# The CLI spawns an openclaw-cron subprocess that JIT-compiles the full
+# Node.js runtime (~60 s) before connecting to the gateway.  Running it
+# inside a deploy script always races against the gateway's startup window
+# and reliably hangs or errors.  Writing jobs.json directly is instant and
+# survives service restarts unchanged.
+#
+# REQUIRED fields (learned the hard way):
+#   sessionTarget: "isolated"  — without this the gateway crashes with
+#       TypeError: Cannot read properties of undefined (reading 'startsWith')
+#   delivery: {"mode":"none"}  — without this the gateway tries to deliver
+#       results to the last Telegram session and fails with
+#       "Delivering to Telegram requires target <chatId>"
 
-if ! $CRON_READY; then
-    warn "Gateway not responding after 30 seconds — cron jobs may need to be added manually"
-    warn "Run: su - clawuser -c 'openclaw cron list' to check after install"
+CRON_DIR="${OPENCLAW_DIR}/cron"
+mkdir -p "${CRON_DIR}"
+
+if [[ -f "${DEPLOY_DIR}/configs/jobs.json" ]]; then
+    cp "${DEPLOY_DIR}/configs/jobs.json" "${CRON_DIR}/jobs.json"
+    log "Copied jobs.json from deploy package"
+else
+    # Fallback: write inline
+    cat > "${CRON_DIR}/jobs.json" << 'JOBSEOF'
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "health-check-main",
+      "name": "health-check",
+      "agentId": "watcher",
+      "sessionTarget": "isolated",
+      "delivery": { "mode": "none" },
+      "schedule": { "kind": "cron", "expr": "*/5 * * * *" },
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run your health-check skill now. Check system resources (CPU, RAM, disk, swap), verify the OpenClaw gateway is running, and review recent error logs. If any metrics exceed warning thresholds, post an alert to Discord using your discord-report skill. Otherwise log the check to your workspace."
+      },
+      "enabled": true,
+      "createdAtMs": 1745535600000,
+      "state": {}
+    },
+    {
+      "id": "session-cleanup-hourly",
+      "name": "session-cleanup",
+      "agentId": "watcher",
+      "sessionTarget": "isolated",
+      "delivery": { "mode": "none" },
+      "schedule": { "kind": "cron", "expr": "0 * * * *" },
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run your session-cleanup skill now. Archive old sessions, clean up temporary files, and ensure disk usage stays healthy."
+      },
+      "enabled": true,
+      "createdAtMs": 1745535600000,
+      "state": {}
+    },
+    {
+      "id": "morning-research-daily",
+      "name": "morning-research",
+      "agentId": "scout",
+      "sessionTarget": "isolated",
+      "delivery": { "mode": "none" },
+      "schedule": { "kind": "cron", "expr": "0 8 * * *" },
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run your news-digest skill. Search for the latest trending topics in AI, marketing analytics, and technology from the last 24 hours. Write a structured briefing with key findings, notable trends, and actionable insights. Save the briefing to your memory. Then post a signed summary to Discord using your discord-report skill."
+      },
+      "enabled": true,
+      "createdAtMs": 1745535600000,
+      "state": {}
+    },
+    {
+      "id": "daily-memo-writer",
+      "name": "daily-memo",
+      "agentId": "writer",
+      "sessionTarget": "isolated",
+      "delivery": { "mode": "none" },
+      "schedule": { "kind": "cron", "expr": "0 9 * * *" },
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run your write-memo skill. Search Scout memory for today's research briefing. Synthesize into a polished executive memo with sections: Top Stories, Trend Analysis, Action Items, Market Watch. Save to your memory. Post to Discord using your discord-report skill."
+      },
+      "enabled": true,
+      "createdAtMs": 1745535600000,
+      "state": {}
+    },
+    {
+      "id": "nightly-rnd-henry",
+      "name": "nightly-rnd",
+      "agentId": "henry",
+      "sessionTarget": "isolated",
+      "delivery": { "mode": "none" },
+      "schedule": { "kind": "cron", "expr": "0 23 * * *" },
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run your rnd-meeting skill. Review today's memo from Writer, research from Scout, and any code from Coder. Identify opportunities and strategic improvements. Delegate follow-up tasks. Post a summary to Discord using your discord-report skill."
+      },
+      "enabled": true,
+      "createdAtMs": 1745535600000,
+      "state": {}
+    }
+  ]
+}
+JOBSEOF
+    log "jobs.json written inline"
 fi
 
-su - "${CLAW_USER}" << 'CRONEOF'
+# Write a clean jobs-state.json so there is no accumulated error backoff
+# from a previous install attempt.
+cat > "${CRON_DIR}/jobs-state.json" << 'STATEEOF'
+{ "version": 1, "jobs": {} }
+STATEEOF
 
-openclaw cron add \
-  --name "morning-research" --agent "scout" \
-  --cron "0 8 * * *" --session isolated \
-  --message "Run your morning research routine. Search the web for the latest trending topics in AI, marketing analytics, and technology. Focus on developments from the last 24 hours. Write a structured briefing with key findings, notable trends, and actionable insights. Save the briefing to your memory. Then post a signed summary to Discord using your discord-report instructions in your SOUL.md."
-
-openclaw cron add \
-  --name "daily-memo" --agent "writer" \
-  --cron "0 9 * * *" --session isolated \
-  --message "Compile the morning memo. Search Scout memory for today's research briefing. Synthesize into a polished executive memo with sections: Top Stories, Trend Analysis, Action Items, Market Watch. Save to your memory. Post to Discord using your discord-report instructions."
-
-openclaw cron add \
-  --name "overnight-worker" --agent "coder" \
-  --cron "0 2 * * *" --session isolated \
-  --message "Check your task queue and Henry's recent delegations. Work on the highest-priority pending development task. If no tasks queued, review code for improvements. Post a summary to Discord using your discord-report instructions."
-
-openclaw cron add \
-  --name "health-check" --agent "watcher" \
-  --cron "*/30 * * * *" --session isolated \
-  --message "Check system resources (CPU, RAM, disk, swap), verify agents are responsive, review error logs. Only post to Discord if something is wrong. Otherwise just log to memory."
-
-openclaw cron add \
-  --name "nightly-rnd" --agent "henry" \
-  --cron "0 23 * * *" --session isolated \
-  --message "Initiate the nightly R&D session. Review today's memo from Writer, research from Scout, and any code from Coder. Identify opportunities and strategic improvements. Delegate follow-up tasks. Post a summary to Discord using your discord-report instructions."
-
-openclaw cron add \
-  --name "session-cleanup" --agent "watcher" \
-  --cron "0 4 * * 0" --session isolated \
-  --message "Perform weekly session cleanup. Archive sessions older than 7 days. Clean up temporary files. Post cleanup summary to Discord."
-
-CRONEOF
-
-log "Cron jobs configured (6 scheduled tasks)"
+chown -R "${CLAW_USER}:${CLAW_USER}" "${CRON_DIR}"
+chmod 600 "${CRON_DIR}/jobs.json" "${CRON_DIR}/jobs-state.json"
+log "Cron jobs configured via jobs.json (5 scheduled tasks)"
 
 # =============================================================================
 # FINAL: Summary
