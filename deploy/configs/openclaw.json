@@ -101,9 +101,7 @@
     "level": "info",
     "file": "~/.openclaw/logs/openclaw.log"
   },
-  "cron": {
-    "enabled": true
-  },
+  "cron": { "enabled": true },
   "tools": {
     "exec": {
       "security": "full",
@@ -119,6 +117,17 @@
   "approvals": {
     "exec": {
       "enabled": false
+    }
+  },
+  "plugins": {
+    "entries": {
+      "anthropic": { "enabled": true },
+      "bonjour":      { "enabled": false },
+      "acpx":         { "enabled": false },
+      "browser":      { "enabled": false },
+      "device-pair":  { "enabled": false },
+      "phone-control":{ "enabled": false },
+      "talk-voice":   { "enabled": false }
     }
   }
 }

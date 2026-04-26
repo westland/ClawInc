@@ -24,7 +24,7 @@ DEPLOY_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAW_USER="clawuser"
 OPENCLAW_DIR="/home/${CLAW_USER}/.openclaw"
 LOG_FILE="/var/log/openclaw-deploy.log"
-VERSION="2.00"
+VERSION="2.10"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
@@ -56,7 +56,7 @@ cat << 'BANNER'
 BANNER
 echo -e "${NC}"
 echo -e "${BOLD}  ClawInc Multi-Agent AI Company — v${VERSION} Installer${NC}"
-echo -e "  OOM fixes · Symlink repair · Cron jobs via jobs.json · Handshake timeout fix"
+echo -e "  OOM fixes · Symlink repair · Cron jobs via jobs.json · Handshake timeout fix · Bonjour/mDNS disabled"
 echo -e "  Voice commands supported via OpenAI audio transcription"
 echo -e "  Deploys 5 autonomous AI agents (Henry, Coder, Scout, Writer, Watcher)"
 echo -e "  Controlled via Telegram · Reports posted to Discord\n"
@@ -377,7 +377,18 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
     "file": "~/.openclaw/logs/openclaw.log"
   },
   "cron": { "enabled": true },
-  "approvals": { "exec": { "enabled": false } }
+  "approvals": { "exec": { "enabled": false } },
+  "plugins": {
+    "entries": {
+      "anthropic":     { "enabled": true  },
+      "bonjour":       { "enabled": false },
+      "acpx":          { "enabled": false },
+      "browser":       { "enabled": false },
+      "device-pair":   { "enabled": false },
+      "phone-control": { "enabled": false },
+      "talk-voice":    { "enabled": false }
+    }
+  }
 }
 CONFIGEOF
 log "openclaw.json written"

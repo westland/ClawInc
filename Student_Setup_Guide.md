@@ -1,7 +1,7 @@
 # ClawInc Student Setup Guide: Your Own AI Agent Company
 
 **MKT/IDS 518 — Deploying OpenClaw on DigitalOcean with Telegram and Discord**  
-*J. Christopher Westland · University of Illinois at Chicago · v1.60*
+*J. Christopher Westland · University of Illinois at Chicago · v2.10*
 
 ---
 
@@ -206,27 +206,23 @@ This takes **10–15 minutes** and will:
 - Deploy and start the monitoring dashboard on port 8050
 - Start the OpenClaw gateway service
 
-### Add Cron Jobs
+### Cron Jobs (Automatically Configured)
 
-Run each command below individually. The heredoc (`<< 'EOF'`) pattern does not work reliably with `su` — run one line at a time and wait for each to complete before typing the next.
+Cron jobs are **automatically deployed** by the installer — you do not need to run any extra commands. All 6 scheduled tasks are written to `~/.openclaw/cron/jobs.json` during Phase 10 of the install.
+
+To confirm they were set up:
 
 ```bash
-su - clawuser -c "openclaw cron add --name 'morning-research' --agent 'scout' --cron '0 8 * * *' --session isolated --message 'Run your morning research routine. Search the web for the latest trending topics in AI, marketing analytics, and technology. Focus on developments from the last 24 hours. Write a structured briefing with key findings, notable trends, and actionable insights. Save the briefing to your memory. Then post a signed summary to the Discord #reports channel using your discord-report skill.'"
+# View the raw schedule (instant — no CLI warmup delay)
+cat /home/clawuser/.openclaw/cron/jobs.json
 
-su - clawuser -c "openclaw cron add --name 'daily-memo' --agent 'writer' --cron '0 9 * * *' --session isolated --message 'Compile the morning memo. Search Scout memory for today'"'"'s research briefing. Synthesize into a polished executive memo with sections: Top Stories, Trend Analysis, Action Items, Market Watch. Save to your memory. Post the memo to Discord #reports using your discord-report skill.'"
-
-su - clawuser -c "openclaw cron add --name 'overnight-worker' --agent 'coder' --cron '0 2 * * *' --session isolated --message 'Check your task queue and Henry'"'"'s recent delegations. Work on the highest-priority pending development task. If no tasks queued, review code for improvements and document technical debt found. Post a summary to Discord #reports using your discord-report skill.'"
-
-su - clawuser -c "openclaw cron add --name 'health-check' --agent 'watcher' --cron '*/30 * * * *' --session isolated --message 'Check system resources (CPU, RAM, disk, swap), verify agents are responsive, review error logs. Only alert Henry and post to Discord if something is wrong.'"
-
-su - clawuser -c "openclaw cron add --name 'nightly-rnd' --agent 'henry' --cron '0 23 * * *' --session isolated --message 'Initiate the nightly R&D session. Review today'"'"'s memo from Writer, research from Scout, and any code from Coder. Identify opportunities and strategic improvements. Delegate follow-up tasks to team members as needed. Post a summary to Discord #reports using your discord-report skill.'"
-
-su - clawuser -c "openclaw cron add --name 'session-cleanup' --agent 'watcher' --cron '0 4 * * 0' --session isolated --message 'Perform weekly session cleanup. Archive sessions older than 7 days. Clean up temporary files. Report storage savings to Henry and post to Discord #reports using your discord-report skill.'"
-
-su - clawuser -c "openclaw cron list"
+# Or check run history after the gateway has been up a while
+cat /home/clawuser/.openclaw/cron/jobs-state.json
 ```
 
-You should see a table of 6 scheduled jobs.
+> **Note:** `openclaw cron list` works but takes 60–90 seconds due to JIT warmup. Reading `jobs.json` directly is faster.
+
+> **If a job shows errors in `jobs-state.json`:** Set `"state": {}` for that job and restart: `systemctl restart openclaw`
 
 ---
 
@@ -524,7 +520,7 @@ DigitalOcean Dashboard → Your Droplet → **Access → Reset Root Password**
 - [ ] All 5 bots respond in Telegram
 - [ ] Agent responses appear in Discord `#reports`
 - [ ] Dashboard accessible at `http://YOUR_IP:8050`
-- [ ] All 6 cron jobs added: `openclaw cron list`
+- [ ] All 6 cron jobs deployed automatically by installer (verify: `cat /home/clawuser/.openclaw/cron/jobs.json`)
 
 ---
 

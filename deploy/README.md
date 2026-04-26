@@ -1,4 +1,4 @@
-# ClawInc — OpenClaw Deployment Package v1.61
+# ClawInc — OpenClaw Deployment Package v2.10
 
 Everything needed to install ClawInc on a fresh Ubuntu 24.04 DigitalOcean droplet.
 
@@ -52,7 +52,7 @@ The `deploy-openclaw.sh` script runs 10 phases automatically:
 | 2. Node.js | Installs Node.js 24 via NodeSource |
 | 3. OpenClaw | Installs OpenClaw globally via npm, creates `clawuser` |
 | 4. Workspaces | Deploys all 5 agent workspaces (SOUL.md, skills, memory) |
-| 5. Config | Writes `openclaw.json` with your API keys, bot tokens, exec permissions |
+| 5. Config | Writes `openclaw.json` with your API keys, bot tokens, exec permissions, and desktop plugins disabled |
 | 6. Permissions | Sets correct file ownership and modes |
 | 7. tmpfiles.d | Creates persistent temp dirs that survive reboots |
 | 8. Systemd | Installs and starts `openclaw.service` |
@@ -189,7 +189,8 @@ Shows: gateway status, all 5 agent cards, CPU/RAM/disk gauges, Telegram bot bind
 - UFW firewall: only SSH (22) and dashboard (8050) open
 - All config files: `chmod 600` (owner only)
 - Gateway runs as `clawuser` (not root)
-- systemd: `NoNewPrivileges=true`, `ProtectSystem=strict`, `MemoryMax=512M`
+- systemd: `NoNewPrivileges=true`, `MemoryMax=1200M` (ProtectSystem intentionally omitted — conflicts with clawuser temp paths)
+- Desktop/local-network plugins disabled: `bonjour`, `acpx`, `browser`, `device-pair`, `phone-control`, `talk-voice` (not needed on cloud servers; bonjour caused fatal mDNS crash)
 
 ---
 
