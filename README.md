@@ -3,7 +3,7 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT/IDS 518 · J. Christopher Westland · University of Illinois at Chicago*
 
-[![Release](https://img.shields.io/badge/release-v3.11-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.11)
+[![Release](https://img.shields.io/badge/release-v3.12-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.12)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4.24-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
@@ -62,6 +62,15 @@ The five agents are:
 | **OOM crashes fixed** | Raised V8 heap limit from `--max-old-space-size=384` to `512` MB — the 384 MB ceiling caused 8 OOM crashes in one day whenever Henry spawned a Coder subagent (Henry + Coder together peaked at ~610 MB) |
 | **systemd memory tuning** | `MemoryHigh` raised from 640 M to 700 M so systemd doesn't throttle Node.js GC before the hard limit is reached |
 | **Session hygiene** | Old session transcript files pruned on the reference server; gateway now starts cleanly without replaying a large backlog of stale sessions |
+
+
+## What's New in v3.12
+
+| Area | Change |
+|------|--------|
+| **Delegation resilience** | Henry's `delegate-task.md` skill now retries `sessions_spawn` once after a 20-second wait if the first attempt fails — covers the window when the gateway is restarting after a crash |
+| **Faster gateway recovery** | `RestartSec` reduced from 10 s to 3 s in the service file — gateway is back in ~11 s instead of ~18 s after a crash, reducing the chance of a subagent announce timeout |
+| **Root-cause prevention** | v3.11 heap fix (384→512 MB) already prevents the OOM crash that caused the announce failure; v3.12 adds defence-in-depth for any future transient gateway drop |
 
 
 ## How It Works

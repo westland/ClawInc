@@ -14,7 +14,7 @@ ExecStartPre=/usr/local/bin/fix-openclaw-symlinks.sh
 ExecStart=/usr/bin/openclaw gateway run
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
-RestartSec=10
+RestartSec=3
 TimeoutStartSec=120
 TimeoutStopSec=30
 
