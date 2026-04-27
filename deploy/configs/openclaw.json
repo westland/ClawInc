@@ -30,13 +30,8 @@
         "primary": "anthropic/claude-sonnet-4-6"
       },
       "subagents": {
-        "allowAgents": [
-          "coder",
-          "scout",
-          "writer",
-          "watcher"
-        ],
-        "maxSpawnDepth": 2
+        "allowAgents": [],
+        "maxSpawnDepth": 1
       }
     },
     "list": [
@@ -46,14 +41,14 @@
         "default": true,
         "workspace": "~/.openclaw/workspace-henry",
         "agentDir": "~/.openclaw/agents/henry",
-        "model": "anthropic/claude-sonnet-4-6"
+        "model": "anthropic/claude-haiku-4-5-20251001"
       },
       {
         "id": "coder",
         "name": "Coder",
         "workspace": "~/.openclaw/workspace-coder",
         "agentDir": "~/.openclaw/agents/coder",
-        "model": "anthropic/claude-sonnet-4-6"
+        "model": "anthropic/claude-haiku-4-5-20251001"
       },
       {
         "id": "scout",
@@ -67,7 +62,7 @@
         "name": "Writer",
         "workspace": "~/.openclaw/workspace-writer",
         "agentDir": "~/.openclaw/agents/writer",
-        "model": "anthropic/claude-sonnet-4-6"
+        "model": "anthropic/claude-haiku-4-5-20251001"
       },
       {
         "id": "watcher",
