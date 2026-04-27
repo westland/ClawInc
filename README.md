@@ -3,7 +3,7 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT/IDS 518 · J. Christopher Westland · University of Illinois at Chicago*
 
-[![Release](https://img.shields.io/badge/release-v3.10-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.10)
+[![Release](https://img.shields.io/badge/release-v3.11-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.11)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4.24-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
@@ -53,6 +53,15 @@ The five agents are:
 | **Config fix** | Added `"allowAgents": ["coder","scout","writer","watcher"]` and `"maxSpawnDepth": 2` under `agents.defaults.subagents` |
 | **Delegation skill** | Added `delegate-task.md` to Henry's workspace — teaches him to use `sessions_spawn` instead of attempting Telegram bot-to-bot messaging (impossible: bots can't initiate chats with other bots) |
 | **Scope upgrade fix** | Granted the gateway CLI device `operator.admin` scope — subagent spawning was blocked by a pending scope upgrade (`operator.read` → `operator.admin`); fixed in `devices/paired.json` + added `gateway.nodes.pairing.autoApproveCidrs: [127.0.0.0/8]` to auto-approve future upgrades from localhost |
+
+
+## What's New in v3.11
+
+| Area | Change |
+|------|--------|
+| **OOM crashes fixed** | Raised V8 heap limit from `--max-old-space-size=384` to `512` MB — the 384 MB ceiling caused 8 OOM crashes in one day whenever Henry spawned a Coder subagent (Henry + Coder together peaked at ~610 MB) |
+| **systemd memory tuning** | `MemoryHigh` raised from 640 M to 700 M so systemd doesn't throttle Node.js GC before the hard limit is reached |
+| **Session hygiene** | Old session transcript files pruned on the reference server; gateway now starts cleanly without replaying a large backlog of stale sessions |
 
 
 ## How It Works
