@@ -9,6 +9,8 @@
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
 [![Discord](https://img.shields.io/badge/reports-Discord-5865F2)](https://discord.com)
 
+> **[The ClawInc Educational Manifesto](MANIFESTO.md)** — The course philosophy: Personality, Action Scripts, and Taboos; Druckerian Strategic Realism; and the Zero-Marginal-Cost Agency.
+
 ---
 
 ## What Is ClawInc?
