@@ -1,7 +1,7 @@
 # ClawInc Student Setup Guide: Your Own AI Agent Company
 
 **MKT/IDS 518 — Deploying OpenClaw on DigitalOcean with Telegram and Discord**  
-*J. Christopher Westland · University of Illinois at Chicago · v3.00*
+*J. Christopher Westland · University of Illinois at Chicago · v3.10*
 
 ---
 

@@ -3,7 +3,7 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT/IDS 518 · J. Christopher Westland · University of Illinois at Chicago*
 
-[![Release](https://img.shields.io/badge/release-v3.00-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.00)
+[![Release](https://img.shields.io/badge/release-v3.10-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.10)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4.24-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
@@ -40,6 +40,16 @@ The five agents are:
 | **Memory limits** | Tuned down to `MemoryMax=800M` / `MemoryHigh=640M` (was 1200M/1024M) — realistic for Sonnet load |
 | **Memory backend** | `memory.backend: builtin` (was `qmd`) — removes external memory dependency |
 | **Plugin cleanup** | `OPENAI_API_KEY` removed from template; per-account `plugins.entries` blocks removed (consolidated to top-level) |
+
+
+## What's New in v3.10
+
+| Area | Change |
+|------|--------|
+| **Agent delegation** | Fixed native subagent spawning — `agents.defaults.subagents.allowAgents` is the correct config key (not `acp.allowedAgents`, which only controls external ACP runtimes like Claude Code CLI) |
+| **Root cause** | OpenClaw source `acp-spawn-DlpFNlw8.js` reads `agents.defaults.subagents.allowAgents`; default is `[]` so all `sessions_spawn` calls were blocked with "agentId not allowed (allowed: none)" |
+| **Config fix** | Added `"allowAgents": ["coder","scout","writer","watcher"]` and `"maxSpawnDepth": 2` under `agents.defaults.subagents` |
+| **Delegation skill** | Added `delegate-task.md` to Henry's workspace — teaches him to use `sessions_spawn` instead of attempting Telegram bot-to-bot messaging (impossible: bots can't initiate chats with other bots) |
 
 
 ## How It Works
