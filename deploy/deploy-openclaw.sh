@@ -167,10 +167,11 @@ sleep 2
 
 header "Phase 1: Preparing Server"
 
-# Swap (essential for 1GB RAM)
+# Swap (essential for 1GB RAM — 4GB gives a wide safety net on SSD droplets)
+SWAP_SIZE="4G"
 if [[ ! -f /swapfile ]]; then
-    log "Creating 2GB swap..."
-    fallocate -l 2G /swapfile
+    log "Creating ${SWAP_SIZE} swap..."
+    fallocate -l "${SWAP_SIZE}" /swapfile
     chmod 600 /swapfile
     mkswap /swapfile
     swapon /swapfile
@@ -178,7 +179,20 @@ if [[ ! -f /swapfile ]]; then
     echo 'vm.swappiness=10' >> /etc/sysctl.conf
     sysctl -p >> "$LOG_FILE" 2>&1
 else
-    log "Swap already configured"
+    # Resize existing swap to SWAP_SIZE if it's smaller
+    CURRENT_SWAP_GB=$(free -g | awk '/^Swap:/{print $2}')
+    DESIRED_SWAP_GB="${SWAP_SIZE//G/}"
+    if [[ "$CURRENT_SWAP_GB" -lt "$DESIRED_SWAP_GB" ]]; then
+        log "Resizing swap from ${CURRENT_SWAP_GB}GB to ${SWAP_SIZE}..."
+        swapoff /swapfile
+        fallocate -l "${SWAP_SIZE}" /swapfile
+        chmod 600 /swapfile
+        mkswap /swapfile
+        swapon /swapfile
+        log "Swap resized to ${SWAP_SIZE}"
+    else
+        log "Swap already ${CURRENT_SWAP_GB}GB (>= ${DESIRED_SWAP_GB}GB), no resize needed"
+    fi
 fi
 
 # System updates
