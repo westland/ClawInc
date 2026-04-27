@@ -1,0 +1,9 @@
+[Unit]
+Description=OpenClaw session cleanup timer
+
+[Timer]
+OnBootSec=30min
+OnUnitActiveSec=2h
+
+[Install]
+WantedBy=timers.target
