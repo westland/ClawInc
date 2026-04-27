@@ -8,12 +8,29 @@
   },
   "acp": {
     "enabled": true,
-    "allowedAgents": ["henry", "coder", "scout", "writer", "watcher"],
+    "allowedAgents": [
+      "henry",
+      "coder",
+      "scout",
+      "writer",
+      "watcher"
+    ],
     "maxConcurrentSessions": 2
   },
   "agents": {
     "defaults": {
-      "model": { "primary": "anthropic/claude-sonnet-4-6" }
+      "model": {
+        "primary": "anthropic/claude-sonnet-4-6"
+      },
+      "subagents": {
+        "allowAgents": [
+          "coder",
+          "scout",
+          "writer",
+          "watcher"
+        ],
+        "maxSpawnDepth": 2
+      }
     },
     "list": [
       {
@@ -58,43 +75,85 @@
     "telegram": {
       "enabled": true,
       "dmPolicy": "open",
-      "allowFrom": ["*"],
+      "allowFrom": [
+        "*"
+      ],
       "defaultAccount": "henry-bot",
       "accounts": {
         "henry-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_HENRY",
           "dmPolicy": "open",
-          "allowFrom": ["*"]
+          "allowFrom": [
+            "*"
+          ]
         },
         "coder-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_CODER",
           "dmPolicy": "open",
-          "allowFrom": ["*"]
+          "allowFrom": [
+            "*"
+          ]
         },
         "scout-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_SCOUT",
           "dmPolicy": "open",
-          "allowFrom": ["*"]
+          "allowFrom": [
+            "*"
+          ]
         },
         "writer-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_WRITER",
           "dmPolicy": "open",
-          "allowFrom": ["*"]
+          "allowFrom": [
+            "*"
+          ]
         },
         "watcher-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_WATCHER",
           "dmPolicy": "open",
-          "allowFrom": ["*"]
+          "allowFrom": [
+            "*"
+          ]
         }
       }
     }
   },
   "bindings": [
-    { "agentId": "henry",   "match": { "channel": "telegram", "accountId": "henry-bot"   } },
-    { "agentId": "coder",   "match": { "channel": "telegram", "accountId": "coder-bot"   } },
-    { "agentId": "scout",   "match": { "channel": "telegram", "accountId": "scout-bot"   } },
-    { "agentId": "writer",  "match": { "channel": "telegram", "accountId": "writer-bot"  } },
-    { "agentId": "watcher", "match": { "channel": "telegram", "accountId": "watcher-bot" } }
+    {
+      "agentId": "henry",
+      "match": {
+        "channel": "telegram",
+        "accountId": "henry-bot"
+      }
+    },
+    {
+      "agentId": "coder",
+      "match": {
+        "channel": "telegram",
+        "accountId": "coder-bot"
+      }
+    },
+    {
+      "agentId": "scout",
+      "match": {
+        "channel": "telegram",
+        "accountId": "scout-bot"
+      }
+    },
+    {
+      "agentId": "writer",
+      "match": {
+        "channel": "telegram",
+        "accountId": "writer-bot"
+      }
+    },
+    {
+      "agentId": "watcher",
+      "match": {
+        "channel": "telegram",
+        "accountId": "watcher-bot"
+      }
+    }
   ],
   "memory": {
     "backend": "builtin"
@@ -103,7 +162,9 @@
     "level": "info",
     "file": "~/.openclaw/logs/openclaw.log"
   },
-  "cron": { "enabled": true },
+  "cron": {
+    "enabled": true
+  },
   "tools": {
     "exec": {
       "security": "full",
@@ -122,13 +183,27 @@
   },
   "plugins": {
     "entries": {
-      "anthropic":     { "enabled": true  },
-      "bonjour":       { "enabled": false },
-      "acpx":          { "enabled": false },
-      "browser":       { "enabled": false },
-      "device-pair":   { "enabled": false },
-      "phone-control": { "enabled": false },
-      "talk-voice":    { "enabled": false }
+      "anthropic": {
+        "enabled": true
+      },
+      "bonjour": {
+        "enabled": false
+      },
+      "acpx": {
+        "enabled": false
+      },
+      "browser": {
+        "enabled": false
+      },
+      "device-pair": {
+        "enabled": false
+      },
+      "phone-control": {
+        "enabled": false
+      },
+      "talk-voice": {
+        "enabled": false
+      }
     }
   }
 }
