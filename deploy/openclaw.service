@@ -20,13 +20,13 @@ TimeoutStopSec=30
 
 Environment=NODE_ENV=production
 Environment=HOME=/home/clawuser
-Environment="NODE_OPTIONS=--max-old-space-size=384 --dns-result-order=ipv4first"
+Environment="NODE_OPTIONS=--max-old-space-size=512 --dns-result-order=ipv4first"
 Environment=NODE_COMPILE_CACHE=/home/clawuser/.cache/node-compile-cache
 Environment=OPENCLAW_HANDSHAKE_TIMEOUT_MS=120000
 Environment=OPENCLAW_NO_RESPAWN=1
 
 MemoryMax=800M
-MemoryHigh=640M
+MemoryHigh=700M
 TasksMax=64
 
 StandardOutput=journal
