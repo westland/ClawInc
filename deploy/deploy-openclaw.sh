@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# deploy-openclaw.sh — ClawInc v2.00 Multi-Agent Company Installer
+# deploy-openclaw.sh — ClawInc v2.15 Multi-Agent Company Installer
 # =============================================================================
 # Installs a complete 5-agent AI company on Ubuntu 24.04 (DigitalOcean).
 #
@@ -24,7 +24,7 @@ DEPLOY_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAW_USER="clawuser"
 OPENCLAW_DIR="/home/${CLAW_USER}/.openclaw"
 LOG_FILE="/var/log/openclaw-deploy.log"
-VERSION="2.11"
+VERSION="2.15"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
@@ -275,6 +275,14 @@ for AGENT in henry coder scout writer watcher; do
     fi
 done
 
+# Set audio enabled only when the user provided an OpenAI API key.
+# Enabling audio with an empty key crashes the gateway on startup.
+if [[ -n "${OPENAI_API_KEY}" ]]; then
+    AUDIO_ENABLED="true"
+else
+    AUDIO_ENABLED="false"
+fi
+
 # =============================================================================
 # PHASE 4: Write openclaw.json configuration
 # =============================================================================
@@ -298,7 +306,7 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
     },
     "media": {
       "audio": {
-        "enabled": true,
+        "enabled": ${AUDIO_ENABLED},
         "echoTranscript": true
       }
     }
@@ -353,11 +361,51 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
       "allowFrom": ["*"],
       "defaultAccount": "henry-bot",
       "accounts": {
-        "henry-bot":   { "botToken": "${TELEGRAM_TOKEN_HENRY}",   "dmPolicy": "open", "allowFrom": ["*"] },
-        "coder-bot":   { "botToken": "${TELEGRAM_TOKEN_CODER}",   "dmPolicy": "open", "allowFrom": ["*"] },
-        "scout-bot":   { "botToken": "${TELEGRAM_TOKEN_SCOUT}",   "dmPolicy": "open", "allowFrom": ["*"] },
-        "writer-bot":  { "botToken": "${TELEGRAM_TOKEN_WRITER}",  "dmPolicy": "open", "allowFrom": ["*"] },
-        "watcher-bot": { "botToken": "${TELEGRAM_TOKEN_WATCHER}", "dmPolicy": "open", "allowFrom": ["*"] }
+        "henry-bot": {
+          "botToken": "${TELEGRAM_TOKEN_HENRY}",
+          "dmPolicy": "open", "allowFrom": ["*"],
+          "plugins": { "entries": {
+            "bonjour": {"enabled": false}, "acpx": {"enabled": false},
+            "browser": {"enabled": false}, "device-pair": {"enabled": false},
+            "phone-control": {"enabled": false}, "talk-voice": {"enabled": false}
+          }}
+        },
+        "coder-bot": {
+          "botToken": "${TELEGRAM_TOKEN_CODER}",
+          "dmPolicy": "open", "allowFrom": ["*"],
+          "plugins": { "entries": {
+            "bonjour": {"enabled": false}, "acpx": {"enabled": false},
+            "browser": {"enabled": false}, "device-pair": {"enabled": false},
+            "phone-control": {"enabled": false}, "talk-voice": {"enabled": false}
+          }}
+        },
+        "scout-bot": {
+          "botToken": "${TELEGRAM_TOKEN_SCOUT}",
+          "dmPolicy": "open", "allowFrom": ["*"],
+          "plugins": { "entries": {
+            "bonjour": {"enabled": false}, "acpx": {"enabled": false},
+            "browser": {"enabled": false}, "device-pair": {"enabled": false},
+            "phone-control": {"enabled": false}, "talk-voice": {"enabled": false}
+          }}
+        },
+        "writer-bot": {
+          "botToken": "${TELEGRAM_TOKEN_WRITER}",
+          "dmPolicy": "open", "allowFrom": ["*"],
+          "plugins": { "entries": {
+            "bonjour": {"enabled": false}, "acpx": {"enabled": false},
+            "browser": {"enabled": false}, "device-pair": {"enabled": false},
+            "phone-control": {"enabled": false}, "talk-voice": {"enabled": false}
+          }}
+        },
+        "watcher-bot": {
+          "botToken": "${TELEGRAM_TOKEN_WATCHER}",
+          "dmPolicy": "open", "allowFrom": ["*"],
+          "plugins": { "entries": {
+            "bonjour": {"enabled": false}, "acpx": {"enabled": false},
+            "browser": {"enabled": false}, "device-pair": {"enabled": false},
+            "phone-control": {"enabled": false}, "talk-voice": {"enabled": false}
+          }}
+        }
       }
     }
   },

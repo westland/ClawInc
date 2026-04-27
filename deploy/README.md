@@ -1,4 +1,4 @@
-# ClawInc — OpenClaw Deployment Package v2.11
+# ClawInc — OpenClaw Deployment Package v2.15
 
 Everything needed to install ClawInc on a fresh Ubuntu 24.04 DigitalOcean droplet.
 

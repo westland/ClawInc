@@ -1,6 +1,7 @@
 {
   "env": {
     "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY",
+    "OPENAI_API_KEY": "YOUR_OPENAI_API_KEY_OR_LEAVE_EMPTY",
     "DISCORD_WEBHOOK_URL": "YOUR_DISCORD_WEBHOOK_URL"
   },
   "gateway": {
@@ -59,27 +60,77 @@
         "henry-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_HENRY",
           "dmPolicy": "open",
-          "allowFrom": ["*"]
+          "allowFrom": ["*"],
+          "plugins": {
+            "entries": {
+              "bonjour":       { "enabled": false },
+              "acpx":          { "enabled": false },
+              "browser":       { "enabled": false },
+              "device-pair":   { "enabled": false },
+              "phone-control": { "enabled": false },
+              "talk-voice":    { "enabled": false }
+            }
+          }
         },
         "coder-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_CODER",
           "dmPolicy": "open",
-          "allowFrom": ["*"]
+          "allowFrom": ["*"],
+          "plugins": {
+            "entries": {
+              "bonjour":       { "enabled": false },
+              "acpx":          { "enabled": false },
+              "browser":       { "enabled": false },
+              "device-pair":   { "enabled": false },
+              "phone-control": { "enabled": false },
+              "talk-voice":    { "enabled": false }
+            }
+          }
         },
         "scout-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_SCOUT",
           "dmPolicy": "open",
-          "allowFrom": ["*"]
+          "allowFrom": ["*"],
+          "plugins": {
+            "entries": {
+              "bonjour":       { "enabled": false },
+              "acpx":          { "enabled": false },
+              "browser":       { "enabled": false },
+              "device-pair":   { "enabled": false },
+              "phone-control": { "enabled": false },
+              "talk-voice":    { "enabled": false }
+            }
+          }
         },
         "writer-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_WRITER",
           "dmPolicy": "open",
-          "allowFrom": ["*"]
+          "allowFrom": ["*"],
+          "plugins": {
+            "entries": {
+              "bonjour":       { "enabled": false },
+              "acpx":          { "enabled": false },
+              "browser":       { "enabled": false },
+              "device-pair":   { "enabled": false },
+              "phone-control": { "enabled": false },
+              "talk-voice":    { "enabled": false }
+            }
+          }
         },
         "watcher-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_WATCHER",
           "dmPolicy": "open",
-          "allowFrom": ["*"]
+          "allowFrom": ["*"],
+          "plugins": {
+            "entries": {
+              "bonjour":       { "enabled": false },
+              "acpx":          { "enabled": false },
+              "browser":       { "enabled": false },
+              "device-pair":   { "enabled": false },
+              "phone-control": { "enabled": false },
+              "talk-voice":    { "enabled": false }
+            }
+          }
         }
       }
     }
@@ -109,7 +160,7 @@
     },
     "media": {
       "audio": {
-        "enabled": true,
+        "enabled": false,
         "echoTranscript": true
       }
     }
@@ -121,13 +172,13 @@
   },
   "plugins": {
     "entries": {
-      "anthropic": { "enabled": true },
-      "bonjour":      { "enabled": false },
-      "acpx":         { "enabled": false },
-      "browser":      { "enabled": false },
-      "device-pair":  { "enabled": false },
-      "phone-control":{ "enabled": false },
-      "talk-voice":   { "enabled": false }
+      "anthropic":     { "enabled": true  },
+      "bonjour":       { "enabled": false },
+      "acpx":          { "enabled": false },
+      "browser":       { "enabled": false },
+      "device-pair":   { "enabled": false },
+      "phone-control": { "enabled": false },
+      "talk-voice":    { "enabled": false }
     }
   }
 }
