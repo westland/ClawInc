@@ -3,7 +3,7 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT/IDS 518 · J. Christopher Westland · University of Illinois at Chicago*
 
-[![Release](https://img.shields.io/badge/release-v3.13-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.13)
+[![Release](https://img.shields.io/badge/release-v3.50-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.50)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4.24-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
@@ -73,7 +73,7 @@ The five agents are:
 | **Root-cause prevention** | v3.11 heap fix (384→512 MB) already prevents the OOM crash that caused the announce failure; v3.12 adds defence-in-depth for any future transient gateway drop |
 
 
-## What's New in v3.13
+## What's New in v3.50
 
 | Area | Change |
 |------|--------|
