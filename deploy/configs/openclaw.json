@@ -4,7 +4,14 @@
     "DISCORD_WEBHOOK_URL": "YOUR_DISCORD_WEBHOOK_URL"
   },
   "gateway": {
-    "mode": "local"
+    "mode": "local",
+    "nodes": {
+      "pairing": {
+        "autoApproveCidrs": [
+          "127.0.0.0/8"
+        ]
+      }
+    }
   },
   "acp": {
     "enabled": true,
