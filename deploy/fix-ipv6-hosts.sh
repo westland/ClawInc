@@ -15,6 +15,7 @@ add_entry() {
 
 add_entry 104.18.3.115    openrouter.ai
 add_entry 185.199.108.133 raw.githubusercontent.com
+add_entry 149.154.166.110 api.telegram.org
 
 # Persist through cloud-init reboots
 TMPL=/etc/cloud/templates/hosts.debian.tmpl
@@ -23,8 +24,12 @@ if [ -f "$TMPL" ]; then
     printf '
 104.18.3.115 openrouter.ai
 185.199.108.133 raw.githubusercontent.com
+149.154.166.110 api.telegram.org
 ' >> "$TMPL"
     echo "Wrote entries to $TMPL for cloud-init persistence"
+  elif ! grep -qF "api.telegram.org" "$TMPL"; then
+    echo '149.154.166.110 api.telegram.org' >> "$TMPL"
+    echo "Added api.telegram.org to $TMPL"
   fi
 fi
 
