@@ -1,7 +1,7 @@
 # ClawInc Student Setup Guide: Your Own AI Agent Company
 
 **MKT/IDS 518 — Deploying OpenClaw on DigitalOcean with Telegram and Discord**  
-*J. Christopher Westland · University of Illinois at Chicago · v2.15*
+*J. Christopher Westland · University of Illinois at Chicago · v3.00*
 
 ---
 
@@ -349,7 +349,7 @@ systemctl restart openclaw
 
 Send messages directly to any Telegram bot. Every response also posts to Discord `#reports`.
 
-**Henry — Chief of Staff (Claude Opus 4.7):**
+**Henry — Chief of Staff (Claude Sonnet 4.6):**
 ```
 Research the top 3 trends in social media marketing in Q1 2026,
 then have Scout do a deep web analysis and Writer produce
@@ -528,7 +528,7 @@ DigitalOcean Dashboard → Your Droplet → **Access → Reset Root Password**
 
 | Agent | Telegram Bot | Model | Role | Discord Color |
 |-------|-------------|-------|------|---------------|
-| **Henry** | @YourHenryBot | Claude Opus 4.7 | Chief of Staff — orchestrates the team | Gold |
+| **Henry** | @YourHenryBot | Claude Sonnet 4.6 | Chief of Staff — orchestrates the team | Gold |
 | **Coder** | @YourCoderBot | Claude Sonnet 4.6 | Software Engineer — code, data analysis | Blue |
 | **Scout** | @YourScoutBot | Claude Haiku 4.5 | Research Analyst — web research, trends | Green |
 | **Writer** | @YourWriterBot | Claude Sonnet 4.6 | Content Creator — reports, memos | Purple |

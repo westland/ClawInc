@@ -3,7 +3,7 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT/IDS 518 · J. Christopher Westland · University of Illinois at Chicago*
 
-[![Release](https://img.shields.io/badge/release-v2.15-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v2.15)
+[![Release](https://img.shields.io/badge/release-v3.00-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.00)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4.24-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
@@ -19,13 +19,28 @@ The five agents are:
 
 | Agent | Model | Role | Discord Color |
 |-------|-------|------|---------------|
-| **Henry** | Claude Opus 4.7 | Chief of Staff — orchestrates the team, delegates tasks | Gold |
+| **Henry** | Claude Sonnet 4.6 | Chief of Staff — orchestrates the team, delegates tasks | Gold |
 | **Coder** | Claude Sonnet 4.6 | Software Engineer — writes code, runs data analysis | Blue |
 | **Scout** | Claude Haiku 4.5 | Research Analyst — web research, trend monitoring | Green |
 | **Writer** | Claude Sonnet 4.6 | Content Creator — memos, reports, executive summaries | Purple |
 | **Watcher** | Claude Haiku 4.5 | System Monitor — health checks, alerts, maintenance | Orange |
 
 ---
+
+## What's New in v3.00
+
+| Area | Change |
+|------|--------|
+| **Models** | Henry downgraded Opus 4.7 → Sonnet 4.6 (prevents OOM on 1 GB droplets) |
+| **ACP delegation** | `acp.enabled: true` + `allowedAgents` — Henry can now spawn Coder/Scout/Writer/Watcher via `sessions_spawn` tool |
+| **Service hardening removed** | Removed `NoNewPrivileges`, `ProtectKernelTunables`, `ProtectKernelModules`, `ProtectControlGroups`, `RestrictNamespaces`, `RestrictSUIDSGID`, `MemoryDenyWriteExecute` — these conflicted with gateway temp-file paths and caused OOM crashes |
+| **IPv6 fix** | `--dns-result-order=ipv4first` in `NODE_OPTIONS` + new `deploy/fix-ipv6-hosts.sh` script for DO droplets with broken IPv6 routes to Cloudflare/GitHub |
+| **DNS cache flush** | `ExecStartPre=/usr/bin/resolvectl flush-caches` — clears stale IPv6 records before gateway starts |
+| **Node.js compile cache** | `NODE_COMPILE_CACHE` env var — speeds up CLI cold start after first run |
+| **Memory limits** | Tuned down to `MemoryMax=800M` / `MemoryHigh=640M` (was 1200M/1024M) — realistic for Sonnet load |
+| **Memory backend** | `memory.backend: builtin` (was `qmd`) — removes external memory dependency |
+| **Plugin cleanup** | `OPENAI_API_KEY` removed from template; per-account `plugins.entries` blocks removed (consolidated to top-level) |
+
 
 ## How It Works
 
@@ -41,7 +56,7 @@ Your Phone / Computer
 DigitalOcean Droplet — Ubuntu 24.04 — $6/month
         │
         │  OpenClaw Gateway (port 18789, systemd service)
-        ├── Henry workspace  (Claude Opus 4.7)
+        ├── Henry workspace  (Claude Sonnet 4.6)
         ├── Coder workspace  (Claude Sonnet 4.6)
         ├── Scout workspace  (Claude Haiku 4.5)
         ├── Writer workspace (Claude Sonnet 4.6)

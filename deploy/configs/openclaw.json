@@ -1,11 +1,15 @@
 {
   "env": {
     "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY",
-    "OPENAI_API_KEY": "YOUR_OPENAI_API_KEY_OR_LEAVE_EMPTY",
     "DISCORD_WEBHOOK_URL": "YOUR_DISCORD_WEBHOOK_URL"
   },
   "gateway": {
     "mode": "local"
+  },
+  "acp": {
+    "enabled": true,
+    "allowedAgents": ["henry", "coder", "scout", "writer", "watcher"],
+    "maxConcurrentSessions": 2
   },
   "agents": {
     "defaults": {
@@ -18,7 +22,7 @@
         "default": true,
         "workspace": "~/.openclaw/workspace-henry",
         "agentDir": "~/.openclaw/agents/henry",
-        "model": "anthropic/claude-opus-4-7"
+        "model": "anthropic/claude-sonnet-4-6"
       },
       {
         "id": "coder",
@@ -60,77 +64,27 @@
         "henry-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_HENRY",
           "dmPolicy": "open",
-          "allowFrom": ["*"],
-          "plugins": {
-            "entries": {
-              "bonjour":       { "enabled": false },
-              "acpx":          { "enabled": false },
-              "browser":       { "enabled": false },
-              "device-pair":   { "enabled": false },
-              "phone-control": { "enabled": false },
-              "talk-voice":    { "enabled": false }
-            }
-          }
+          "allowFrom": ["*"]
         },
         "coder-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_CODER",
           "dmPolicy": "open",
-          "allowFrom": ["*"],
-          "plugins": {
-            "entries": {
-              "bonjour":       { "enabled": false },
-              "acpx":          { "enabled": false },
-              "browser":       { "enabled": false },
-              "device-pair":   { "enabled": false },
-              "phone-control": { "enabled": false },
-              "talk-voice":    { "enabled": false }
-            }
-          }
+          "allowFrom": ["*"]
         },
         "scout-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_SCOUT",
           "dmPolicy": "open",
-          "allowFrom": ["*"],
-          "plugins": {
-            "entries": {
-              "bonjour":       { "enabled": false },
-              "acpx":          { "enabled": false },
-              "browser":       { "enabled": false },
-              "device-pair":   { "enabled": false },
-              "phone-control": { "enabled": false },
-              "talk-voice":    { "enabled": false }
-            }
-          }
+          "allowFrom": ["*"]
         },
         "writer-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_WRITER",
           "dmPolicy": "open",
-          "allowFrom": ["*"],
-          "plugins": {
-            "entries": {
-              "bonjour":       { "enabled": false },
-              "acpx":          { "enabled": false },
-              "browser":       { "enabled": false },
-              "device-pair":   { "enabled": false },
-              "phone-control": { "enabled": false },
-              "talk-voice":    { "enabled": false }
-            }
-          }
+          "allowFrom": ["*"]
         },
         "watcher-bot": {
           "botToken": "YOUR_TELEGRAM_BOT_TOKEN_WATCHER",
           "dmPolicy": "open",
-          "allowFrom": ["*"],
-          "plugins": {
-            "entries": {
-              "bonjour":       { "enabled": false },
-              "acpx":          { "enabled": false },
-              "browser":       { "enabled": false },
-              "device-pair":   { "enabled": false },
-              "phone-control": { "enabled": false },
-              "talk-voice":    { "enabled": false }
-            }
-          }
+          "allowFrom": ["*"]
         }
       }
     }
@@ -143,10 +97,7 @@
     { "agentId": "watcher", "match": { "channel": "telegram", "accountId": "watcher-bot" } }
   ],
   "memory": {
-    "backend": "qmd",
-    "qmd": {
-      "searchMode": "search"
-    }
+    "backend": "builtin"
   },
   "logging": {
     "level": "info",
@@ -160,8 +111,7 @@
     },
     "media": {
       "audio": {
-        "enabled": false,
-        "echoTranscript": true
+        "enabled": false
       }
     }
   },
