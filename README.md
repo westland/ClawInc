@@ -3,7 +3,7 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT/IDS 518 · J. Christopher Westland · University of Illinois at Chicago*
 
-[![Release](https://img.shields.io/badge/release-v3.12-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.12)
+[![Release](https://img.shields.io/badge/release-v3.13-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.13)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4.24-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
@@ -71,6 +71,15 @@ The five agents are:
 | **Delegation resilience** | Henry's `delegate-task.md` skill now retries `sessions_spawn` once after a 20-second wait if the first attempt fails — covers the window when the gateway is restarting after a crash |
 | **Faster gateway recovery** | `RestartSec` reduced from 10 s to 3 s in the service file — gateway is back in ~11 s instead of ~18 s after a crash, reducing the chance of a subagent announce timeout |
 | **Root-cause prevention** | v3.11 heap fix (384→512 MB) already prevents the OOM crash that caused the announce failure; v3.12 adds defence-in-depth for any future transient gateway drop |
+
+
+## What's New in v3.13
+
+| Area | Change |
+|------|--------|
+| **Announce timeout root cause fixed** | "Subagent announce failed: gateway timeout after 10000ms" traced to `readSubagentOutput` calling `chat.history` with no explicit timeout (defaults to 10 s hardcoded). Under memory pressure the gateway was missing this 10 s window. |
+| **V8 heap raised** | `--max-old-space-size` increased 512 MB to 640 MB -- eliminates GC thrashing that caused >10 s response delays during dual-agent execution |
+| **systemd limits raised** | `MemoryHigh` 700 M to 800 M, `MemoryMax` 800 M to 900 M -- stops kernel cgroup throttling when Henry + subagent peak at ~734 MB |
 
 
 ## How It Works
