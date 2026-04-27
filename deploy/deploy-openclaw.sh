@@ -592,6 +592,17 @@ done
 systemctl daemon-reload
 systemctl enable openclaw
 log "Systemd service installed and enabled"
+# Install session file cleanup timer (prevents V8 OOM from large session history)
+if [[ -f "${DEPLOY_DIR}/openclaw-session-cleanup.sh" ]]; then
+    cp "${DEPLOY_DIR}/openclaw-session-cleanup.sh" /usr/local/bin/
+    chmod +x /usr/local/bin/openclaw-session-cleanup.sh
+    cp "${DEPLOY_DIR}/openclaw-session-cleanup.service" /etc/systemd/system/
+    cp "${DEPLOY_DIR}/openclaw-session-cleanup.timer" /etc/systemd/system/
+    systemctl daemon-reload
+    systemctl enable --now openclaw-session-cleanup.timer
+    log "Session cleanup timer installed (runs every 2h)"
+fi
+
 
 log "Starting OpenClaw gateway..."
 systemctl start openclaw
