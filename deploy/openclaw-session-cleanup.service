@@ -1,0 +1,8 @@
+[Unit]
+Description=OpenClaw session file cleanup
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/bin/openclaw-session-cleanup.sh
