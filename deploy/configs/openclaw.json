@@ -179,6 +179,11 @@
       "audio": {
         "enabled": false
       }
+    },
+    "message": {
+      "crossContext": {
+        "allowAcrossProviders": true
+      }
     }
   },
   "approvals": {
