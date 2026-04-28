@@ -314,58 +314,27 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
     "mode": "local"
   },
   "tools": {
-    "exec": {
-      "security": "full",
-      "ask": "off"
-    },
-    "media": {
-      "audio": {
-        "enabled": ${AUDIO_ENABLED},
-        "echoTranscript": true
-      }
-    }
+    "exec": { "security": "full", "ask": "off" },
+    "media": { "audio": { "enabled": ${AUDIO_ENABLED}, "echoTranscript": true } },
+    "message": { "crossContext": { "allowAcrossProviders": true } }
   },
   "agents": {
     "defaults": {
-      "model": { "primary": "anthropic/claude-sonnet-4-6" }
+      "model": { "primary": "anthropic/claude-sonnet-4-6" },
+      "subagents": { "allowAgents": ["scout","writer"], "maxSpawnDepth": 1 },
+      "llm": { "idleTimeoutSeconds": 600 }
     },
     "list": [
-      {
-        "id": "henry",
-        "name": "Henry",
-        "default": true,
-        "workspace": "~/.openclaw/workspace-henry",
-        "agentDir": "~/.openclaw/agents/henry",
-        "model": "anthropic/claude-opus-4-7"
-      },
-      {
-        "id": "coder",
-        "name": "Coder",
-        "workspace": "~/.openclaw/workspace-coder",
-        "agentDir": "~/.openclaw/agents/coder",
-        "model": "anthropic/claude-sonnet-4-6"
-      },
-      {
-        "id": "scout",
-        "name": "Scout",
-        "workspace": "~/.openclaw/workspace-scout",
-        "agentDir": "~/.openclaw/agents/scout",
-        "model": "anthropic/claude-haiku-4-5-20251001"
-      },
-      {
-        "id": "writer",
-        "name": "Writer",
-        "workspace": "~/.openclaw/workspace-writer",
-        "agentDir": "~/.openclaw/agents/writer",
-        "model": "anthropic/claude-sonnet-4-6"
-      },
-      {
-        "id": "watcher",
-        "name": "Watcher",
-        "workspace": "~/.openclaw/workspace-watcher",
-        "agentDir": "~/.openclaw/agents/watcher",
-        "model": "anthropic/claude-haiku-4-5-20251001"
-      }
+      { "id": "henry",   "name": "Henry",   "default": true,
+        "workspace": "~/.openclaw/workspace-henry",   "agentDir": "~/.openclaw/agents/henry",   "model": "anthropic/claude-haiku-4-5-20251001" },
+      { "id": "coder",   "name": "Coder",
+        "workspace": "~/.openclaw/workspace-coder",   "agentDir": "~/.openclaw/agents/coder",   "model": "anthropic/claude-haiku-4-5-20251001" },
+      { "id": "scout",   "name": "Scout",
+        "workspace": "~/.openclaw/workspace-scout",   "agentDir": "~/.openclaw/agents/scout",   "model": "anthropic/claude-haiku-4-5-20251001" },
+      { "id": "writer",  "name": "Writer",
+        "workspace": "~/.openclaw/workspace-writer",  "agentDir": "~/.openclaw/agents/writer",  "model": "anthropic/claude-haiku-4-5-20251001" },
+      { "id": "watcher", "name": "Watcher",
+        "workspace": "~/.openclaw/workspace-watcher", "agentDir": "~/.openclaw/agents/watcher", "model": "anthropic/claude-haiku-4-5-20251001" }
     ]
   },
   "channels": {
@@ -375,51 +344,11 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
       "allowFrom": ["*"],
       "defaultAccount": "henry-bot",
       "accounts": {
-        "henry-bot": {
-          "botToken": "${TELEGRAM_TOKEN_HENRY}",
-          "dmPolicy": "open", "allowFrom": ["*"],
-          "plugins": { "entries": {
-            "bonjour": {"enabled": false}, "acpx": {"enabled": false},
-            "browser": {"enabled": false}, "device-pair": {"enabled": false},
-            "phone-control": {"enabled": false}, "talk-voice": {"enabled": false}
-          }}
-        },
-        "coder-bot": {
-          "botToken": "${TELEGRAM_TOKEN_CODER}",
-          "dmPolicy": "open", "allowFrom": ["*"],
-          "plugins": { "entries": {
-            "bonjour": {"enabled": false}, "acpx": {"enabled": false},
-            "browser": {"enabled": false}, "device-pair": {"enabled": false},
-            "phone-control": {"enabled": false}, "talk-voice": {"enabled": false}
-          }}
-        },
-        "scout-bot": {
-          "botToken": "${TELEGRAM_TOKEN_SCOUT}",
-          "dmPolicy": "open", "allowFrom": ["*"],
-          "plugins": { "entries": {
-            "bonjour": {"enabled": false}, "acpx": {"enabled": false},
-            "browser": {"enabled": false}, "device-pair": {"enabled": false},
-            "phone-control": {"enabled": false}, "talk-voice": {"enabled": false}
-          }}
-        },
-        "writer-bot": {
-          "botToken": "${TELEGRAM_TOKEN_WRITER}",
-          "dmPolicy": "open", "allowFrom": ["*"],
-          "plugins": { "entries": {
-            "bonjour": {"enabled": false}, "acpx": {"enabled": false},
-            "browser": {"enabled": false}, "device-pair": {"enabled": false},
-            "phone-control": {"enabled": false}, "talk-voice": {"enabled": false}
-          }}
-        },
-        "watcher-bot": {
-          "botToken": "${TELEGRAM_TOKEN_WATCHER}",
-          "dmPolicy": "open", "allowFrom": ["*"],
-          "plugins": { "entries": {
-            "bonjour": {"enabled": false}, "acpx": {"enabled": false},
-            "browser": {"enabled": false}, "device-pair": {"enabled": false},
-            "phone-control": {"enabled": false}, "talk-voice": {"enabled": false}
-          }}
-        }
+        "henry-bot":  { "botToken": "${TELEGRAM_TOKEN_HENRY}",  "dmPolicy": "open", "allowFrom": ["*"] },
+        "coder-bot":  { "botToken": "${TELEGRAM_TOKEN_CODER}",  "dmPolicy": "open", "allowFrom": ["*"] },
+        "scout-bot":  { "botToken": "${TELEGRAM_TOKEN_SCOUT}",  "dmPolicy": "open", "allowFrom": ["*"] },
+        "writer-bot": { "botToken": "${TELEGRAM_TOKEN_WRITER}", "dmPolicy": "open", "allowFrom": ["*"] },
+        "watcher-bot":{ "botToken": "${TELEGRAM_TOKEN_WATCHER}","dmPolicy": "open", "allowFrom": ["*"] }
       }
     }
   },
@@ -431,8 +360,7 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
     { "agentId": "watcher", "match": { "channel": "telegram", "accountId": "watcher-bot" } }
   ],
   "memory": {
-    "backend": "qmd",
-    "qmd": { "searchMode": "search" }
+    "backend": "builtin"
   },
   "logging": {
     "level": "info",
@@ -510,6 +438,52 @@ fi
 chmod +x /usr/local/bin/fix-openclaw-symlinks.sh
 log "Symlink repair script installed at /usr/local/bin/fix-openclaw-symlinks.sh"
 
+# Install discord-post helper script for agents to post to Discord webhook
+cat > /usr/local/bin/discord-post << DISCORDPOSTEOF
+#!/usr/bin/env python3
+import sys, json, subprocess
+WEBHOOK = "${DISCORD_WEBHOOK_URL}"
+msg = sys.stdin.read().strip()
+if not msg:
+    print("discord-post: no message on stdin", file=sys.stderr)
+    sys.exit(1)
+for chunk in [msg[i:i+2000] for i in range(0, len(msg), 2000)]:
+    subprocess.run(["curl","-s","-X","POST",WEBHOOK,
+                    "-H","Content-Type: application/json",
+                    "--data-binary",json.dumps({"content":chunk})],check=True)
+print(f"Posted {len([msg[i:i+2000] for i in range(0,len(msg),2000)])} chunk(s) to Discord")
+DISCORDPOSTEOF
+chmod +x /usr/local/bin/discord-post
+log "Discord-post script installed at /usr/local/bin/discord-post"
+
+# Install discord-report skill for all agents
+DISCORD_SKILL='# Discord Report Skill
+
+Post a message to the ClawInc #reports Discord channel.
+
+## Method
+
+Pipe your message to /usr/local/bin/discord-post:
+
+```bash
+cat << DISCORD_EOF | /usr/local/bin/discord-post
+Your message content here...
+DISCORD_EOF
+```
+
+Long messages (>2000 chars) are split automatically.
+
+## IMPORTANT
+
+Do NOT use message(channel="discord") - requires a Discord bot token not configured here.
+Always use the pipe-to-script method above.
+'
+for AGENT in henry coder scout writer watcher; do
+    mkdir -p "${OPENCLAW_DIR}/workspace-${AGENT}/skills"
+    echo "$DISCORD_SKILL" > "${OPENCLAW_DIR}/workspace-${AGENT}/skills/discord-report.md"
+done
+log "Discord-report skill installed for all agents"
+
 header "Phase 6b: Configuring Systemd Temp Directories"
 
 cat > /etc/tmpfiles.d/openclaw.conf << TMPEOF
@@ -550,7 +524,7 @@ TimeoutStopSec=30
 
 Environment=NODE_ENV=production
 Environment=HOME=/home/clawuser
-Environment=NODE_OPTIONS=--max-old-space-size=384
+Environment="NODE_OPTIONS=--max-old-space-size=1024 --dns-result-order=ipv4first"
 Environment=OPENCLAW_HANDSHAKE_TIMEOUT_MS=120000
 
 NoNewPrivileges=true
@@ -562,8 +536,8 @@ RestrictSUIDSGID=true
 MemoryDenyWriteExecute=false
 SystemCallArchitectures=native
 
-MemoryMax=1200M
-MemoryHigh=1024M
+MemoryMax=1500M
+MemoryHigh=1300M
 TasksMax=64
 
 StandardOutput=journal
@@ -854,3 +828,4 @@ echo -e "  su - clawuser -c 'openclaw status'    # Agent status"
 echo ""
 echo "  Full deploy log: $LOG_FILE"
 echo ""
+
