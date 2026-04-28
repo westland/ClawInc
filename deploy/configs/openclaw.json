@@ -30,7 +30,10 @@
         "primary": "anthropic/claude-sonnet-4-6"
       },
       "subagents": {
-        "allowAgents": [],
+        "allowAgents": [
+          "scout",
+          "writer"
+        ],
         "maxSpawnDepth": 1
       }
     },
