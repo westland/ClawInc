@@ -26,7 +26,7 @@ Environment=OPENCLAW_HANDSHAKE_TIMEOUT_MS=120000
 Environment=OPENCLAW_NO_RESPAWN=1
 
 MemoryMax=1500M
-MemoryHigh=1300M
+MemoryHigh=1400M
 TasksMax=64
 
 StandardOutput=journal

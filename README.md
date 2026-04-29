@@ -3,8 +3,8 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT/IDS 518 · J. Christopher Westland · University of Illinois at Chicago*
 
-[![Release](https://img.shields.io/badge/release-v3.84-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.84)
-[![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4.24-blue)](https://openclaw.dev)
+[![Release](https://img.shields.io/badge/release-v3.85-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.85)
+[![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4.26-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
 [![Discord](https://img.shields.io/badge/reports-Discord-5865F2)](https://discord.com)
@@ -211,7 +211,7 @@ Agents are color-coded in Discord: Henry (gold), Coder (blue), Scout (green), Wr
 
 | Component | Technology |
 |-----------|-----------|
-| Agent runtime | OpenClaw 2026.4.24 |
+| Agent runtime | OpenClaw 2026.4.26 |
 | AI models | Anthropic Claude (Opus 4.7, Sonnet 4.6, Haiku 4.5) |
 | Voice transcription | OpenAI gpt-4o-mini-transcribe (Whisper API) |
 | Server | Ubuntu 24.04 on DigitalOcean ($6/month) |
@@ -329,6 +329,7 @@ systemctl restart openclaw
 | `openclaw cron list` hangs for 60+ seconds then times out | `openclaw-cron` subprocess JIT-compiles the full Node.js runtime (~60 s) before connecting; default server-side WS handshake timeout (10 s) fires first | Added `OPENCLAW_HANDSHAKE_TIMEOUT_MS=120000` to service; use `--timeout 120000` or read `jobs-state.json` directly |
 | `openclaw cron add` hangs during deploy | Same JIT issue — the CLI always races against a freshly started gateway | Replaced `openclaw cron add` calls with direct `jobs.json` file write |
 | Gateway crashes ~46 s after startup with `CIAO PROBING CANCELLED` | `bonjour` mDNS plugin tries to advertise on datacenter LAN where mDNS is blocked; unhandled promise rejection kills Node.js | Disabled `bonjour`, `acpx`, `browser`, `device-pair`, `phone-control`, `talk-voice` plugins in `plugins.entries` — cloud servers only need `telegram` |
+| Two `[model-pricing] ... failed (timeout 60s)` warnings on every startup | OpenClaw fetches live pricing from OpenRouter and LiteLLM during startup; its internal scheduler fires before Node.js can service the request at cold-start. Non-blocking — all bots connect cleanly 1 s after the timeout fires. No config option to disable the fetch. | No fix needed; wait ~2 min after each restart for bots to become responsive |
 
 ---
 

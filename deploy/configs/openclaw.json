@@ -35,6 +35,9 @@
           "writer"
         ],
         "maxSpawnDepth": 1
+      },
+      "llm": {
+        "idleTimeoutSeconds": 600
       }
     },
     "list": [
