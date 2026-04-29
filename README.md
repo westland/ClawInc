@@ -21,10 +21,10 @@ The five agents are:
 
 | Agent | Model | Role | Discord Color |
 |-------|-------|------|---------------|
-| **Henry** | Claude Sonnet 4.6 | Chief of Staff — orchestrates the team, delegates tasks | Gold |
-| **Coder** | Claude Sonnet 4.6 | Software Engineer — writes code, runs data analysis | Blue |
+| **Henry** | Claude Haiku 4.5 | Chief of Staff — orchestrates the team, delegates tasks | Gold |
+| **Coder** | Claude Haiku 4.5 | Software Engineer — writes code, runs data analysis | Blue |
 | **Scout** | Claude Haiku 4.5 | Research Analyst — web research, trend monitoring | Green |
-| **Writer** | Claude Sonnet 4.6 | Content Creator — memos, reports, executive summaries | Purple |
+| **Writer** | Claude Haiku 4.5 | Content Creator — memos, reports, executive summaries | Purple |
 | **Watcher** | Claude Haiku 4.5 | System Monitor — health checks, alerts, maintenance | Orange |
 
 ---
@@ -43,10 +43,10 @@ Your Phone / Computer
 DigitalOcean Droplet — Ubuntu 24.04 — $6/month
         │
         │  OpenClaw Gateway (port 18789, systemd service)
-        ├── Henry workspace  (Claude Sonnet 4.6)
-        ├── Coder workspace  (Claude Sonnet 4.6)
+        ├── Henry workspace  (Claude Haiku 4.5)
+        ├── Coder workspace  (Claude Haiku 4.5)
         ├── Scout workspace  (Claude Haiku 4.5)
-        ├── Writer workspace (Claude Sonnet 4.6)
+        ├── Writer workspace (Claude Haiku 4.5)
         └── Watcher workspace (Claude Haiku 4.5)
         │
         ├── Anthropic API (Claude models)
@@ -140,7 +140,7 @@ ClawInc/
 ## The Five Agents
 
 ### Henry — Chief of Staff
-- **Model:** `anthropic/claude-opus-4-7` (highest intelligence)
+- **Model:** `anthropic/claude-haiku-4-5-20251001`
 - **Telegram:** @YourHenryBot
 - **Role:** Primary user interface. Receives high-level goals, delegates to other agents. Has agent-to-agent delegation authority over all four others.
 - **Skills:** `delegate-task`, `daily-standup`, `rnd-meeting`, `discord-report`
@@ -148,7 +148,7 @@ ClawInc/
 - **Discord:** Posts after every user prompt and every nightly session (gold embed)
 
 ### Coder — Software Engineer
-- **Model:** `anthropic/claude-sonnet-4-6`
+- **Model:** `anthropic/claude-haiku-4-5-20251001`
 - **Telegram:** @YourCoderBot
 - **Role:** Writes, debugs, and executes code. Handles Python/R data analysis, statistical modeling, and automation scripts.
 - **Skills:** `vibe-code`, `debug-app`, `deploy-app`, `discord-report`
@@ -164,7 +164,7 @@ ClawInc/
 - **Discord:** Posts after every user prompt and every morning scan (green embed)
 
 ### Writer — Content Creator
-- **Model:** `anthropic/claude-sonnet-4-6`
+- **Model:** `anthropic/claude-haiku-4-5-20251001`
 - **Telegram:** @YourWriterBot
 - **Role:** Produces polished written output: executive memos, research reports, marketing content, summaries.
 - **Skills:** `write-memo`, `write-report`, `content-plan`, `discord-report`
@@ -212,7 +212,7 @@ Agents are color-coded in Discord: Henry (gold), Coder (blue), Scout (green), Wr
 | Component | Technology |
 |-----------|-----------|
 | Agent runtime | OpenClaw 2026.4.26 |
-| AI models | Anthropic Claude (Opus 4.7, Sonnet 4.6, Haiku 4.5) |
+| AI models | Anthropic Claude Haiku 4.5 (all agents) |
 | Voice transcription | OpenAI gpt-4o-mini-transcribe (Whisper API) |
 | Server | Ubuntu 24.04 on DigitalOcean ($6/month) |
 | Runtime | Node.js 24 |
