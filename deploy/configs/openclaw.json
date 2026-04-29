@@ -86,39 +86,19 @@
       "defaultAccount": "henry-bot",
       "accounts": {
         "henry-bot": {
-          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_HENRY",
-          "dmPolicy": "open",
-          "allowFrom": [
-            "*"
-          ]
+          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_HENRY"
         },
         "coder-bot": {
-          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_CODER",
-          "dmPolicy": "open",
-          "allowFrom": [
-            "*"
-          ]
+          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_CODER"
         },
         "scout-bot": {
-          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_SCOUT",
-          "dmPolicy": "open",
-          "allowFrom": [
-            "*"
-          ]
+          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_SCOUT"
         },
         "writer-bot": {
-          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_WRITER",
-          "dmPolicy": "open",
-          "allowFrom": [
-            "*"
-          ]
+          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_WRITER"
         },
         "watcher-bot": {
-          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_WATCHER",
-          "dmPolicy": "open",
-          "allowFrom": [
-            "*"
-          ]
+          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_WATCHER"
         }
       }
     }
