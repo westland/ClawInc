@@ -1,7 +1,7 @@
 # ClawInc Student Setup Guide: Your Own AI Agent Company
 
 **MKT/IDS 518 — Deploying OpenClaw on DigitalOcean with Telegram and Discord**  
-*J. Christopher Westland · University of Illinois at Chicago · v3.12*
+*J. Christopher Westland · University of Illinois at Chicago · v3.84*
 
 ---
 
@@ -475,6 +475,19 @@ su - clawuser -c "openclaw config validate"
 ```
 
 Check: JSON syntax, no trailing commas, all brackets matched, bot tokens in `NUMBER:LETTERS` format.
+
+**"invalid config: must NOT have additional properties" on telegram accounts**
+
+This means `dmPolicy` or `allowFrom` are inside a per-account entry. OpenClaw only allows `botToken` at the account level. Fix by removing those keys from each account in `/home/clawuser/.openclaw/openclaw.json`:
+
+```json
+"accounts": {
+  "henry-bot": { "botToken": "..." },
+  "coder-bot":  { "botToken": "..." }
+}
+```
+
+Channel-wide policy (`dmPolicy: "open"`, `allowFrom: ["*"]`) belongs one level up at `channels.telegram`, where it already lives. Restart after editing: `systemctl restart openclaw`
 
 ### Gateway Not Starting
 

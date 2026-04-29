@@ -1,4 +1,4 @@
-# ClawInc — OpenClaw Deployment Package v2.15
+# ClawInc — OpenClaw Deployment Package v3.84
 
 Everything needed to install ClawInc on a fresh Ubuntu 24.04 DigitalOcean droplet.
 
@@ -52,7 +52,7 @@ The `deploy-openclaw.sh` script runs 10 phases automatically:
 | 2. Node.js | Installs Node.js 24 via NodeSource |
 | 3. OpenClaw | Installs OpenClaw globally via npm, creates `clawuser` |
 | 4. Workspaces | Deploys all 5 agent workspaces (SOUL.md, skills, memory) |
-| 5. Config | Writes `openclaw.json` with your API keys, bot tokens, exec permissions, and desktop plugins disabled |
+| 5. Config | Writes `openclaw.json` with your API keys, bot tokens, exec permissions, and desktop plugins disabled. Each telegram account entry contains only `botToken` — channel-level policy (`dmPolicy`, `allowFrom`) lives at `channels.telegram`, not per-account |
 | 6. Permissions | Sets correct file ownership and modes |
 | 7. tmpfiles.d | Creates persistent temp dirs that survive reboots |
 | 8. Systemd | Installs and starts `openclaw.service` |

@@ -3,7 +3,7 @@
 **A deployable five-agent autonomous AI company for marketing analytics, research, and automation.**  
 *MKT/IDS 518 · J. Christopher Westland · University of Illinois at Chicago*
 
-[![Release](https://img.shields.io/badge/release-v3.50-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.50)
+[![Release](https://img.shields.io/badge/release-v3.84-brightgreen)](https://github.com/westland/ClawInc/releases/tag/v3.84)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.4.24-blue)](https://openclaw.dev)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange)](https://ubuntu.com)
 [![Telegram](https://img.shields.io/badge/interface-Telegram-2CA5E0)](https://telegram.org)
@@ -72,6 +72,12 @@ The five agents are:
 | **Faster gateway recovery** | `RestartSec` reduced from 10 s to 3 s in the service file — gateway is back in ~11 s instead of ~18 s after a crash, reducing the chance of a subagent announce timeout |
 | **Root-cause prevention** | v3.11 heap fix (384→512 MB) already prevents the OOM crash that caused the announce failure; v3.12 adds defence-in-depth for any future transient gateway drop |
 
+
+## What's New in v3.84
+
+| Area | Change |
+|------|--------|
+| **Config schema fix** | Removed `dmPolicy` and `allowFrom` from per-account telegram entries — OpenClaw 2026.4.24 only allows `botToken` at the account level; channel-wide policy belongs at `channels.telegram` |
 
 ## What's New in v3.50
 
@@ -286,6 +292,7 @@ The master config is `deploy/configs/openclaw.json`. OpenClaw 2026.x uses strict
 - Discord webhook goes in `env.DISCORD_WEBHOOK_URL`
 - `channels.telegram.accounts` is an **object** keyed by account ID (not an array)
 - Bot token field is `botToken` (not `token`)
+- Per-account entries accept **only** `botToken` — do **not** put `dmPolicy` or `allowFrom` inside account objects (they are only valid at the `channels.telegram` level; adding them causes "invalid config: must NOT have additional properties")
 - `gateway.mode` is the correct key (not `gateway.authToken`)
 - Exec approvals require **two settings**: `tools.exec.security: "full"` in openclaw.json AND `defaults.security: "full"` in exec-approvals.json
 - The `execApprovals.mode` and `tools.exec.askFallback` keys do not exist in 2026.x — omit them
