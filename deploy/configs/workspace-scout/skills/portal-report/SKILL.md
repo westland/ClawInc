@@ -1,4 +1,4 @@
-# SKILL: discord-report
+# SKILL: portal-report
 
 ## Identity
 - **Sender name**: Scout — Research Bot
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-Post a signed research briefing to the ClawInc Discord guild.
+Post a signed research briefing to the Reports & Memos portal screen.
 Use this after completing any research task, morning scan, trend
 analysis, or intelligence report.
 
@@ -44,47 +44,37 @@ Structure your message as:
 
 Keep under 3800 characters. Full citations saved to Scout's memory.
 
-### Step 2: Post to Discord via Python
+### Step 2: Post to the portal via Python
 
 ```python
-import urllib.request, json, os, datetime
+import urllib.request, json, os
 
-webhook = os.environ.get("DISCORD_WEBHOOK_URL", "")
-if not webhook:
-    print("DISCORD_WEBHOOK_URL not set — skipping Discord post")
+portal_url = os.environ.get("PORTAL_REPORTS_URL", "") or os.environ.get("DISCORD_WEBHOOK_URL", "")
+if not portal_url:
+    print("PORTAL_REPORTS_URL not set — skipping portal post")
 else:
     body = """PASTE_REPORT_BODY_HERE"""
-    payload = {
-        "username": "Scout \u2014 Research Bot",
-        "embeds": [{
-            "title": "Scout's Research Briefing",
-            "description": body[:4096],
-            "color": 3066993,
-            "footer": {
-                "text": f"ClawInc \u00b7 Scout \u00b7 Claude Haiku 4.5 \u00b7 {datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
-            }
-        }]
-    }
-    data = json.dumps(payload).encode()
+    payload = {"content": body}
+    data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
-        webhook, data=data,
-        headers={"Content-Type": "application/json", "User-Agent": "ClawIncBot/1.0"},
+        portal_url, data=data,
+        headers={"Content-Type": "application/json"},
         method="POST"
     )
     try:
         urllib.request.urlopen(req, timeout=10)
-        print("Posted to Discord successfully")
+        print("Posted to Reports & Memos successfully")
     except Exception as e:
-        print(f"Discord post failed: {e}")
+        print(f"Portal post failed: {e}")
 ```
 
 ### Step 3: Confirm and Log
 
-- Confirm "Posted to Discord successfully"
+- Confirm "Posted to Reports & Memos successfully"
 - Log post in memory with date, topic, and source count
 
 ## Signature Line
 
-Every Discord post from Scout ends with:
+Every report/memo post from Scout ends with:
 
 > *— Scout, Research Bot · ClawInc · [date]*

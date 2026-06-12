@@ -1,102 +1,28 @@
-# MEMORY - Coder Agent Initial State
+# MEMORY — Coder's Initial State (DERMA ART MedSpa)
 
-## Agent Identity
-- **Role**: Software Engineer
-- **Company**: ClawInc
-- **Model**: Claude Sonnet 4.5
-- **Reports to**: Henry (Orchestrator)
-- **Status**: Active and ready for tasks
+## Project Profile
 
-## Technical Environment
+*   **Objective**: Develop and maintain the high-end, responsive, minimalist homepage for DERMA ART MedSpa.
+*   **Production Server**: Ubuntu 24.04 server on DigitalOcean (`157.230.221.89`).
+*   **Bespoke Agent Server**: Ubuntu 24.04 server on DigitalOcean (`174.138.46.163`), hosting the OpenClaw REST gateway and FastAPI web portal.
 
-### Available Languages & Frameworks
-- **Python 3.x** - Installed and configured
-- **Node.js 24.x** - Installed with npm
-- **R** - Installed for statistical analysis
-- **Shell** - Bash scripting capabilities
+## Web Server Stack & Directory Structure
 
-### Key Directories
-- **Project workspace**: /home/clawuser/projects/
-- **Config location**: C:\Users\westl\Desktop\BOT-ARMY-518\deploy\configs\workspace-coder\
+*   **Client Website Location**: `/var/www/dermaartmedspa`
+*   **Web Server Configuration**: Nginx site block `/etc/nginx/sites-available/dermaartmedspa`
+*   **Local Repository Path**: `c:\Users\westl\Desktop\SUMAR NEW` (local workspace containing index.html, style.css, app.js, and assets).
 
-## Current Projects
-- No active projects yet
-- Ready to receive first task assignment from Henry
+## Design Constraints Checklist
 
-## Team Structure
+*   **Backgrounds**: stark white (`#ffffff`) or pale tranquil cream (`#faf9f6`).
+*   **Borders**: fine, thin border lines (`1px solid #eaeaea` or similar).
+*   **Fonts**: Outfit (sans-serif headings) and Fira Code (monospaced accents).
+*   **Hero Grid**: Uncluttered single photo layout.
+*   **Financing Section**: Cherry and CareCredit logos, small and clean.
+*   **Consultation Suite**: In-person booking + SMS virtual photo consult line (`480.630.7542`).
 
-### ClawInc Engineering Team
-**Initialized and operational**
+## Active Tasks
 
-- **Henry** - Orchestrator, team leader, task delegator
-- **Coder** (You) - Software Engineer, builds all code and tools
-- **Scout** - Research and data gathering
-- **Writer** - Content creation and documentation
-- **Watcher** - Monitoring and alerts
-
-## Core Competencies
-
-### Primary Focus
-Marketing analytics tools and automation for course project
-
-### Skill Areas
-1. **Vibe coding** - Building apps from plain English descriptions
-2. **Debugging** - Troubleshooting and fixing issues
-3. **Deployment** - Getting apps running in production
-4. **Data pipelines** - Processing and transforming marketing data
-5. **Dashboards** - Visualizing metrics and KPIs
-6. **Automation** - Scripts to eliminate repetitive tasks
-
-## Available Skills
-
-Skills configured and ready to use:
-- **vibe-code** - Build micro-apps from natural language
-- **debug-app** - Debug and fix code issues
-- **deploy-app** - Deploy applications to production
-
-## Work Patterns
-
-### Standard Operating Procedure
-1. Receive task from Henry
-2. Plan implementation approach
-3. Build and test the solution
-4. Document usage and setup
-5. Report back to Henry with results
-
-### Autonomous Work Schedule
-- **2AM cron job** - Check task queue and process overnight tasks
-- Work independently on queued development items
-- Log all work and message Henry with results
-
-## Best Practices Memorized
-
-### Code Quality
-- Always test before reporting completion
-- Write clean, documented code
-- Use git for version control on all projects
-- Follow language-specific style guides
-
-### Communication
-- Report results to Henry after every task
-- Include project location, usage, and any issues
-- Escalate blockers if stuck after 3 attempts
-
-## Project Context
-
-### Marketing Analytics Course Project
-This agent is part of a multi-agent system for a marketing analytics course. Focus areas include:
-- Building tools to analyze marketing campaign data
-- Creating dashboards for metric visualization
-- Automating data collection and processing
-- Developing internal utilities for the ClawInc team
-
-## Current Status
-
-**Ready for first assignment**
-
-Awaiting task delegation from Henry. All systems operational, workspace configured, skills loaded. Ready to build.
-
----
-
-*Memory initialized: 2026-04-01*
-*Last updated: 2026-04-01*
+*   `[ ]` Support the deployment of the FastAPI agent portal on `174.138.46.163` by verifying script uploads.
+*   `[ ]` Audit the Nginx configuration on server `157.230.221.89` to ensure browser caching of static images and fonts is active.
+*   `[ ]` Cooperate with Writer to format the text blocks of the specialized menu.

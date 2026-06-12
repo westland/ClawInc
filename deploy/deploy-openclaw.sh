@@ -59,14 +59,16 @@ echo -e "${BOLD}  ClawInc Multi-Agent AI Company — v${VERSION} Installer${NC}"
 echo -e "  OOM fixes · Symlink repair · Cron jobs via jobs.json · Handshake timeout fix · Bonjour/mDNS disabled"
 echo -e "  Voice commands supported via OpenAI audio transcription"
 echo -e "  Deploys 5 autonomous AI agents (Henry, Coder, Scout, Writer, Watcher)"
-echo -e "  Controlled via Telegram · Reports posted to Discord\n"
+echo -e "  Controlled via Telegram · Reports posted to Web Portal\n"
 echo -e "${YELLOW}  Before continuing, make sure you have:${NC}"
 echo -e "  1. Your Anthropic API key   → console.anthropic.com (required)"
 echo -e "  2. Your OpenAI API key      → platform.openai.com (for voice commands)"
-echo -e "  3. Your Discord webhook URL → your Discord server → #reports channel"
+echo -e "  3. Your Portal Reports API URL (default: http://127.0.0.1:8000/api/reports/submit)"
 echo -e "  4. Five Telegram bot tokens → @BotFather on Telegram\n"
-echo -e "  Press ENTER to continue or Ctrl+C to exit."
-read -r
+if [[ -z "${NON_INTERACTIVE:-}" ]]; then
+    echo -e "  Press ENTER to continue or Ctrl+C to exit."
+    read -r
+fi
 
 # =============================================================================
 # Collect credentials interactively
@@ -76,45 +78,56 @@ header "Collecting Your Credentials"
 
 echo -e "${BOLD}── Server Information ──────────────────────────────────────${NC}"
 echo -e "  This is used in agent documentation."
-prompt "What is this server's IP address? (e.g. 123.45.67.89)"
-read -r SERVER_IP
+SERVER_IP="${SERVER_IP:-}"
+if [[ -z "$SERVER_IP" ]]; then
+    prompt "What is this server's IP address? (e.g. 123.45.67.89)"
+    read -r SERVER_IP
+fi
 while [[ -z "$SERVER_IP" ]]; do
     prompt "IP address cannot be empty. Enter your droplet IP:"
     read -r SERVER_IP
 done
 
 echo ""
-echo -e "${BOLD}── Anthropic API Key ───────────────────────────────────────${NC}"
-echo -e "  Powers all 5 agents (Claude models). Get yours at: https://console.anthropic.com/api-keys"
-echo -e "  It looks like: sk-ant-api03-..."
-prompt "Paste your Anthropic API key:"
-read -r ANTHROPIC_API_KEY
-while [[ -z "$ANTHROPIC_API_KEY" || "$ANTHROPIC_API_KEY" == "sk-ant-"* && ${#ANTHROPIC_API_KEY} -lt 40 ]]; do
-    prompt "Key looks invalid. Paste your Anthropic API key (starts with sk-ant-):"
-    read -r ANTHROPIC_API_KEY
+echo -e "${BOLD}── Gemini API Key ──────────────────────────────────────────${NC}"
+echo -e "  Powers all 5 agents (Gemini models). Get yours at: Google AI Studio"
+echo -e "  It looks like: AIzaSy..."
+GEMINI_API_KEY="${GEMINI_API_KEY:-}"
+if [[ -z "$GEMINI_API_KEY" ]]; then
+    prompt "Paste your Gemini API key:"
+    read -r GEMINI_API_KEY
+fi
+while [[ -z "$GEMINI_API_KEY" || "$GEMINI_API_KEY" != "AIzaSy"* ]]; do
+    prompt "Key looks invalid. Paste your Gemini API key (starts with AIzaSy):"
+    read -r GEMINI_API_KEY
 done
+GOOGLE_API_KEY="${GEMINI_API_KEY}"
+
 
 echo ""
 echo -e "${BOLD}── OpenAI API Key (for voice transcription) ────────────────${NC}"
 echo -e "  Used to transcribe voice messages sent to your bots."
 echo -e "  Get yours at: https://platform.openai.com/api-keys"
 echo -e "  It looks like: sk-proj-... (press ENTER to skip — voice commands will be disabled)"
-prompt "Paste your OpenAI API key (or press ENTER to skip):"
-read -r OPENAI_API_KEY
+OPENAI_API_KEY="${OPENAI_API_KEY:-}"
+if [[ -z "$OPENAI_API_KEY" && -z "${NON_INTERACTIVE:-}" ]]; then
+    prompt "Paste your OpenAI API key (or press ENTER to skip):"
+    read -r OPENAI_API_KEY
+fi
 
 echo ""
-echo -e "${BOLD}── Discord Webhook URL ─────────────────────────────────────${NC}"
-echo -e "  All agent reports post here. To get your webhook URL:"
-echo -e "  1. Open Discord → your ClawInc server → #reports channel"
-echo -e "  2. Right-click #reports → Edit Channel → Integrations → Webhooks"
-echo -e "  3. Click 'New Webhook' → name it 'ClawInc Reports' → Copy Webhook URL"
-echo -e "  It looks like: https://discord.com/api/webhooks/123456/ABCDEF..."
-prompt "Paste your Discord webhook URL:"
-read -r DISCORD_WEBHOOK_URL
-while [[ -z "$DISCORD_WEBHOOK_URL" ]]; do
-    prompt "Webhook URL cannot be empty. Paste your Discord webhook URL:"
-    read -r DISCORD_WEBHOOK_URL
-done
+echo -e "${BOLD}── Portal Reports API URL ───────────────────────────────────${NC}"
+echo -e "  All agent reports post here. Default local path:"
+echo -e "  http://127.0.0.1:8000/api/reports/submit"
+PORTAL_REPORTS_URL="${PORTAL_REPORTS_URL:-}"
+if [[ -z "$PORTAL_REPORTS_URL" ]]; then
+    prompt "Paste your Portal Reports API URL (default: http://127.0.0.1:8000/api/reports/submit):"
+    read -r PORTAL_REPORTS_URL
+fi
+if [[ -z "$PORTAL_REPORTS_URL" ]]; then
+    PORTAL_REPORTS_URL="http://127.0.0.1:8000/api/reports/submit"
+fi
+DISCORD_WEBHOOK_URL="${PORTAL_REPORTS_URL}"
 
 echo ""
 echo -e "${BOLD}── Telegram Bot Tokens ─────────────────────────────────────${NC}"
@@ -124,35 +137,35 @@ echo -e "  2. Send /newbot and follow the prompts for each bot"
 echo -e "  3. Each token looks like: 8732631641:AAHu1OuUh8uRXqpZqH_6G77DMOwIAXVaRKU"
 echo ""
 
-prompt "Henry bot token (Chief of Staff — your main command interface):"
-read -r TELEGRAM_TOKEN_HENRY
-while [[ -z "$TELEGRAM_TOKEN_HENRY" ]]; do
-    prompt "Henry token cannot be empty:"; read -r TELEGRAM_TOKEN_HENRY
-done
+TELEGRAM_TOKEN_HENRY="${TELEGRAM_TOKEN_HENRY:-dummy1}"
+if [[ -z "$TELEGRAM_TOKEN_HENRY" && -z "${NON_INTERACTIVE:-}" ]]; then
+    prompt "Henry bot token (Chief of Staff — your main command interface):"
+    read -r TELEGRAM_TOKEN_HENRY
+fi
 
-prompt "Coder bot token (Software Engineer):"
-read -r TELEGRAM_TOKEN_CODER
-while [[ -z "$TELEGRAM_TOKEN_CODER" ]]; do
-    prompt "Coder token cannot be empty:"; read -r TELEGRAM_TOKEN_CODER
-done
+TELEGRAM_TOKEN_CODER="${TELEGRAM_TOKEN_CODER:-dummy2}"
+if [[ -z "$TELEGRAM_TOKEN_CODER" && -z "${NON_INTERACTIVE:-}" ]]; then
+    prompt "Coder bot token (Software Engineer):"
+    read -r TELEGRAM_TOKEN_CODER
+fi
 
-prompt "Scout bot token (Research Analyst):"
-read -r TELEGRAM_TOKEN_SCOUT
-while [[ -z "$TELEGRAM_TOKEN_SCOUT" ]]; do
-    prompt "Scout token cannot be empty:"; read -r TELEGRAM_TOKEN_SCOUT
-done
+TELEGRAM_TOKEN_SCOUT="${TELEGRAM_TOKEN_SCOUT:-dummy3}"
+if [[ -z "$TELEGRAM_TOKEN_SCOUT" && -z "${NON_INTERACTIVE:-}" ]]; then
+    prompt "Scout bot token (Research Analyst):"
+    read -r TELEGRAM_TOKEN_SCOUT
+fi
 
-prompt "Writer bot token (Content Creator):"
-read -r TELEGRAM_TOKEN_WRITER
-while [[ -z "$TELEGRAM_TOKEN_WRITER" ]]; do
-    prompt "Writer token cannot be empty:"; read -r TELEGRAM_TOKEN_WRITER
-done
+TELEGRAM_TOKEN_WRITER="${TELEGRAM_TOKEN_WRITER:-dummy4}"
+if [[ -z "$TELEGRAM_TOKEN_WRITER" && -z "${NON_INTERACTIVE:-}" ]]; then
+    prompt "Writer bot token (Content Creator):"
+    read -r TELEGRAM_TOKEN_WRITER
+fi
 
-prompt "Watcher bot token (System Monitor):"
-read -r TELEGRAM_TOKEN_WATCHER
-while [[ -z "$TELEGRAM_TOKEN_WATCHER" ]]; do
-    prompt "Watcher token cannot be empty:"; read -r TELEGRAM_TOKEN_WATCHER
-done
+TELEGRAM_TOKEN_WATCHER="${TELEGRAM_TOKEN_WATCHER:-dummy5}"
+if [[ -z "$TELEGRAM_TOKEN_WATCHER" && -z "${NON_INTERACTIVE:-}" ]]; then
+    prompt "Watcher bot token (System Monitor):"
+    read -r TELEGRAM_TOKEN_WATCHER
+fi
 
 # Generate a random gateway token
 GATEWAY_TOKEN=$(openssl rand -hex 24)
@@ -220,6 +233,7 @@ ufw --force reset >> "$LOG_FILE" 2>&1
 ufw default deny incoming >> "$LOG_FILE" 2>&1
 ufw default allow outgoing >> "$LOG_FILE" 2>&1
 ufw allow ssh >> "$LOG_FILE" 2>&1
+ufw allow 80/tcp >> "$LOG_FILE" 2>&1       # Web portal
 ufw allow 8050/tcp >> "$LOG_FILE" 2>&1   # Shiny dashboard
 ufw --force enable >> "$LOG_FILE" 2>&1
 
@@ -272,12 +286,12 @@ if [[ -d "${DEPLOY_DIR}/configs" ]]; then
     done
 fi
 
-# Substitute student's Discord webhook URL into all SOUL.md files
-log "Configuring Discord webhook in agent personalities..."
+# Substitute student's Portal Reports API URL into all SOUL.md files
+log "Configuring Portal Reports URL in agent personalities..."
 for AGENT in henry coder scout writer watcher; do
     SOUL="${OPENCLAW_DIR}/workspace-${AGENT}/SOUL.md"
     if [[ -f "$SOUL" ]]; then
-        sed -i "s|DISCORD_WEBHOOK_PLACEHOLDER|${DISCORD_WEBHOOK_URL}|g" "$SOUL"
+        sed -i "s|DISCORD_WEBHOOK_PLACEHOLDER|${PORTAL_REPORTS_URL}|g" "$SOUL"
     fi
 done
 
@@ -306,59 +320,76 @@ header "Phase 4: Writing OpenClaw Configuration"
 cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
 {
   "env": {
-    "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}",
+    "GEMINI_API_KEY": "${GEMINI_API_KEY}",
+    "GOOGLE_API_KEY": "${GEMINI_API_KEY}",
     "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+    "PORTAL_REPORTS_URL": "${PORTAL_REPORTS_URL}",
     "DISCORD_WEBHOOK_URL": "${DISCORD_WEBHOOK_URL}"
   },
   "gateway": {
-    "mode": "local"
+    "mode": "local",
+    "http": {
+      "endpoints": {
+        "chatCompletions": {
+          "enabled": true
+        }
+      }
+    },
+    "auth": {
+      "mode": "none"
+    }
   },
-  "tools": {
-    "exec": { "security": "full", "ask": "off" },
-    "media": { "audio": { "enabled": ${AUDIO_ENABLED}, "echoTranscript": true } },
-    "message": { "crossContext": { "allowAcrossProviders": true } }
+  "acp": {
+    "enabled": true,
+    "allowedAgents": [
+      "henry",
+      "coder",
+      "scout",
+      "writer",
+      "watcher"
+    ],
+    "maxConcurrentSessions": 5
   },
   "agents": {
     "defaults": {
-      "model": { "primary": "anthropic/claude-sonnet-4-6" },
-      "subagents": { "allowAgents": ["scout","writer"], "maxSpawnDepth": 1 },
-      "llm": { "idleTimeoutSeconds": 600 }
+      "model": { "primary": "google/gemini-2.5-flash" },
+      "subagents": { "allowAgents": ["scout","writer","coder","watcher","henry"], "maxSpawnDepth": 1 },
+      "memorySearch": {
+        "provider": "gemini",
+        "fallback": "none",
+        "remote": {
+          "batch": {
+            "enabled": false
+          }
+        }
+      }
     },
     "list": [
       { "id": "henry",   "name": "Henry",   "default": true,
-        "workspace": "~/.openclaw/workspace-henry",   "agentDir": "~/.openclaw/agents/henry",   "model": "anthropic/claude-haiku-4-5-20251001" },
+        "workspace": "~/.openclaw/workspace-henry",   "agentDir": "~/.openclaw/agents/henry",   "model": "google/gemini-2.5-flash" },
       { "id": "coder",   "name": "Coder",
-        "workspace": "~/.openclaw/workspace-coder",   "agentDir": "~/.openclaw/agents/coder",   "model": "anthropic/claude-haiku-4-5-20251001" },
+        "workspace": "~/.openclaw/workspace-coder",   "agentDir": "~/.openclaw/agents/coder",   "model": "google/gemini-2.5-flash" },
       { "id": "scout",   "name": "Scout",
-        "workspace": "~/.openclaw/workspace-scout",   "agentDir": "~/.openclaw/agents/scout",   "model": "anthropic/claude-haiku-4-5-20251001" },
+        "workspace": "~/.openclaw/workspace-scout",   "agentDir": "~/.openclaw/agents/scout",   "model": "google/gemini-2.5-flash" },
       { "id": "writer",  "name": "Writer",
-        "workspace": "~/.openclaw/workspace-writer",  "agentDir": "~/.openclaw/agents/writer",  "model": "anthropic/claude-haiku-4-5-20251001" },
+        "workspace": "~/.openclaw/workspace-writer",  "agentDir": "~/.openclaw/agents/writer",  "model": "google/gemini-2.5-flash" },
       { "id": "watcher", "name": "Watcher",
-        "workspace": "~/.openclaw/workspace-watcher", "agentDir": "~/.openclaw/agents/watcher", "model": "anthropic/claude-haiku-4-5-20251001" }
+        "workspace": "~/.openclaw/workspace-watcher", "agentDir": "~/.openclaw/agents/watcher", "model": "google/gemini-2.5-flash" }
     ]
   },
-  "channels": {
-    "telegram": {
-      "enabled": true,
-      "dmPolicy": "open",
-      "allowFrom": ["*"],
-      "defaultAccount": "henry-bot",
-      "accounts": {
-        "henry-bot":  { "botToken": "${TELEGRAM_TOKEN_HENRY}",  "dmPolicy": "open", "allowFrom": ["*"] },
-        "coder-bot":  { "botToken": "${TELEGRAM_TOKEN_CODER}",  "dmPolicy": "open", "allowFrom": ["*"] },
-        "scout-bot":  { "botToken": "${TELEGRAM_TOKEN_SCOUT}",  "dmPolicy": "open", "allowFrom": ["*"] },
-        "writer-bot": { "botToken": "${TELEGRAM_TOKEN_WRITER}", "dmPolicy": "open", "allowFrom": ["*"] },
-        "watcher-bot":{ "botToken": "${TELEGRAM_TOKEN_WATCHER}","dmPolicy": "open", "allowFrom": ["*"] }
+  "models": {
+    "providers": {
+      "google": {
+        "timeoutSeconds": 300
       }
     }
   },
-  "bindings": [
-    { "agentId": "henry",   "match": { "channel": "telegram", "accountId": "henry-bot"   } },
-    { "agentId": "coder",   "match": { "channel": "telegram", "accountId": "coder-bot"   } },
-    { "agentId": "scout",   "match": { "channel": "telegram", "accountId": "scout-bot"   } },
-    { "agentId": "writer",  "match": { "channel": "telegram", "accountId": "writer-bot"  } },
-    { "agentId": "watcher", "match": { "channel": "telegram", "accountId": "watcher-bot" } }
-  ],
+  "channels": {
+    "telegram": {
+      "enabled": false
+    }
+  },
+  "bindings": [],
   "memory": {
     "backend": "builtin"
   },
@@ -367,10 +398,18 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
     "file": "~/.openclaw/logs/openclaw.log"
   },
   "cron": { "enabled": true },
+  "tools": {
+    "exec": { "security": "full", "ask": "off" },
+    "elevated": { "enabled": true },
+    "media": { "audio": { "enabled": ${AUDIO_ENABLED}, "echoTranscript": true } },
+    "message": { "crossContext": { "allowAcrossProviders": true } },
+    "links": { "enabled": false }
+  },
   "approvals": { "exec": { "enabled": false } },
   "plugins": {
     "entries": {
-      "anthropic":     { "enabled": true  },
+      "google":        { "enabled": true  },
+      "anthropic":     { "enabled": false },
       "bonjour":       { "enabled": false },
       "acpx":          { "enabled": false },
       "browser":       { "enabled": false },
@@ -438,37 +477,40 @@ fi
 chmod +x /usr/local/bin/fix-openclaw-symlinks.sh
 log "Symlink repair script installed at /usr/local/bin/fix-openclaw-symlinks.sh"
 
-# Install discord-post helper script for agents to post to Discord webhook
-cat > /usr/local/bin/discord-post << DISCORDPOSTEOF
+# Install portal-post helper script for agents to post to Reports & Memos portal
+cat > /usr/local/bin/portal-post << 'PORTALPOSTEOF'
 #!/usr/bin/env python3
-import sys, json, subprocess
-WEBHOOK = "${DISCORD_WEBHOOK_URL}"
+import sys, json, urllib.request
 msg = sys.stdin.read().strip()
 if not msg:
-    print("discord-post: no message on stdin", file=sys.stderr)
-    sys.exit(1)
-for chunk in [msg[i:i+2000] for i in range(0, len(msg), 2000)]:
-    subprocess.run(["curl","-s","-X","POST",WEBHOOK,
-                    "-H","Content-Type: application/json",
-                    "--data-binary",json.dumps({"content":chunk})],check=True)
-print(f"Posted {len([msg[i:i+2000] for i in range(0,len(msg),2000)])} chunk(s) to Discord")
-DISCORDPOSTEOF
-chmod +x /usr/local/bin/discord-post
-log "Discord-post script installed at /usr/local/bin/discord-post"
+    sys.exit(0)
+try:
+    req = urllib.request.Request(
+        "http://127.0.0.1:8000/api/reports/submit",
+        data=json.dumps({"content": msg}).encode("utf-8"),
+        headers={"Content-Type": "application/json"}
+    )
+    urllib.request.urlopen(req, timeout=5)
+except Exception as e:
+    sys.stderr.write(f"Failed to submit report locally: {e}\n")
+PORTALPOSTEOF
+chmod +x /usr/local/bin/portal-post
+ln -sf /usr/local/bin/portal-post /usr/local/bin/discord-post
+log "Portal-post script installed at /usr/local/bin/portal-post (discord-post symlinked)"
 
-# Install discord-report skill for all agents
-DISCORD_SKILL='# Discord Report Skill
+# Install portal-report skill for all agents
+PORTAL_SKILL='# Portal Report Skill
 
-Post a message to the ClawInc #reports Discord channel.
+Post a message to the Portal Reports & Memos screen.
 
 ## Method
 
-Pipe your message to /usr/local/bin/discord-post:
+Pipe your message to /usr/local/bin/portal-post:
 
 ```bash
-cat << DISCORD_EOF | /usr/local/bin/discord-post
+cat << PORTAL_EOF | /usr/local/bin/portal-post
 Your message content here...
-DISCORD_EOF
+PORTAL_EOF
 ```
 
 Long messages (>2000 chars) are split automatically.
@@ -480,9 +522,10 @@ Always use the pipe-to-script method above.
 '
 for AGENT in henry coder scout writer watcher; do
     mkdir -p "${OPENCLAW_DIR}/workspace-${AGENT}/skills"
-    echo "$DISCORD_SKILL" > "${OPENCLAW_DIR}/workspace-${AGENT}/skills/discord-report.md"
+    echo "$PORTAL_SKILL" > "${OPENCLAW_DIR}/workspace-${AGENT}/skills/portal-report.md"
+    rm -f "${OPENCLAW_DIR}/workspace-${AGENT}/skills/portal-report.md"
 done
-log "Discord-report skill installed for all agents"
+log "Portal-report skill installed for all agents"
 
 header "Phase 6b: Configuring Systemd Temp Directories"
 
@@ -576,6 +619,107 @@ if [[ -f "${DEPLOY_DIR}/openclaw-session-cleanup.sh" ]]; then
     systemctl enable --now openclaw-session-cleanup.timer
     log "Session cleanup timer installed (runs every 2h)"
 fi
+
+# Apply Google client timeout/fetch patch to prevent 30s timeouts on long reasoning turns
+log "Applying Google client timeout/fetch patch..."
+cat > /tmp/patch_google_client.py << 'PATCHEOF'
+import glob
+import os
+import re
+import sys
+
+dist_dir = "/usr/lib/node_modules/openclaw/dist"
+
+# 1. Locate the file exporting buildGuardedModelFetch
+fetch_guard_file = None
+for path in glob.glob(os.path.join(dist_dir, "*.js")):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+        if "function buildGuardedModelFetch" in content:
+            fetch_guard_file = os.path.basename(path)
+            break
+    except Exception:
+        pass
+
+if not fetch_guard_file:
+    print("Error: Could not locate file exporting buildGuardedModelFetch!")
+    sys.exit(1)
+
+# 2. Locate the google client file (specifically for Google AI Studio)
+google_client_file = None
+for path in glob.glob(os.path.join(dist_dir, "google-*.js")):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+        if "//#region src/llm/providers/google.ts" in content:
+            google_client_file = path
+            break
+    except Exception:
+        pass
+
+if not google_client_file:
+    print("Error: Could not locate Google client file!")
+    sys.exit(1)
+
+# 3. Patch the Google client file
+with open(google_client_file, "r", encoding="utf-8") as f:
+    c = f.read()
+
+# Make sure we don't patch it twice
+if "buildGuardedModelFetch" in c:
+    print("Already patched or buildGuardedModelFetch already imported.")
+else:
+    # Insert import statement
+    import_target = 'import { GoogleGenAI } from "@google/genai";'
+    import_repl = f'import {{ GoogleGenAI }} from "@google/genai";\nimport {{ m as buildGuardedModelFetch }} from "./{fetch_guard_file}";'
+    
+    if import_target in c:
+        c = c.replace(import_target, import_repl, 1)
+    else:
+        import_target_sq = "import { GoogleGenAI } from '@google/genai';"
+        import_repl_sq = f"import {{ GoogleGenAI }} from '@google/genai';\nimport {{ m as buildGuardedModelFetch }} from './{fetch_guard_file}';"
+        c = c.replace(import_target_sq, import_repl_sq, 1)
+
+    # Replace createClient function using regex
+    match = re.search(r'function createClient\(model,\s*apiKey,\s*optionsHeaders\)\s*\{([\s\S]*?return\s+new\s+GoogleGenAI\(\{[\s\S]*?\}\);\s*\})', c)
+    if match:
+        original_body = match.group(0)
+        
+        patched_body = (
+            "function createClient(model, apiKey, optionsHeaders) {\n"
+            "\tconst httpOptions = {};\n"
+            "\tif (model.baseUrl) {\n"
+            "\t\thttpOptions.baseUrl = model.baseUrl;\n"
+            "\t\thttpOptions.apiVersion = \"\";\n"
+            "\t}\n"
+            "\tconst timeoutMs = (model.timeoutSeconds ?? 300) * 1000;\n"
+            "\treturn new GoogleGenAI({\n"
+            "\t\tapiKey,\n"
+            "\t\tbaseURL: httpOptions.baseUrl || undefined,\n"
+            "\t\tapiVersion: httpOptions.apiVersion || undefined,\n"
+            "\t\ttimeout: timeoutMs,\n"
+            "\t\tfetch: buildGuardedModelFetch(model, timeoutMs),\n"
+            "\t\tfetchOptions: (model.headers || optionsHeaders) ? {\n"
+            "\t\t\theaders: {\n"
+            "\t\t\t\t...model.headers,\n"
+            "\t\t\t\t...optionsHeaders\n"
+            "\t\t\t}\n"
+            "\t\t} : undefined\n"
+            "\t});\n"
+            "}"
+        )
+        c = c.replace(original_body, patched_body, 1)
+        print("Patched createClient successfully.")
+    else:
+        print("Warning: regex pattern for createClient did not match!")
+
+    with open(google_client_file, "w", encoding="utf-8") as f:
+        f.write(c)
+    print("Patch successfully applied!")
+PATCHEOF
+python3 /tmp/patch_google_client.py
+rm -f /tmp/patch_google_client.py
 
 
 log "Starting OpenClaw gateway..."
@@ -716,7 +860,7 @@ else
       "schedule": { "kind": "cron", "expr": "*/5 * * * *" },
       "payload": {
         "kind": "agentTurn",
-        "message": "Run your health-check skill now. Check system resources (CPU, RAM, disk, swap), verify the OpenClaw gateway is running, and review recent error logs. If any metrics exceed warning thresholds, post an alert to Discord using your discord-report skill. Otherwise log the check to your workspace."
+        "message": "Run your health-check skill now. Check system resources (CPU, RAM, disk, swap), verify the OpenClaw gateway is running, and review recent error logs. If any metrics exceed warning thresholds, post an alert to the portal using your portal-report skill. Otherwise log the check quietly to your workspace."
       },
       "enabled": true,
       "createdAtMs": 1745535600000,
@@ -731,7 +875,7 @@ else
       "schedule": { "kind": "cron", "expr": "0 * * * *" },
       "payload": {
         "kind": "agentTurn",
-        "message": "Run your session-cleanup skill now. Archive old sessions, clean up temporary files, and ensure disk usage stays healthy."
+        "message": "Run your session-cleanup skill now. Archive old sessions, clean up temporary files, and ensure disk usage stays healthy. IMPORTANT: Do not call the update_goal tool as this is an automated system task."
       },
       "enabled": true,
       "createdAtMs": 1745535600000,
@@ -746,7 +890,7 @@ else
       "schedule": { "kind": "cron", "expr": "0 8 * * *" },
       "payload": {
         "kind": "agentTurn",
-        "message": "Run your news-digest skill. Search for the latest trending topics in AI, marketing analytics, and technology from the last 24 hours. Write a structured briefing with key findings, notable trends, and actionable insights. Save the briefing to your memory. Then post a signed summary to Discord using your discord-report skill."
+        "message": "Run your news-digest skill. Search for the latest trending topics in aesthetics, medspa marketing, local Scottsdale competitor medspas (pricing for Botox, fillers, Sculptra), patient feedback, and updates on Cherry or CareCredit financing plans. Write a structured briefing with comparison tables and key competitive findings. Save the briefing to your memory. Then post a signed summary to the portal using your portal-report skill."
       },
       "enabled": true,
       "createdAtMs": 1745535600000,
@@ -761,7 +905,7 @@ else
       "schedule": { "kind": "cron", "expr": "0 9 * * *" },
       "payload": {
         "kind": "agentTurn",
-        "message": "Run your write-memo skill. Search Scout memory for today's research briefing. Synthesize into a polished executive memo with sections: Top Stories, Trend Analysis, Action Items, Market Watch. Save to your memory. Post to Discord using your discord-report skill."
+        "message": "Run your write-memo skill. Search Scout's memory for today's competitor and aesthetics research briefing. Synthesize it into a polished, high-end operational memo for Sumar Kasik, RN. Structure it with sections: Competitor Price Shifts, Aesthetic Market Opportunities, Proposed Homepage Copy adjustments, and Social Media/Outreach Ideas. Save to memory. Post the memo using your portal-report skill."
       },
       "enabled": true,
       "createdAtMs": 1745535600000,
@@ -776,7 +920,7 @@ else
       "schedule": { "kind": "cron", "expr": "0 23 * * *" },
       "payload": {
         "kind": "agentTurn",
-        "message": "Run your rnd-meeting skill. Review today's memo from Writer, research from Scout, and any code from Coder. Identify opportunities and strategic improvements. Delegate follow-up tasks. Post a summary to Discord using your discord-report skill."
+        "message": "Run your rnd-meeting skill. Review today's memo from Writer, competitor research from Scout, and coding deliverables from Coder. Analyze gaps in Derma Art's branding, site responsiveness, or patient outreach. Formulate strategic recommendations for Sumar Kasik, RN. Post the retrospective summary using your portal-report skill. IMPORTANT: Do not call the update_goal tool as this is an automated system task."
       },
       "enabled": true,
       "createdAtMs": 1745535600000,
@@ -808,7 +952,7 @@ echo -e "${GREEN}${BOLD}"
 echo "  ✓ OpenClaw gateway running"
 echo "  ✓ 5 agents configured: Henry, Coder, Scout, Writer, Watcher"
 echo "  ✓ Telegram bots connected"
-echo "  ✓ Discord webhook configured"
+echo "  ✓ Portal reports URL configured"
 echo "  ✓ Exec approvals disabled (agents can run code freely)"
 echo "  ✓ 6 cron jobs scheduled"
 echo -e "${NC}"
@@ -819,7 +963,7 @@ echo ""
 echo -e "${BOLD}  Next steps:${NC}"
 echo -e "  1. Open Telegram and search for your Henry bot"
 echo -e "  2. Send a message — Henry will respond within seconds"
-echo -e "  3. Check your Discord #reports channel for the response"
+echo -e "  3. Check your Portal Reports & Memos screen for the response"
 echo ""
 echo -e "${BOLD}  Useful commands:${NC}"
 echo -e "  systemctl status openclaw              # Check gateway status"

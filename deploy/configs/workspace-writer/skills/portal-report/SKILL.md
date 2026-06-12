@@ -1,4 +1,4 @@
-# SKILL: discord-report
+# SKILL: portal-report
 
 ## Identity
 - **Sender name**: Writer — Content Bot
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-Post a signed, polished report or memo to the ClawInc Discord guild.
+Post a signed, polished report or memo to the Reports & Memos portal screen.
 Use this after completing any written deliverable — memos, briefings,
 summaries, or content pieces.
 
@@ -21,9 +21,9 @@ summaries, or content pieces.
 
 ## Execution Steps
 
-### Step 1: Compose the Discord Version
+### Step 1: Compose the Report / Memo
 
-For Discord, produce a clean, readable version of your document:
+Produce a clean, readable version of your document:
 
 ```
 **[DOCUMENT TITLE]**
@@ -46,47 +46,37 @@ For Discord, produce a clean, readable version of your document:
 Keep under 3800 characters. If the full document is longer, post
 an executive summary and note: "Full document saved to Writer's memory."
 
-### Step 2: Post to Discord via Python
+### Step 2: Post to the portal via Python
 
 ```python
-import urllib.request, json, os, datetime
+import urllib.request, json, os
 
-webhook = os.environ.get("DISCORD_WEBHOOK_URL", "")
-if not webhook:
-    print("DISCORD_WEBHOOK_URL not set — skipping Discord post")
+portal_url = os.environ.get("PORTAL_REPORTS_URL", "") or os.environ.get("DISCORD_WEBHOOK_URL", "")
+if not portal_url:
+    print("PORTAL_REPORTS_URL not set — skipping portal post")
 else:
     body = """PASTE_REPORT_BODY_HERE"""
-    payload = {
-        "username": "Writer \u2014 Content Bot",
-        "embeds": [{
-            "title": "Writer's Report",
-            "description": body[:4096],
-            "color": 10181046,
-            "footer": {
-                "text": f"ClawInc \u00b7 Writer \u00b7 Claude Sonnet 4.5 \u00b7 {datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
-            }
-        }]
-    }
-    data = json.dumps(payload).encode()
+    payload = {"content": body}
+    data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
-        webhook, data=data,
-        headers={"Content-Type": "application/json", "User-Agent": "ClawIncBot/1.0"},
+        portal_url, data=data,
+        headers={"Content-Type": "application/json"},
         method="POST"
     )
     try:
         urllib.request.urlopen(req, timeout=10)
-        print("Posted to Discord successfully")
+        print("Posted to Reports & Memos successfully")
     except Exception as e:
-        print(f"Discord post failed: {e}")
+        print(f"Portal post failed: {e}")
 ```
 
 ### Step 3: Confirm and Log
 
-- Confirm "Posted to Discord successfully"
+- Confirm "Posted to Reports & Memos successfully"
 - Log the post in memory: document title, date, word count
 
 ## Signature Line
 
-Every Discord post from Writer ends with:
+Every report/memo post from Writer ends with:
 
 > *— Writer, Content Bot · ClawInc · [date]*

@@ -105,17 +105,17 @@ deploy/
     │   └── skills/
     │       ├── delegate-task/SKILL.md
     │       ├── daily-standup/SKILL.md
-    │       ├── discord-report/SKILL.md
+    │       ├── portal-report/SKILL.md
     │       └── rnd-meeting/SKILL.md
     ├── workspace-coder/
-    │   └── skills/ (vibe-code, debug-app, deploy-app, discord-report)
+    │   └── skills/ (vibe-code, debug-app, deploy-app, portal-report)
     ├── workspace-scout/
-    │   └── skills/ (web-research, trend-monitor, news-digest, discord-report)
+    │   └── skills/ (web-research, trend-monitor, news-digest, portal-report)
     ├── workspace-writer/
-    │   └── skills/ (write-memo, write-report, content-plan, discord-report)
+    │   └── skills/ (write-memo, write-report, content-plan, portal-report)
     └── workspace-watcher/
         ├── HEARTBEAT.md
-        └── skills/ (health-check, log-analyzer, session-cleanup, discord-report)
+        └── skills/ (health-check, log-analyzer, session-cleanup, portal-report)
 ```
 
 ---

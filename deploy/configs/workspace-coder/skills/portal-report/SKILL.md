@@ -1,4 +1,4 @@
-# SKILL: discord-report
+# SKILL: portal-report
 
 ## Identity
 - **Sender name**: Coder — Dev Agent
@@ -7,7 +7,7 @@
 
 ## Purpose
 
-Post a signed, formatted technical report to the ClawInc Discord guild.
+Post a signed, formatted technical report to the Reports & Memos portal screen.
 Use this after completing development tasks, code reviews, analyses, or
 overnight work sessions.
 
@@ -46,47 +46,37 @@ Structure your message as:
 Keep under 3800 characters. For long code outputs, summarize and save
 the full output to memory.
 
-### Step 2: Post to Discord via Python
+### Step 2: Post to the portal via Python
 
 ```python
-import urllib.request, json, os, datetime
+import urllib.request, json, os
 
-webhook = os.environ.get("DISCORD_WEBHOOK_URL", "")
-if not webhook:
-    print("DISCORD_WEBHOOK_URL not set — skipping Discord post")
+portal_url = os.environ.get("PORTAL_REPORTS_URL", "") or os.environ.get("DISCORD_WEBHOOK_URL", "")
+if not portal_url:
+    print("PORTAL_REPORTS_URL not set — skipping portal post")
 else:
     body = """PASTE_REPORT_BODY_HERE"""
-    payload = {
-        "username": "Coder \u2014 Dev Agent",
-        "embeds": [{
-            "title": "Coder's Report",
-            "description": body[:4096],
-            "color": 3447003,
-            "footer": {
-                "text": f"ClawInc \u00b7 Coder \u00b7 Claude Sonnet 4.5 \u00b7 {datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
-            }
-        }]
-    }
-    data = json.dumps(payload).encode()
+    payload = {"content": body}
+    data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
-        webhook, data=data,
-        headers={"Content-Type": "application/json", "User-Agent": "ClawIncBot/1.0"},
+        portal_url, data=data,
+        headers={"Content-Type": "application/json"},
         method="POST"
     )
     try:
         urllib.request.urlopen(req, timeout=10)
-        print("Posted to Discord successfully")
+        print("Posted to Reports & Memos successfully")
     except Exception as e:
-        print(f"Discord post failed: {e}")
+        print(f"Portal post failed: {e}")
 ```
 
 ### Step 3: Confirm and Log
 
-- Confirm "Posted to Discord successfully"
-- Save a record of the Discord post to memory
+- Confirm "Posted to Reports & Memos successfully"
+- Save a record of the portal post to memory
 
 ## Signature Line
 
-Every Discord post from Coder ends with:
+Every report/memo post from Coder ends with:
 
 > *— Coder, Dev Agent · ClawInc · [date]*

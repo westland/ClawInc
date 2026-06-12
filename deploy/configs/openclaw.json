@@ -1,17 +1,12 @@
 {
   "env": {
     "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY",
-    "DISCORD_WEBHOOK_URL": "YOUR_DISCORD_WEBHOOK_URL"
+    "OPENAI_API_KEY": "YOUR_OPENAI_API_KEY",
+    "PORTAL_REPORTS_URL": "http://127.0.0.1:8000/api/reports/submit",
+    "DISCORD_WEBHOOK_URL": "http://127.0.0.1:8000/api/reports/submit"
   },
   "gateway": {
-    "mode": "local",
-    "nodes": {
-      "pairing": {
-        "autoApproveCidrs": [
-          "127.0.0.0/8"
-        ]
-      }
-    }
+    "mode": "local"
   },
   "acp": {
     "enabled": true,
@@ -22,7 +17,7 @@
       "writer",
       "watcher"
     ],
-    "maxConcurrentSessions": 2
+    "maxConcurrentSessions": 5
   },
   "agents": {
     "defaults": {
@@ -32,12 +27,24 @@
       "subagents": {
         "allowAgents": [
           "scout",
-          "writer"
+          "writer",
+          "coder",
+          "watcher",
+          "henry"
         ],
         "maxSpawnDepth": 1
       },
       "llm": {
         "idleTimeoutSeconds": 600
+      },
+      "memorySearch": {
+        "provider": "gemini",
+        "fallback": "none",
+        "remote": {
+          "batch": {
+            "enabled": false
+          }
+        }
       }
     },
     "list": [
@@ -81,68 +88,10 @@
   },
   "channels": {
     "telegram": {
-      "enabled": true,
-      "dmPolicy": "open",
-      "allowFrom": [
-        "*"
-      ],
-      "defaultAccount": "henry-bot",
-      "accounts": {
-        "henry-bot": {
-          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_HENRY"
-        },
-        "coder-bot": {
-          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_CODER"
-        },
-        "scout-bot": {
-          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_SCOUT"
-        },
-        "writer-bot": {
-          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_WRITER"
-        },
-        "watcher-bot": {
-          "botToken": "YOUR_TELEGRAM_BOT_TOKEN_WATCHER"
-        }
-      }
+      "enabled": false
     }
   },
-  "bindings": [
-    {
-      "agentId": "henry",
-      "match": {
-        "channel": "telegram",
-        "accountId": "henry-bot"
-      }
-    },
-    {
-      "agentId": "coder",
-      "match": {
-        "channel": "telegram",
-        "accountId": "coder-bot"
-      }
-    },
-    {
-      "agentId": "scout",
-      "match": {
-        "channel": "telegram",
-        "accountId": "scout-bot"
-      }
-    },
-    {
-      "agentId": "writer",
-      "match": {
-        "channel": "telegram",
-        "accountId": "writer-bot"
-      }
-    },
-    {
-      "agentId": "watcher",
-      "match": {
-        "channel": "telegram",
-        "accountId": "watcher-bot"
-      }
-    }
-  ],
+  "bindings": [],
   "memory": {
     "backend": "builtin"
   },
@@ -157,6 +106,9 @@
     "exec": {
       "security": "full",
       "ask": "off"
+    },
+    "elevated": {
+      "enabled": true
     },
     "media": {
       "audio": {

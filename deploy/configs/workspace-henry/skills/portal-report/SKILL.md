@@ -1,4 +1,4 @@
-# SKILL: discord-report
+# SKILL: portal-report
 
 ## Identity
 - **Sender name**: Henry — Chief of Staff
@@ -7,9 +7,9 @@
 
 ## Purpose
 
-Post a signed, formatted report to the ClawInc Discord guild. Use this skill
+Post a signed, formatted report to the Reports & Memos portal screen. Use this skill
 after completing any significant task, synthesis, R&D session, or strategic
-decision that the team or instructor should see.
+decision that the team should see.
 
 ## When to Use
 
@@ -42,54 +42,44 @@ Structure your message as:
 • [What happens next]
 ```
 
-Keep the body under 3800 characters (Discord embed limit is 4096).
+Keep the body under 3800 characters.
 If the content is longer, summarize and note "full report saved to memory."
 
-### Step 2: Post to Discord via Python
+### Step 2: Post to the portal via Python
 
 Run the following Python snippet, substituting your composed report as `BODY`:
 
 ```python
-import urllib.request, json, os, datetime
+import urllib.request, json, os
 
-webhook = os.environ.get("DISCORD_WEBHOOK_URL", "")
-if not webhook:
-    print("DISCORD_WEBHOOK_URL not set — skipping Discord post")
+portal_url = os.environ.get("PORTAL_REPORTS_URL", "") or os.environ.get("DISCORD_WEBHOOK_URL", "")
+if not portal_url:
+    print("PORTAL_REPORTS_URL not set — skipping portal post")
 else:
     body = """PASTE_REPORT_BODY_HERE"""
-    payload = {
-        "username": "Henry \u2014 Chief of Staff",
-        "embeds": [{
-            "title": "Henry's Report",
-            "description": body[:4096],
-            "color": 15792143,
-            "footer": {
-                "text": f"ClawInc \u00b7 Henry \u00b7 Claude Opus 4.6 \u00b7 {datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
-            }
-        }]
-    }
-    data = json.dumps(payload).encode()
+    payload = {"content": body}
+    data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
-        webhook, data=data,
-        headers={"Content-Type": "application/json", "User-Agent": "ClawIncBot/1.0"},
+        portal_url, data=data,
+        headers={"Content-Type": "application/json"},
         method="POST"
     )
     try:
         urllib.request.urlopen(req, timeout=10)
-        print("Posted to Discord successfully")
+        print("Posted to Reports & Memos successfully")
     except Exception as e:
-        print(f"Discord post failed: {e}")
+        print(f"Portal post failed: {e}")
 ```
 
 ### Step 3: Confirm and Log
 
-- Confirm "Posted to Discord successfully" in output
-- Log the Discord post in your memory: date, report title, summary
+- Confirm "Posted to Reports & Memos successfully" in output
+- Log the portal post in your memory: date, report title, summary
 - If the post fails, save the report to memory and note the failure
 
 ## Signature Line
 
-Every Discord post from Henry ends with:
+Every report/memo post from Henry ends with:
 
 > *— Henry, Chief of Staff · ClawInc · [date]*
 
@@ -97,6 +87,6 @@ Include this at the end of your `body` string.
 
 ## Error Handling
 
-- If `DISCORD_WEBHOOK_URL` is empty: skip silently, save report to memory instead
+- If `PORTAL_REPORTS_URL` and `DISCORD_WEBHOOK_URL` are empty: skip silently, save report to memory instead
 - If HTTP error (rate limit, bad URL): retry once after 2 seconds, then log failure
 - If report exceeds 4096 chars: truncate at 3900 chars and append `\n\n*[Report truncated — full version in Henry's memory]*`

@@ -291,13 +291,13 @@ Session completed: [Time]
 ## Data Sources
 
 ### Agent Memory Files
-- `C:\Users\westl\Desktop\BOT-ARMY-518\deploy\configs\workspace-writer\MEMORY.md`
-- `C:\Users\westl\Desktop\BOT-ARMY-518\deploy\configs\workspace-scout\MEMORY.md`
-- `C:\Users\westl\Desktop\BOT-ARMY-518\deploy\configs\workspace-coder\MEMORY.md`
-- `C:\Users\westl\Desktop\BOT-ARMY-518\deploy\configs\workspace-watcher\MEMORY.md`
+- `/home/clawuser/.openclaw/workspace-writer/MEMORY.md`
+- `/home/clawuser/.openclaw/workspace-scout/MEMORY.md`
+- `/home/clawuser/.openclaw/workspace-coder/MEMORY.md`
+- `/home/clawuser/.openclaw/workspace-watcher/MEMORY.md`
 
 ### Your Own Memory
-- `C:\Users\westl\Desktop\BOT-ARMY-518\deploy\configs\workspace-henry\MEMORY.md`
+- `/home/clawuser/.openclaw/workspace-henry/MEMORY.md`
 - Review previous R&D sessions
 - Check on delegated tasks
 - Note ongoing strategic initiatives

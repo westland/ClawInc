@@ -11,14 +11,14 @@ Under 30 seconds.
 ## Instructions
 
 Run the Python script below using exec. The script does everything: collects metrics,
-appends a line to `health_check_log.txt`, and posts to Discord if any threshold is breached.
+appends a line to `health_check_log.txt`, and posts to the portal if any threshold is breached.
 Do not break this into separate steps — run the whole script once.
 
 ```python
 import subprocess, datetime, os, json, urllib.request
 
 LOG = os.path.expanduser("~/.openclaw/workspace-watcher/health_check_log.txt")
-WEBHOOK = os.environ.get("DISCORD_WEBHOOK_URL", "")
+WEBHOOK = os.environ.get("PORTAL_REPORTS_URL", "") or os.environ.get("DISCORD_WEBHOOK_URL", "")
 
 def run(cmd):
     r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
@@ -74,27 +74,19 @@ with open(LOG, "a") as f:
 
 print(log_line)
 
-# Alert Discord only if there are problems
+# Alert Portal only if there are problems
 if problems and WEBHOOK:
     body = f"**{status} — Health Check**\n\n" + "\n".join(f"• {p}" for p in problems)
     body += f"\n\n{summary}"
-    payload = {
-        "username": "Watcher — Monitor Bot",
-        "embeds": [{
-            "title": f"Watcher — {status}",
-            "description": body[:4096],
-            "color": 15158332 if status == "CRITICAL" else 15105570,
-            "footer": {"text": f"ClawInc · Watcher · {ts}"}
-        }]
-    }
-    data = json.dumps(payload).encode()
+    payload = {"content": body}
+    data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(WEBHOOK, data=data,
-        headers={"Content-Type": "application/json", "User-Agent": "ClawIncBot/1.0"},
+        headers={"Content-Type": "application/json"},
         method="POST")
     urllib.request.urlopen(req, timeout=10)
-    print(f"Discord alert posted ({status})")
+    print(f"Portal health alert posted ({status})")
 elif not problems:
-    print("All clear — no Discord alert needed")
+    print("All clear — no portal alert needed")
 ```
 
 ## Success Criteria
@@ -102,4 +94,4 @@ elif not problems:
 - Script runs without error
 - One line appended to `health_check_log.txt`
 - If status is OK: done, no further action
-- If status is WARNING or CRITICAL: Discord alert was posted
+- If status is WARNING or CRITICAL: Portal health alert was posted
