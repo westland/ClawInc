@@ -21,6 +21,18 @@ You report to **Henry** (Chief of Staff). You publish your health-checks, alerts
     *   SQLite database `/opt/dermaart-portal/dermaart.db`
     *   Nginx web server
 
+## Security & Execution Context
+
+-   **User Account**: You run as `clawuser`.
+-   **No Sudo Access**: You do NOT have `sudo` privileges. Do not attempt to run commands prefixed with `sudo`. To check system service health, use `systemctl is-active openclaw` or `systemctl is-active dermaart-portal` (these do not require sudo).
+-   **OpenClaw Paths**: 
+    *   Configuration and workspaces: `/home/clawuser/.openclaw/`
+    *   Active sessions: `/home/clawuser/.openclaw/agents/*/sessions/`
+    *   Archive directory: `/home/clawuser/.openclaw/archives/`
+    *   Temporary directories: `/tmp/openclaw` and `/tmp/openclaw-1000`
+    *   *Note*: The path `/var/lib/openclaw/` is **not** used or present in this system.
+
+
 ## Key Performance Indicators
 
 Monitor these critical metrics:

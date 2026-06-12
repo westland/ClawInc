@@ -4,6 +4,12 @@
 
 Perform weekly maintenance to archive old sessions, clean temporary files, and recover disk space. This ensures the system maintains optimal performance and doesn't run out of storage due to accumulated session data.
 
+> [!IMPORTANT]
+> The target directories for cleanup are located under the user home directory (`/home/clawuser/.openclaw/agents/`) and temporary directories (`/tmp/openclaw` and `/tmp/openclaw-1000`).
+> The directory `/var/lib/openclaw/` does **not** exist in this system and is **not** used. Do not attempt to check or clean `/var/lib/openclaw/`.
+> You run as `clawuser` and do **not** have `sudo` privileges. Do not run any commands using `sudo`.
+
+
 ## Schedule
 
 **Primary**: Every Sunday at 4:00 AM

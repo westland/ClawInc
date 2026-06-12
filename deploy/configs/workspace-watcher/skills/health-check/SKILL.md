@@ -30,6 +30,31 @@ df   = run("df -h /")
 load = run("cat /proc/loadavg")
 gw   = run("systemctl --user is-active openclaw-gateway.service 2>/dev/null || echo inactive")
 
+# Check Nginx and Portal health
+portal_status = "inactive"
+try:
+    req = urllib.request.urlopen("http://127.0.0.1:8000/", timeout=5)
+    portal_status = "active"
+except urllib.error.HTTPError as e:
+    if e.code in [401, 302, 307, 403]:
+        portal_status = f"active (status {e.code} expected)"
+    else:
+        problems.append(f"WARNING: Portal returned status {e.code}")
+except Exception as e:
+    problems.append(f"CRITICAL: Portal on port 8000 is unreachable: {e}")
+
+nginx_status = "inactive"
+try:
+    req = urllib.request.urlopen("http://127.0.0.1/", timeout=5)
+    nginx_status = "active"
+except urllib.error.HTTPError as e:
+    if e.code in [401, 302, 307, 403]:
+        nginx_status = f"active (status {e.code} expected)"
+    else:
+        problems.append(f"WARNING: Nginx returned status {e.code}")
+except Exception as e:
+    problems.append(f"CRITICAL: Nginx on port 80 is unreachable: {e}")
+
 # Parse RAM
 mem_line = [l for l in free.splitlines() if l.startswith("Mem:")][0].split()
 ram_total, ram_used = int(mem_line[1]), int(mem_line[2])
@@ -59,18 +84,22 @@ elif disk_pct > 85: problems.append(f"WARNING: Disk {disk_pct}% (>85%)")
 
 gw_status = gw.strip()
 if gw_status != "active": problems.append(f"CRITICAL: openclaw-gateway is {gw_status}")
+if "CRITICAL" in portal_status or portal_status == "inactive": problems.append("CRITICAL: dermaart-portal is inactive")
+if "CRITICAL" in nginx_status or nginx_status == "inactive": problems.append("CRITICAL: Nginx is inactive")
 
 status = "CRITICAL" if any(p.startswith("CRITICAL") for p in problems) else ("WARNING" if problems else "OK")
 
+
 # Log to file (one line per run, append)
 ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-summary = f"RAM:{ram_pct}% Swap:{swap_pct}% Disk:{disk_pct}% Load:{load_1m} GW:{gw_status}"
+summary = f"RAM:{ram_pct}% Swap:{swap_pct}% Disk:{disk_pct}% Load:{load_1m} GW:{gw_status} Portal:{portal_status} Nginx:{nginx_status}"
 log_line = f"[{ts}] {status} | {summary}"
 if problems:
     log_line += " | " + "; ".join(problems)
 
 with open(LOG, "a") as f:
     print(log_line, file=f)
+
 
 print(log_line)
 
