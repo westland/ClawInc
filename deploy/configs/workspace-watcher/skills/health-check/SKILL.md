@@ -19,6 +19,7 @@ import subprocess, datetime, os, json, urllib.request
 
 LOG = os.path.expanduser("~/.openclaw/workspace-watcher/health_check_log.txt")
 WEBHOOK = os.environ.get("PORTAL_REPORTS_URL", "") or os.environ.get("DISCORD_WEBHOOK_URL", "")
+problems = []
 
 def run(cmd):
     r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
@@ -73,7 +74,7 @@ disk_pct = int(disk_line[4].rstrip("%"))
 load_1m = float(load.split()[0])
 
 # Evaluate thresholds
-problems = []
+# problems list is initialized above
 if ram_pct > 95:    problems.append(f"CRITICAL: RAM {ram_pct}% (>95%)")
 elif ram_pct > 80:  problems.append(f"WARNING: RAM {ram_pct}% (>80%)")
 

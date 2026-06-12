@@ -73,18 +73,18 @@ Delegate tasks to sub-agents with proper context, tracking, and follow-up.
 - Provide examples if helpful
 - Note priority level
 
-### 4. Send via Agent-to-Agent
+### 4. Send via Sessions Spawn Tool
 
 **Actions**:
-- Use the agent-to-agent messaging tool
-- Target the correct agent workspace
-- Include your composed instructions
-- Attach any relevant files or links
-- Confirm message sent successfully
+- Use the `sessions_spawn` tool to delegate the task (do NOT run `agent-to-agent` in the shell)
+- Set `agentId` to the target agent id (e.g., "writer", "coder", "scout")
+- Set `task` to your composed instructions
+- Set `mode` to "run" (or "session" for persistent threads)
+- Confirm the tool execution returns successfully
 
 **Syntax Example**:
 ```
-agent-to-agent --target workspace-[agent] --message "[instructions]"
+sessions_spawn(agentId="[agent_id]", task="[instructions]", mode="run")
 ```
 
 ### 5. Log the Delegation
