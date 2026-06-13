@@ -339,6 +339,12 @@ cat > "${OPENCLAW_DIR}/openclaw.json" << CONFIGEOF
       "mode": "none"
     }
   },
+  "session": {
+    "writeLock": {
+      "acquireTimeoutMs": 300000,
+      "maxHoldMs": 600000
+    }
+  },
   "acp": {
     "enabled": true,
     "allowedAgents": [
