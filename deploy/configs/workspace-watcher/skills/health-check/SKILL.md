@@ -15,10 +15,9 @@ appends a line to `health_check_log.txt`, and posts to the portal if any thresho
 Do not break this into separate steps — run the whole script once.
 
 ```python
-import subprocess, datetime, os, json, urllib.request
+import subprocess, datetime, os, json
 
 LOG = os.path.expanduser("~/.openclaw/workspace-watcher/health_check_log.txt")
-WEBHOOK = os.environ.get("PORTAL_REPORTS_URL", "") or os.environ.get("DISCORD_WEBHOOK_URL", "")
 problems = []
 
 def run(cmd):
@@ -29,32 +28,32 @@ def run(cmd):
 free = run("free -m")
 df   = run("df -h /")
 load = run("cat /proc/loadavg")
-gw   = run("systemctl --user is-active openclaw-gateway.service 2>/dev/null || echo inactive")
+gw   = run("systemctl is-active openclaw.service 2>/dev/null || echo inactive")
 
 # Check Nginx and Portal health
 portal_status = "inactive"
 try:
-    req = urllib.request.urlopen("http://127.0.0.1:8000/", timeout=5)
-    portal_status = "active"
-except urllib.error.HTTPError as e:
-    if e.code in [401, 302, 307, 403]:
-        portal_status = f"active (status {e.code} expected)"
+    curl_output = run("curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/")
+    if curl_output in ["200", "301", "302", "307", "401", "403", "404"]:
+        portal_status = f"active (status {curl_output} expected)"
+    elif curl_output in ["000", ""]:
+        problems.append("CRITICAL: Portal on port 8000 is unreachable")
     else:
-        problems.append(f"WARNING: Portal returned status {e.code}")
+        problems.append(f"WARNING: Portal returned status {curl_output}")
 except Exception as e:
-    problems.append(f"CRITICAL: Portal on port 8000 is unreachable: {e}")
+    problems.append(f"CRITICAL: Portal check failed: {e}")
 
 nginx_status = "inactive"
 try:
-    req = urllib.request.urlopen("http://127.0.0.1/", timeout=5)
-    nginx_status = "active"
-except urllib.error.HTTPError as e:
-    if e.code in [401, 302, 307, 403]:
-        nginx_status = f"active (status {e.code} expected)"
+    curl_output = run("curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/")
+    if curl_output in ["200", "301", "302", "307", "401", "403", "404"]:
+        nginx_status = f"active (status {curl_output} expected)"
+    elif curl_output in ["000", ""]:
+        problems.append("CRITICAL: Nginx on port 80 is unreachable")
     else:
-        problems.append(f"WARNING: Nginx returned status {e.code}")
+        problems.append(f"WARNING: Nginx returned status {curl_output}")
 except Exception as e:
-    problems.append(f"CRITICAL: Nginx on port 80 is unreachable: {e}")
+    problems.append(f"CRITICAL: Nginx check failed: {e}")
 
 # Parse RAM
 mem_line = [l for l in free.splitlines() if l.startswith("Mem:")][0].split()
@@ -101,21 +100,16 @@ if problems:
 with open(LOG, "a") as f:
     print(log_line, file=f)
 
-
 print(log_line)
 
 # Alert Portal only if there are problems
-if problems and WEBHOOK:
-    body = f"**{status} — Health Check**\n\n" + "\n".join(f"• {p}" for p in problems)
-    body += f"\n\n{summary}"
-    payload = {"content": body}
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(WEBHOOK, data=data,
-        headers={"Content-Type": "application/json"},
-        method="POST")
-    urllib.request.urlopen(req, timeout=10)
+if problems:
+    report_content = f"# Watcher — System Health Check\n## {status} Alert\n\n"
+    report_content += "\n".join(f"*   **{p}**" for p in problems)
+    report_content += f"\n*   **Summary**: {summary}"
+    subprocess.run(["/usr/local/bin/portal-post"], input=report_content.encode("utf-8"))
     print(f"Portal health alert posted ({status})")
-elif not problems:
+else:
     print("All clear — no portal alert needed")
 ```
 
