@@ -216,7 +216,7 @@ apt-get upgrade -y -qq >> "$LOG_FILE" 2>&1
 apt-get install -y -qq curl wget git nano ufw python3 python3-pip python3-venv openssl >> "$LOG_FILE" 2>&1
 
 # Timezone
-timedatectl set-timezone America/Chicago >> "$LOG_FILE" 2>&1 || true
+timedatectl set-timezone America/Phoenix >> "$LOG_FILE" 2>&1 || true
 
 # Create clawuser
 if ! id "$CLAW_USER" &>/dev/null; then
@@ -919,7 +919,7 @@ else
     },
     {
       "id": "nightly-rnd-henry",
-      "name": "nightly-rnd",
+      "name": "Nightly R&D Session",
       "agentId": "henry",
       "sessionTarget": "isolated",
       "delivery": { "mode": "none" },

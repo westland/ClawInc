@@ -22,7 +22,7 @@
       "agentId": "watcher",
       "sessionTarget": "isolated",
       "delivery": { "mode": "none" },
-      "schedule": { "kind": "cron", "expr": "0 * * * *" },
+      "schedule": { "kind": "cron", "expr": "12 * * * *" },
       "payload": {
         "kind": "agentTurn",
         "message": "Run your session-cleanup skill now. Archive old sessions, clean up temporary files, and ensure disk usage stays healthy. IMPORTANT: Do not call the update_goal tool as this is an automated system task."
@@ -37,7 +37,7 @@
       "agentId": "scout",
       "sessionTarget": "isolated",
       "delivery": { "mode": "none" },
-      "schedule": { "kind": "cron", "expr": "0 8 * * *" },
+      "schedule": { "kind": "cron", "expr": "18 8 * * *" },
       "payload": {
         "kind": "agentTurn",
         "message": "Run your news-digest skill. Search the web for the latest trends in aesthetics, medspa marketing, local Scottsdale competitor medspas (pricing for Botox, fillers, Sculptra), patient feedback, and updates on Cherry or CareCredit financing plans. Write a structured briefing with comparison tables and key competitive findings. Save the briefing to your memory. Then post it using your portal-report skill."
@@ -52,7 +52,7 @@
       "agentId": "writer",
       "sessionTarget": "isolated",
       "delivery": { "mode": "none" },
-      "schedule": { "kind": "cron", "expr": "0 9 * * *" },
+      "schedule": { "kind": "cron", "expr": "24 9 * * *" },
       "payload": {
         "kind": "agentTurn",
         "message": "Run your write-memo skill. Search Scout's memory for today's competitor and aesthetics research briefing. Synthesize it into a polished, high-end operational memo for Sumar Kasik, RN. Structure it with sections: Competitor Price Shifts, Aesthetic Market Opportunities, Proposed Homepage Copy adjustments, and Social Media/Outreach Ideas. Save to memory. Post the memo using your portal-report skill."
@@ -63,11 +63,11 @@
     },
     {
       "id": "nightly-rnd-henry",
-      "name": "nightly-rnd",
+      "name": "Nightly R&D Session",
       "agentId": "henry",
       "sessionTarget": "isolated",
       "delivery": { "mode": "none" },
-      "schedule": { "kind": "cron", "expr": "0 23 * * *" },
+      "schedule": { "kind": "cron", "expr": "34 23 * * *" },
       "payload": {
         "kind": "agentTurn",
         "message": "Run your rnd-meeting skill. Review today's memo from Writer, competitor research from Scout, and coding deliverables from Coder. Analyze gaps in Derma Art's branding, site responsiveness, or patient outreach. Formulate strategic recommendations for Sumar Kasik, RN. Post the retrospective summary using your portal-report skill. IMPORTANT: Do not call the update_goal tool as this is an automated system task."
